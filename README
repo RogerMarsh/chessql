@@ -1,0 +1,49 @@
+=================================
+Chess Query Language (CQL) parser
+=================================
+
+.. contents::
+
+
+Description
+===========
+
+This package provides a parser for Chess Query Language ('CQL'_).
+
+The 'documentation'_ for CQL version 5.1 as found in first half of 2017 was used as a reference. 
+
+This package does not implement an evaluator to find games in a 'PGN'_ file which match a query.
+
+
+Installation Instructions
+=========================
+
+Build dependencies
+
+* `Python`_ 3.3 or later 
+
+Install the package by typing
+
+   python setup.py install
+
+at the command prompt with setup.py in the current directory.
+
+You may need to give the path and version of Python depending on your system's configuration:
+
+   <path to python>/python<version> setup.py install
+
+   For example
+
+      C:\\Python33\\python setup.py install
+
+         on Microsoft Windows or
+
+      python3.3 setup.py install
+
+         on Unix-like systems.
+
+
+.. _Python: https://python.org
+.. _CQL: http://www.gadycosteff.com
+.. _PGN: http://www6.chessclub/help/PGN-spec
+.. _documentation: http://www.gadycosteff.com/cql/doc/allindex.html
