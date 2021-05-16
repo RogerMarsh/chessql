@@ -30,7 +30,7 @@ arguments are list_of_filters.
 import re
 import collections
 
-import pgn.core.constants
+import pgn_read.core.constants
 
 from . import constants, node
 
@@ -51,19 +51,20 @@ CQL_PARAMETERS = (constants.OUTPUT,
 # 'ray orthogonal ( [QqRr] on s, ... ) or ray diagonal ( [QqBb] on s, ... )
 # and is included as a RAY_DIRECTION.
 # ATTACK is not the 'attack' filter in this context.
-RAY_DIRECTIONS = frozenset(constants.DIRECTION_FILTER.union(constants.ATTACK))
+RAY_DIRECTIONS = frozenset(
+    constants.DIRECTION_FILTER.union((constants.ATTACK,)))
 
 TRANSFORM_FILTERS = frozenset((constants.FLIP,
-                              constants.FLIPDIHEDRAL,
-                              constants.FLIPHORIZONTAL,
-                              constants.FLIPVERTICAL,
-                              constants.FLIPCOLOR,
-                              constants.ROTATE45,
-                              constants.ROTATE90,
-                              constants.SHIFT,
-                              constants.SHIFTHORIZONTAL,
-                              constants.SHIFTVERTICAL,
-                              ))
+                               constants.FLIPDIHEDRAL,
+                               constants.FLIPHORIZONTAL,
+                               constants.FLIPVERTICAL,
+                               constants.FLIPCOLOR,
+                               constants.ROTATE45,
+                               constants.ROTATE90,
+                               constants.SHIFT,
+                               constants.SHIFTHORIZONTAL,
+                               constants.SHIFTVERTICAL,
+                               ))
 STAR_FILTERS = frozenset((constants.NEXT_STAR,
                           constants.PREVIOUS_STAR,
                           ))
@@ -101,9 +102,9 @@ RELATION_SQUARE_PARAMETERS = frozenset((constants.MATCH,
                                         constants.TARGETSQUARES,
                                         ))
 GAME_RESULTS = (
-    pgn.core.constants.WHITE_WIN,
-    pgn.core.constants.BLACK_WIN,
-    pgn.core.constants.DRAW)
+    pgn_read.core.constants.WHITE_WIN,
+    pgn_read.core.constants.BLACK_WIN,
+    pgn_read.core.constants.DRAW)
 REAL_BRACES = frozenset((constants.CQL,
                          constants.LEFT_BRACE_FILTER,
                          constants.LEFT_PARENTHESIS_FILTER,

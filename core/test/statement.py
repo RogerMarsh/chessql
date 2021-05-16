@@ -11,6 +11,7 @@ import collections
 
 from .. import constants
 from .. import statement
+from .. import node
 
 
 class Constants(unittest.TestCase):
@@ -57,20 +58,23 @@ class Constants(unittest.TestCase):
                               r'anydirection',
                               r'attack',
                               )))
-        self.assertEqual(statement.DIHEDRAL_FILTERS,
+        self.assertEqual(statement.TRANSFORM_FILTERS,
                          frozenset(
                              (r'flip',
                               r'flipdihedral',
                               r'fliphorizontal',
                               r'flipvertical',
                               r'flipcolor',
-                              r'next\*',
-                              r'previous\*',
                               r'rotate45',
                               r'rotate90',
                               r'shift',
                               r'shifthorizontal',
                               r'shiftvertical',
+                              )))
+        self.assertEqual(statement.STAR_FILTERS,
+                         frozenset(
+                             (r'next\*',
+                              r'previous\*',
                               )))
         self.assertEqual(statement.MOVE_MODIFIERS,
                          frozenset(
@@ -99,9 +103,8 @@ class Constants(unittest.TestCase):
                              (r'ancestor',
                               r'descendant',
                               )))
-        self.assertEqual(statement.PGN_FILE, '.pgn')
-        self.assertEqual(statement.GAME_RESULTS, ('1-0', '0-1', '1/2-1/2'))
         self.assertIsInstance(statement.Token(*('',)*44), statement.Token)
+        self.assertIs(statement.Statement.create_node, node.Node)
 
 
 class StatementMethods(unittest.TestCase):
@@ -139,13 +142,19 @@ class StatementMethods(unittest.TestCase):
         self.assertEqual(s.cql_tokens + s.tokens, cql_tokens + tokens)
         self.assertEqual(len(tokens) - poptokens, len(s.tokens))
 
-    def keyword_ok(
-        self, keyword, method, nodestr, nextmethod, nslen, poptokens=1):
+    def keyword_ok(self,
+                   keyword,
+                   method,
+                   nodestr,
+                   nextmethod,
+                   nslen,
+                   poptokens=1,
+                   method_return=None):
         # For testing keywords in isolation.
         s = self.statement
         tokens = s.tokens.copy()
         cql_tokens = s.cql_tokens.copy()
-        self.assertEqual(method(), None)
+        self.assertEqual(method(), method_return)
         self.assertEqual(len(s.node_stack), nslen)
         if nslen:
             self.assertEqual(str(s.node_stack[0]), nodestr)
@@ -229,7 +238,7 @@ class StatementMethods(unittest.TestCase):
         if node_stack:
             s.node_stack.extend(node_stack)
         else:
-            s.node_stack.append(statement.Node('cql'))
+            s.node_stack.append(statement.Statement.create_node('cql'))
         if children:
             s.node_stack[-1].children.extend(children)
         if variables:
@@ -259,8 +268,7 @@ class StatementMethods(unittest.TestCase):
 
     def test____init__(self):
         s = self.statement
-        self.assertEqual(len(s.__dict__), 13)
-        self.assertEqual(s._Statement__database, None)
+        self.assertEqual(len(s.__dict__), 12)
         self.assertEqual(s._description_string, '')
         self.assertEqual(s._statement_string, '')
         self.assertEqual(s._error_information, None)
@@ -277,8 +285,7 @@ class StatementMethods(unittest.TestCase):
     def test__reset_state(self):
         s = self.statement
         s._reset_state()
-        self.assertEqual(len(s.__dict__), 13)
-        self.assertEqual(hasattr(s, '_Statement__database'), True)
+        self.assertEqual(len(s.__dict__), 12)
         self.assertEqual(hasattr(s, '_description_string'), True)
         self.assertEqual(hasattr(s, '_statement_string'), True)
         self.assertEqual(s._error_information, False)
@@ -307,11 +314,6 @@ class StatementMethods(unittest.TestCase):
     def test_get_statement_text(self):
         s = self.statement
         self.assertIs(s.get_statement_text(), s._statement_string)
-
-    def test_set_database(self):
-        s = self.statement
-        s.set_database(True)
-        self.assertEqual(s._Statement__database, True)        
 
     def test_lex_01_null_string(self):
         s = self.statement
@@ -372,7 +374,7 @@ class StatementMethods(unittest.TestCase):
         self.assertEqual(s.tokens, [])
         self.assertEqual(s.cql_tokens, em)
         self.assertEqual(s._error_information, None)
-        self.assertIsInstance(s.cql_parameters, statement.Node)
+        self.assertIsInstance(s.cql_parameters, statement.Statement.create_node)
         self.assertEqual(s.cql_filters, None)
 
     def test_parse_04_ok_tokens(self):
@@ -383,8 +385,8 @@ class StatementMethods(unittest.TestCase):
         self.assertEqual(s.tokens, [])
         self.assertEqual(s.cql_tokens, em)
         self.assertEqual(s._error_information, None)
-        self.assertIsInstance(s.cql_parameters, statement.Node)
-        self.assertIsInstance(s.cql_filters, statement.Node)
+        self.assertIsInstance(s.cql_parameters, node.Node)
+        self.assertIsInstance(s.cql_filters, statement.Statement.create_node)
 
     def test_validate_01_error(self):
         s = self.statement
@@ -543,7 +545,7 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_numbers_02_(self):
         s = self.statement
-        node = statement.Node('number')
+        node = statement.Statement.create_node('number')
         s.node_stack.append(node)
         s.stack.append('elements')
         s.tokens = self.expected_matches((('x', 12),('y', 12),('z', 12),))
@@ -574,7 +576,7 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_numbers_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_numbers(), None)
@@ -592,7 +594,7 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_range_01_(self):
         s = self.statement
-        node = statement.Node('number')
+        node = statement.Statement.create_node('number')
         s.node_stack.append(node)
         s.stack.append('elements')
         s.tokens = self.expected_matches((('x', 12),('y', 12),('z', 12),))
@@ -623,7 +625,7 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_range_02_only_one_number_token(self):
         s = self.statement
-        node = statement.Node('number')
+        node = statement.Statement.create_node('number')
         s.node_stack.append(node)
         s.stack.append('elements')
         s.tokens = self.expected_matches((('x', 12),))
@@ -643,7 +645,7 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_cql_02_(self):
         token = ('cql', 5)
-        nodestr = '(cql, [], None)'
+        nodestr = '(cql, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
@@ -657,45 +659,45 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_left_parenthesis_02_(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_left_parenthesis, nodestr, s.p_cql_parameter, 2)
 
     def test_p_cql_parameter_01_input_output(self):
         token = ('input', 7)
-        nodestr = '(gash, [(input, [], None)], None)'
+        nodestr = '(gash, [(input, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_allowed_strings_filename, 2)
 
     def test_p_cql_parameter_02_variations(self):
         token = ('variations', 7)
-        nodestr = '(gash, [(variations, [], True)], None)'
+        nodestr = '(gash, [(variations, [], True, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, None, 1)
 
     def test_p_cql_parameter_03_gamenumber(self):
         token = ('gamenumber', 7)
-        nodestr = '(gash, [(gamenumber, [], [])], None)'
+        nodestr = '(gash, [(gamenumber, [], [], None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_gamenumber, 2)
 
     def test_p_cql_parameter_04_matchcount(self):
         token = ('matchcount', 7)
-        nodestr = '(gash, [(matchcount, [], [])], None)'
+        nodestr = '(gash, [(matchcount, [], [], None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_matchcount, 2)
@@ -704,21 +706,21 @@ class StatementMethods(unittest.TestCase):
         # To be done.
         token = ('input', 7)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
 
     def test_p_cql_parameter_06_error(self):
         token = ('gash', 7)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.p_cql_parameter, 2)
 
     def test_p_cql_parameter_07_site_event(self):
         token = ('event', 35)
-        nodestr = '(gash, [(event, [], None)], None)'
+        nodestr = '(gash, [(event, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_double_quoted_string, 2)
@@ -729,27 +731,27 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_cql_parameter_09_player(self):
         token = ('player', 27)
-        nodestr = '(gash, [(player, [], None)], None)'
+        nodestr = '(gash, [(player, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_player_white_black, 2)
 
     def test_p_cql_parameter_10_elo(self):
         token = ('elo', 19)
-        nodestr = '(gash, [(elo, [], None)], None)'
+        nodestr = '(gash, [(elo, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_elo_white_black, 2)
 
     def test_p_cql_parameter_11_year(self):
         token = ('year', 33)
-        nodestr = '(gash, [(year, [], [])], None)'
+        nodestr = '(gash, [(year, [], [], None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_range, 2)
@@ -760,9 +762,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_cql_parameter_13_silent(self):
         token = ('silent', 34)
-        nodestr = '(gash, [(silent, [], True)], None)'
+        nodestr = '(gash, [(silent, [], True, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, None, 1)
@@ -773,9 +775,9 @@ class StatementMethods(unittest.TestCase):
         
     def test_p_cql_parameter_15_sort(self):
         token = ('sort', 32)
-        nodestr = '(gash, [(sort, [], None)], None)'
+        nodestr = '(gash, [(sort, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_sort_matchcount, 2)
@@ -786,9 +788,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_cql_parameter_17_result(self):
         token = ('result', 31)
-        nodestr = '(gash, [(result, [], None)], None)'
+        nodestr = '(gash, [(result, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_cql_parameter, nodestr, s.p_allowed_strings_result, 2)
@@ -799,10 +801,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_cql_parameter_19_right_parenthesis(self):
         token = (')', 1)
-        nodestr = '(cql, [], None)'
+        nodestr = '(cql, [], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.stack.append('gash')
         s.stack.append('gash')
@@ -813,7 +815,7 @@ class StatementMethods(unittest.TestCase):
     def test_p_cql_parameter_20_right_parenthesis_len(self):
         token = (')', 1)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.p_cql_parameter, 0)
@@ -821,8 +823,8 @@ class StatementMethods(unittest.TestCase):
     def test_p_cql_parameter_21_right_parenthesis_type(self):
         token = (')', 1)
         s = self.statement
-        s.node_stack.append(statement.Node('cqll'))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('cqll'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.p_cql_parameter, 1)
@@ -835,9 +837,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_allowed_strings_filename_01_ok(self):
         token = ('file.pgn', 41)
-        nodestr = '(gash, [], file.pgn)'
+        nodestr = '(gash, [], file.pgn, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack.append(s.node_stack[-1])
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -852,9 +854,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_allowed_strings_result_01_ok(self):
         token = ('file', 41)
-        nodestr = '(gash, [], file)'
+        nodestr = '(gash, [], file, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack.append(s.node_stack[-1])
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -869,16 +871,16 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_allowed_strings_result_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_allowed_strings_result(), None)
 
     def test_b_allowed_strings_result_02_ok(self):
         token = ('file', 41)
-        nodestr = '(gash, [], file)'
+        nodestr = '(gash, [], file, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack.append(s.node_stack[-1])
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -913,9 +915,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_double_quoted_string_01_ok(self):
         token = ('"Smith"', 13)
-        nodestr = '(gash, [], "Smith")'
+        nodestr = '(gash, [], "Smith", None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack.append(s.node_stack[-1])
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -930,16 +932,16 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_double_quoted_string_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_double_quoted_string(), None)
 
     def test_b_double_quoted_string_02_ok(self):
         token = ('"Smith"', 13)
-        nodestr = '(gash, [], "Smith")'
+        nodestr = '(gash, [], "Smith", None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack.append(s.node_stack[-1])
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -958,9 +960,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_player_white_black_01_white(self):
         token = ('white', 40)
-        nodestr = '(gash, [(white, [], None)], None)'
+        nodestr = '(gash, [(white, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_player_white_black, nodestr, s.p_double_quoted_string, 2)
@@ -970,9 +972,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_player_white_black_03_string(self):
         token = ('"Smith"', 13)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_reprocess_ok(
             token, s.p_player_white_black, nodestr, s.p_double_quoted_string, 2)
@@ -984,7 +986,7 @@ class StatementMethods(unittest.TestCase):
     def test_p_player_white_black_05_type(self):
         token = ('gash', 1)
         s = self.statement
-        s.node_stack.append(statement.Node('player'))
+        s.node_stack.append(statement.Statement.create_node('player'))
         s.stack.append('gash')
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -995,15 +997,15 @@ class StatementMethods(unittest.TestCase):
     def test_p_player_white_black_06_error(self):
         token = ('gash', 1)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.p_player_white_black, 1)
 
     def test_p_elo_white_black_01_white(self):
         token = ('white', 40)
-        nodestr = '(gash, [(white, [], [])], None)'
+        nodestr = '(gash, [(white, [], [], None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_ok(
             token, s.p_elo_white_black, nodestr, s.p_numbers, 2)
@@ -1014,9 +1016,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_p_elo_white_black_03_number(self):
         token = ('1500', 12)
-        nodestr = '(gash, [], [])'
+        nodestr = '(gash, [], [], None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_reprocess_ok(
             token, s.p_elo_white_black, nodestr, s.p_range, 2)
@@ -1028,7 +1030,7 @@ class StatementMethods(unittest.TestCase):
     def test_p_elo_white_black_05_type(self):
         token = ('gash', 1)
         s = self.statement
-        s.node_stack.append(statement.Node('elo'))
+        s.node_stack.append(statement.Statement.create_node('elo'))
         s.stack.append('gash')
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
@@ -1039,13 +1041,13 @@ class StatementMethods(unittest.TestCase):
     def test_p_elo_white_black_06_error(self):
         token = ('gash', 1)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.p_elo_white_black, 1)
 
     def test_b_pop_top_of_stack_01_others(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.assertEqual(s.b_pop_top_of_stack(), None)
         self.assertEqual(s.node_stack, [])
@@ -1055,54 +1057,62 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_pop_nested_stack_01_(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('{'))
+        s.node_stack.append(statement.Statement.create_node('{'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('on'))
+        s.node_stack.append(statement.Statement.create_node('on'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(
+            statement.Statement.create_node(
+                'gash', children=[node.Node('g'), node.Node('g')]))
         s.stack.append('gash')
         self.assertEqual(s.b_pop_nested_stack(), None)
         self.assertEqual(s.stack, ['gash', 'gash'])
         self.assertEqual(len(s.node_stack), 2)
-        self.assertEqual(str(s.node_stack[0]), '(gash, [], None)')
-        self.assertEqual(str(s.node_stack[1]), '({, [], None)')
+        self.assertEqual(str(s.node_stack[0]), '(gash, [], None, None)')
+        self.assertEqual(str(s.node_stack[1]), '({, [], None, None)')
 
     def test_b_pop_nested_stack_to_implied_brace_01_(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('{'))
+        s.node_stack.append(statement.Statement.create_node('{'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('on'))
+        s.node_stack.append(statement.Statement.create_node('on'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
         self.assertEqual(s.b_pop_nested_stack_to_implied_brace(), None)
         self.assertEqual(s.stack, ['gash', 'gash', 'gash'])
         self.assertEqual(len(s.node_stack), 3)
-        self.assertEqual(str(s.node_stack[0]), '(gash, [], None)')
-        self.assertEqual(str(s.node_stack[1]), '({, [], None)')
-        self.assertEqual(str(s.node_stack[2]), '(on, [], None)')
+        self.assertEqual(str(s.node_stack[0]), '(gash, [], None, None)')
+        self.assertEqual(str(s.node_stack[1]), '({, [], None, None)')
+        self.assertEqual(str(s.node_stack[2]), '(on, [], None, None)')
 
     def test_b_pop_top_of_stack_and_nested_01_(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('{'))
+        s.node_stack.append(statement.Statement.create_node('{'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('on'))
+        s.node_stack.append(statement.Statement.create_node('on'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(
+            statement.Statement.create_node(
+                'gash', children=[node.Node('g'), node.Node('g')]))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('{'))
+        s.node_stack.append(
+            statement.Statement.create_node('{', children=[None, None]))
         s.stack.append('gash')
         self.assertEqual(s.b_pop_top_of_stack_and_nested(), None)
         self.assertEqual(s.stack, ['gash', 'gash'])
         self.assertEqual(len(s.node_stack), 2)
-        self.assertEqual(str(s.node_stack[0]), '(gash, [], None)')
-        self.assertEqual(str(s.node_stack[1]), '({, [], None)')
+        self.assertEqual(str(s.node_stack[0]), '(gash, [], None, None)')
+        self.assertEqual(str(s.node_stack[1]), '({, [], None, None)')
 
     def test_b_pop_variables_stack_01_(self):
         s = self.statement
@@ -1119,17 +1129,18 @@ class StatementMethods(unittest.TestCase):
         self.assertEqual(len(s.node_stack), 1)
         self.assertEqual(s.stack, [s.b_body])
         self.assertEqual(s.variables_stack, [set()])
-        self.assertEqual(str(s.node_stack[0]), '(cql, [], None)')
+        self.assertEqual(str(s.node_stack[0]), '(cql, [], None, None)')
 
     def test_b_body_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
         self.assertRaises(IndexError, s.b_body)
 
     def test_b_body_02_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_body(), None)
@@ -1138,18 +1149,19 @@ class StatementMethods(unittest.TestCase):
         s = self.statement
         token = ('', 0)
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.assertEqual(s.b_body(), True)
 
     def test_b_piece_square_in_set_body_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
         self.assertRaises(IndexError, s.b_piece_square_in_set_body)
 
     def test_b_piece_square_in_set_body_02_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_piece_square_in_set_body(), None)
@@ -1158,15 +1170,15 @@ class StatementMethods(unittest.TestCase):
         s = self.statement
         token = ('', 0)
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.assertEqual(s.b_piece_square_in_set_body(), True)
 
     def test_b_collapse_filters_stack_01_rays_collapse_stack(self):
         s = self.statement
         ns = s.node_stack
-        ns.extend([statement.Node('cql'),
-                   statement.Node('{'),
-                   statement.Node('up')])
+        ns.extend([statement.Statement.create_node('cql'),
+                   statement.Statement.create_node('{'),
+                   statement.Statement.create_node('up')])
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         s.stack.append('gash')
@@ -1177,9 +1189,9 @@ class StatementMethods(unittest.TestCase):
     def test_b_collapse_filters_stack_02_no_collapse(self):
         s = self.statement
         ns = s.node_stack
-        ns.extend([statement.Node('cql'),
-                   statement.Node('{'),
-                   statement.Node('wtm')])
+        ns.extend([statement.Statement.create_node('cql'),
+                   statement.Statement.create_node('{'),
+                   statement.Statement.create_node('wtm')])
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         s.stack.append('gash')
@@ -1193,49 +1205,54 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_collapse_parameters_stack_02_(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.assertEqual(s.b_collapse_parameters_stack(), None)
 
     def test_b_collapse_parameters_stack_03_(self):
         s = self.statement
         token = ('or', 14)
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('or'))
+        s.node_stack.append(statement.Statement.create_node('or'))
         self.assertEqual(s.b_collapse_parameters_stack(), None)
 
     def test_b_collapse_04_parameters_stack_(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack.append(statement.Node('from'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack.append(statement.Statement.create_node('from'))
         s.stack.append('gash')
         self.assertEqual(s.b_collapse_parameters_stack(), None)
 
     def test_b_end_01_nslen_not_1(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('{'))
+        s.node_stack.append(statement.Statement.create_node('{'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('on'))
+        s.node_stack.append(statement.Statement.create_node('on'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
         self.assertEqual(s.b_end(), None)
         self.assertEqual(s.stack, ['gash', 'gash'])
         self.assertEqual(len(s.node_stack), 2)
-        self.assertEqual(str(s.node_stack[0]), '(cql, [], None)')
-        self.assertEqual(str(s.node_stack[1]), '({, [], None)')
+        self.assertEqual(str(s.node_stack[0]), '(cql, [], None, None)')
+        self.assertEqual(str(s.node_stack[1]), '({, [], None, None)')
 
     def test_b_end_02_nslen_1(self):
         s = self.statement
-        n = statement.Node('cql')
+        n = statement.Statement.create_node('cql')
         s.node_stack.append(n)
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('on'))
+        s.node_stack.append(statement.Statement.create_node('on'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_end(), None)
@@ -1243,14 +1260,14 @@ class StatementMethods(unittest.TestCase):
         self.assertEqual(s.variables_stack, [])
         self.assertEqual(len(s.node_stack), 0)
         self.assertEqual(len(s.node_stack), 0)
-        self.assertEqual(str(s.cql_filters), '(cql, [], None)')
+        self.assertEqual(str(s.cql_filters), '(cql, [], None, None)')
         self.assertIs(s.cql_filters, n)
 
     def test_add_piece_square_in_set_body_01_piece_designator(self):
         self.add_keyword_method_stackmethod(
             ('k', 6),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(piece_designator, [], k)], None)',
+            '(cql, [(piece_designator, [], k, True)], None, None)',
             None,
             1,
             None)
@@ -1259,7 +1276,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('darksquares', 9),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(plain_filter, [], darksquares)], None)',
+            '(cql, [(plain, [], darksquares, True)], None, None)',
             None,
             1,
             None)
@@ -1268,7 +1285,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('lightsquares', 9),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(plain_filter, [], lightsquares)], None)',
+            '(cql, [(plain, [], lightsquares, True)], None, None)',
             None,
             1,
             None)
@@ -1277,7 +1294,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('wtm', 9),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [], None)',
+            '(cql, [], None, None)',
             None,
             1,
             True)
@@ -1286,7 +1303,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('not', 15),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(not, [], None)], None)',
+            '(cql, [(not, [], None, None)], None, None)',
             None,
             1,
             None)
@@ -1295,7 +1312,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('or', 14),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [], None)',
+            '(cql, [], None, None)',
             None,
             1,
             True)
@@ -1304,18 +1321,18 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('or', 14),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(or, [(op1, [], None)], None)], None)',
+            '(cql, [(or, [(op1, [], None, None)], None, None)], None, None)',
             None,
             1,
             None,
-            children=[statement.Node('op1')],
+            children=[statement.Statement.create_node('op1')],
             cql_tokens=[('k', 6)])
 
     def test_add_piece_square_in_set_body_08_on(self):
         self.add_keyword_method_stackmethod(
             ('on', 26),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [], None)',
+            '(cql, [], None, None)',
             None,
             1,
             True)
@@ -1324,18 +1341,18 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('on', 26),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(on, [(op1, [], None)], None)], None)',
+            '(cql, [(on, [(op1, [], None, None)], None, None)], None, None)',
             None,
             1,
             None,
-            children=[statement.Node('op1')],
+            children=[statement.Statement.create_node('op1')],
             cql_tokens=[('k', 6)])
 
     def test_add_piece_square_in_set_body_10_transform(self):
         self.add_keyword_method_stackmethod(
             ('right', 8),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(right, [], None)], None)',
+            '(cql, [(right, [], None, None)], None, None)',
             None,
             1,
             None)
@@ -1344,7 +1361,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('attack', 16),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(attack, [], None)], None)',
+            '(cql, [(attack, [], None, None)], None, None)',
             None,
             1,
             None)
@@ -1353,7 +1370,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('move', 23),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [(move, [], None)], None)',
+            '(cql, [(move, [], None, None)], None, None)',
             None,
             1,
             None)
@@ -1362,7 +1379,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('{', 2),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [], None)], None)',
+            '(cql, [({, [], None, None)], None, None)',
             None,
             1,
             None)
@@ -1370,11 +1387,12 @@ class StatementMethods(unittest.TestCase):
     def test_add_piece_square_in_set_body_14_right_brace_node_stack_cleared(
         self):
         s = self.statement
-        ns = [statement.Node('cql')]
+        ns = [statement.Statement.create_node(
+            'cql', children=[node.Node('g'), node.Node('h')])]
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [], None)',
+            '(cql, [(g, [], None, None), (h, [], None, None)], None, None)',
             None,
             0,
             True,
@@ -1383,12 +1401,18 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_15_right_brace_left(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node(
+                  '{', children=[node.Node('g'), node.Node('h')])]
         ns[0].children.append(ns[1])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [], None)], None)',
+            ''.join((
+                '(cql, [({, ',
+                '[(g, [], None, None), (h, [], None, None)], '
+                'None, False)], None, None)',
+                )),
             None,
             1,
             None,
@@ -1397,12 +1421,18 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_16_right_brace_left_variables(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node(
+                  '{', children=[node.Node('g'), node.Node('h')])]
         ns[0].children.append(ns[1])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [], None)], None)',
+            ''.join((
+                '(cql, [({, ',
+                '[(g, [], None, None), (h, [], None, None)], '
+                'None, False)], None, None)',
+                )),
             None,
             1,
             None,
@@ -1413,13 +1443,20 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_17_right_brace_cql(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{'), statement.Node('cql')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node('{'),
+              statement.Statement.create_node(
+                  'cql', children=[node.Node('g'), node.Node('h')])]
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [(cql, [], None)], None)], None)',
+            ''.join((
+                '(cql, [({, [(cql, ',
+                '[(g, [], None, None), (h, [], None, None)], '
+                'None, False)], None, False)], None, None)',
+                )),
             None,
             1,
             None,
@@ -1429,13 +1466,18 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_18_right_brace_cql_variables(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{'), statement.Node('cql')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node('{'),
+              statement.Statement.create_node(
+                  'cql', children=[node.Node('g'), node.Node('h')])]
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [(cql, [], None)], None)], None)',
+            ''.join(('(cql, [({, [(cql, ',
+                     '[(g, [], None, None), (h, [], None, None)], ',
+                     'None, False)], None, False)], None, None)',)),
             None,
             1,
             None,
@@ -1447,13 +1489,18 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_19_right_brace_not(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{'), statement.Node('not')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node('{'),
+              statement.Statement.create_node(
+                  'not', children=[node.Node('g'), node.Node('h')])]
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [(not, [], None)], None)], None)',
+            ''.join(('(cql, [({, [(not, [(g, [], None, None), (h, [], None, None)], ',
+                     'None, False)], None, False)], None, None)',
+                     )),
             None,
             1,
             None,
@@ -1463,13 +1510,15 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_20_right_brace_error(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{'), statement.Node('k')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node('{'),
+              statement.Statement.create_node('k')]
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [(k, [], None)], None)], None)',
+            '(cql, [({, [(k, [], None, None)], None, None)], None, None)',
             None,
             1,
             True,
@@ -1477,13 +1526,19 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_in_set_body_21_right_brace_more_tokens(self):
         s = self.statement
-        ns = [statement.Node('cql'), statement.Node('{'), statement.Node('not')]
+        ns = [statement.Statement.create_node('cql'),
+              statement.Statement.create_node('{'),
+              statement.Statement.create_node(
+                  'not', children=[node.Node('g'), node.Node('h')])]
         ns[0].children.append(ns[1])
         ns[1].children.append(ns[2])
         self.add_keyword_method_stackmethod(
             ('}', 3),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [({, [(not, [], None)], None)], None)',
+            ''.join(('(cql, [({, [(not, [(g, [], None, None), ',
+                     '(h, [], None, None)], None, False)], None, False)], ',
+                     'None, None)',
+                     )),
             None,
             1,
             None,
@@ -1496,7 +1551,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('white', 40),
             self.statement.add_piece_square_in_set_body,
-            '(cql, [], None)',
+            '(cql, [], None, None)',
             None,
             1,
             True)
@@ -1505,7 +1560,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('wtm', 9),
             self.statement.add_set_body,
-            '(cql, [(plain_filter, [], wtm)], None)',
+            '(cql, [(plain, [], wtm, False)], None, None)',
             None,
             1,
             None)
@@ -1516,7 +1571,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('$x', 39),
             self.statement.add_set_body,
-            '(cql, [($, [], gash)], None)',
+            '(cql, [($, [], gash, None)], None, None)',
             None,
             1,
             None,
@@ -1526,7 +1581,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('move', 23),
             self.statement.add_set_body,
-            '(cql, [(move, [], None)], None)',
+            '(cql, [(move, [], None, None)], None, None)',
             None,
             1,
             None)
@@ -1535,7 +1590,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('$x', 39),
             self.statement.add_cql_body,
-            '(cql, [($, [], psvtarget)], None)',
+            '(cql, [($, [], psvtarget, None)], None, None)',
             None,
             1,
             None,
@@ -1546,7 +1601,7 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('7', 12),
             s.add_cql_body,
-            '(cql, [], None)',
+            '(cql, [], None, None)',
             s.b_range,
             2,
             None)
@@ -1556,25 +1611,25 @@ class StatementMethods(unittest.TestCase):
         self.add_keyword_method_stackmethod(
             ('move', 23),
             self.statement.add_cql_body,
-            '(cql, [(move, [], None)], None)',
+            '(cql, [(move, [], None, None)], None, None)',
             None,
             1,
             None)
 
     def test_add_piece_designator_01_(self):
         token = ('k', 6)
-        nodestr = '(cql, [(piece_designator, [], k)], None)'
+        nodestr = '(cql, [(piece_designator, [], k, True)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
         self.body_keyword_ok(token, s.add_piece_designator, nodestr, 'gash', 1)
 
     def test_add_left_parenthesis_01_(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.body_keyword_ok(token, s.add_left_parenthesis, nodestr, None, 2)
         self.assertEqual(s.variables_stack, [set()])
@@ -1588,9 +1643,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_piece_square_variable_02_ok(self):
         token = ('$x', 39)
-        nodestr = '(cql, [($, [], psvtarget)], None)'
+        nodestr = '(cql, [($, [], psvtarget, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
         s.variables['$x'] = 'psvtarget'
@@ -1599,18 +1654,18 @@ class StatementMethods(unittest.TestCase):
 
     def test_add_plain_filter_01_(self):
         token = ('btm', 9)
-        nodestr = '(cql, [(plain_filter, [], btm)], None)'
+        nodestr = '(cql, [(plain, [], btm, False)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.tokens = self.expected_matches((token,))
         self.body_keyword_ok(token, s.add_plain_filter, nodestr, 'gash', 1)
 
     def test_add_move_from_to_enpassantsquare_parameter_01_(self):
         token = ('to', 11)
-        nodestr = '(gash, [(gash, [(to, [], None)], None)], None)'
-        node = statement.Node('gash')
-        node.children.append(statement.Node('gash'))
+        nodestr = '(gash, [(gash, [(to, [], None, None)], None, None)], None, None)'
+        node = statement.Statement.create_node('gash')
+        node.children.append(statement.Statement.create_node('gash'))
         s = self.statement
         s.node_stack.append(node)
         s.tokens = self.expected_matches((token,))
@@ -1627,35 +1682,35 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_move_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_move(), None)
 
     def test_b_move_02_mainline(self):
         token = ('mainline', 22)
-        nodestr = '(cql, [(mainline, [], None)], None)'
+        nodestr = '(cql, [(mainline, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         self.keyword_ok(token, s.b_move, nodestr, s.b_move_from, 1)
 
     def test_b_move_03_next_previous(self):
         token = ('previous', 25)
-        nodestr = '(cql, [(previous, [], None)], None)'
+        nodestr = '(cql, [(previous, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         self.keyword_ok(token, s.b_move, nodestr, s.b_move_from, 1)
 
     def test_b_move_04_move_parameter(self):
         token = ('from', 11)
-        nodestr = '(cql, [(next, [], None)], None)'
+        nodestr = '(cql, [(next, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_move, nodestr, s.b_move_from, 1)
 
@@ -1663,32 +1718,33 @@ class StatementMethods(unittest.TestCase):
         token = ('from', 11)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('cql'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_move, 1)
 
     def test_b_move_06_children_not_token(self):
         token = ('k', 6)
-        nodestr = '(cql, [(gash, [], None)], None)'
+        nodestr = '(cql, [(gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('cql'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
+        s.node_stack[-1].children.append(
+            statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_move, nodestr, s.b_move_from, 1)
 
     def test_b_move_from_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_move_from(), None)
 
     def test_b_move_from_02_ok(self):
         token = ('from', 11)
-        nodestr = '(gash, [(gash, [(from, [], None)], None)], None)'
-        node = statement.Node('gash')
-        node.children.append(statement.Node('gash'))
+        nodestr = '(gash, [(gash, [(from, [], None, None)], None, None)], None, None)'
+        node = statement.Statement.create_node('gash')
+        node.children.append(statement.Statement.create_node('gash'))
         s = self.statement
         s.node_stack.append(node)
         s.stack.append('gash')
@@ -1709,16 +1765,16 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_move_to_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_move_to(), None)
 
     def test_b_move_to_02_ok(self):
         token = ('to', 11)
-        nodestr = '(gash, [(gash, [(to, [], None)], None)], None)'
-        node = statement.Node('gash')
-        node.children.append(statement.Node('gash'))
+        nodestr = '(gash, [(gash, [(to, [], None, None)], None, None)], None, None)'
+        node = statement.Statement.create_node('gash')
+        node.children.append(statement.Statement.create_node('gash'))
         s = self.statement
         s.node_stack.append(node)
         s.stack.append('gash')
@@ -1739,16 +1795,16 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_move_promote_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_move_to(), None)
 
     def test_b_move_promote_02_ok(self):
         token = ('promote', 11)
-        nodestr = '(gash, [(gash, [(promote, [], None)], None)], None)'
-        node = statement.Node('gash')
-        node.children.append(statement.Node('gash'))
+        nodestr = '(gash, [(gash, [(promote, [], None, None)], None, None)], None, None)'
+        node = statement.Statement.create_node('gash')
+        node.children.append(statement.Statement.create_node('gash'))
         s = self.statement
         s.node_stack.append(node)
         s.stack.append('gash')
@@ -1770,16 +1826,16 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_move_enpassantsquare_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_move_to(), None)
 
     def test_b_move_enpassantsquare_02_ok(self):
         token = ('enpassantsquare', 11)
-        nodestr = '(gash, [(gash, [(enpassantsquare, [], None)], None)], None)'
-        node = statement.Node('gash')
-        node.children.append(statement.Node('gash'))
+        nodestr = '(gash, [(gash, [(enpassantsquare, [], None, None)], None, None)], None, None)'
+        node = statement.Statement.create_node('gash')
+        node.children.append(statement.Statement.create_node('gash'))
         s = self.statement
         s.node_stack.append(node)
         s.stack.append('gash')
@@ -1793,11 +1849,11 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_move_enpassantsquare_03_enpassant(self):
         token = ('enpassant', 11)
-        nodestr = '(gash, [(gash, [(enpassantsquare, [], a-h1-8)], None)], None)'
+        nodestr = '(gash, [(gash, [(enpassantsquare, [], a-h1-8, None)], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(token, s.b_move_enpassantsquare, nodestr, None, 0)
 
@@ -1816,7 +1872,7 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_two_set_filters_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_two_set_filters(), None)
@@ -1825,50 +1881,56 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_two_set_filters, 1)
 
     def test_b_two_set_filters_03_right_parenthesis_children_error(self):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_two_set_filters, 1)
 
     def test_b_two_set_filters_04_right_parenthesis_ok(self):
         token = (')', 1)
-        nodestr = '(, [(gash, [], None), (gash, [], None)], None)'
+        nodestr = '((, [(gash, [], None, None), (gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.variables_stack.append({})
-        self.keyword_ok(token, s.b_two_set_filters, nodestr, None, 0)
+        self.keyword_ok(token,
+                        s.b_two_set_filters,
+                        nodestr,
+                        ['gash', s.p_error],
+                        1,
+                        poptokens=0,
+                        method_return=True)
 
     def test_b_two_set_filters_05_children_error(self):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_two_set_filters, 1)
 
     def test_b_two_set_filters_06_ok(self):
         token = ('k', 6)
-        nodestr = '((, [(gash, [], None), (piece_designator, [], k)], None)'
+        nodestr = '((, [(gash, [], None, None), (piece_designator, [], k, True)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_two_set_filters, nodestr, None, 1)
 
     def test_b_one_set_filter_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_one_set_filter(), None)
@@ -1877,36 +1939,46 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_one_set_filter, 1)
 
     def test_b_one_set_filter_03_children_ok(self):
         token = ('k', 6)
-        nodestr = '((, [(gash, [], None), (piece_designator, [], k)], None)'
+        nodestr = '(gash, [(gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        self.keyword_ok(
-            token, s.b_one_set_filter, nodestr, None, 0, poptokens=0)
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        self.keyword_ok(token,
+                        s.b_one_set_filter,
+                        nodestr,
+                        ['gash', s.p_error],
+                        1,
+                        poptokens=0,
+                        method_return=True)
 
     def test_b_one_set_filter_04_ok(self):
         token = ('k', 6)
-        nodestr = '((, [(gash, [], None), (piece_designator, [], k)], None)'
+        nodestr = '((, [(gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
+        s.node_stack.append(statement.Statement.create_node('('))
         s.stack.append('gash')
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        self.keyword_ok(
-            token, s.b_one_set_filter, nodestr, None, 0, poptokens=0)
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        self.keyword_ok(token,
+                        s.b_one_set_filter,
+                        nodestr,
+                        ['gash', s.p_error],
+                        1,
+                        poptokens=0,
+                        method_return=True)
 
     def test_b_two_or_more_set_filters_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_two_or_more_set_filters(), None)
@@ -1915,7 +1987,7 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_two_or_more_set_filters, 1)
 
     def test_b_two_or_more_set_filters_03_right_parenthesis_children_error(
@@ -1923,34 +1995,40 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_two_or_more_set_filters, 1)
 
     def test_b_two_or_more_set_filters_04_right_parenthesis_ok(self):
         token = (')', 1)
-        nodestr = '(, [(gash, [], None), (gash, [], None)], None)'
+        nodestr = '((, [(gash, [], None, None), (gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.variables_stack.append({})
-        self.keyword_ok(token, s.b_two_or_more_set_filters, nodestr, None, 0)
+        self.keyword_ok(token,
+                        s.b_two_or_more_set_filters,
+                        nodestr,
+                        ['gash', s.p_error],
+                        1,
+                        poptokens=0,
+                        method_return=True)
 
     def test_b_two_or_more_set_filters_05_ok(self):
         token = ('k', 6)
-        nodestr = '((, [(gash, [], None), (piece_designator, [], k)], None)'
+        nodestr = '((, [(gash, [], None, None), (piece_designator, [], k, True)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_two_or_more_set_filters, nodestr, None, 1)
 
     def test_b_one_or_more_re_set_filters_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_one_or_more_re_set_filters(), None)
@@ -1959,7 +2037,7 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_one_or_more_re_set_filters, 1)
 
     def test_b_one_or_more_re_set_filters_03_right_parenthesis_children_error(
@@ -1967,34 +2045,40 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_one_or_more_re_set_filters, 1)
 
     def test_b_one_or_more_re_set_filters_04_right_parenthesis_ok(self):
         token = (')', 1)
-        nodestr = '(, [(gash, [], None), (gash, [], None)], None)'
+        nodestr = '((, [(gash, [], None, None), (gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.variables_stack.append({})
-        self.keyword_ok(token, s.b_one_or_more_re_set_filters, nodestr, None, 0)
+        self.keyword_ok(token,
+                        s.b_one_or_more_re_set_filters,
+                        nodestr,
+                        ['gash', s.p_error],
+                        1,
+                        poptokens=0,
+                        method_return=True)
 
     def test_b_one_or_more_re_set_filters_05_ok(self):
         token = ('k', 6)
-        nodestr = '((, [(gash, [], None), (piece_designator, [], k)], None)'
+        nodestr = '((, [(gash, [], None, None), (piece_designator, [], k, True)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_one_or_more_re_set_filters, nodestr, None, 1)
 
     def test_b_one_or_more_filters_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_one_or_more_filters(), None)
@@ -2003,7 +2087,7 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_one_or_more_filters, 1)
 
     def test_b_one_or_more_filters_03_right_parenthesis_children_error(
@@ -2011,34 +2095,40 @@ class StatementMethods(unittest.TestCase):
         token = (')', 1)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_one_or_more_filters, 1)
 
     def test_b_one_or_more_filters_04_right_parenthesis_ok(self):
         token = (')', 1)
-        nodestr = '(, [(gash, [], None), (gash, [], None)], None)'
+        nodestr = '((, [(gash, [], None, None), (gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.variables_stack.append({})
-        self.keyword_ok(token, s.b_one_or_more_filters, nodestr, None, 0)
+        self.keyword_ok(token,
+                        s.b_one_or_more_filters,
+                        nodestr,
+                        ['gash', s.p_error],
+                        1,
+                        poptokens=0,
+                        method_return=True)
 
     def test_b_one_or_more_filters_05_ok(self):
         token = ('k', 6)
-        nodestr = '((, [(gash, [], None), (piece_designator, [], k)], None)'
+        nodestr = '((, [(gash, [], None, None), (piece_designator, [], k, True)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('('))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_one_or_more_filters, nodestr, None, 1)
 
     def test_b_attack_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_attack(), None)
@@ -2047,45 +2137,45 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_attack, None, None, 0)
 
     def test_b_attack_03_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_attack, nodestr, s.b_two_set_filters, 2)
 
     def test_b_attack_04_number_after_attack_parameters(self):
         token = ('15', 12)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack[-1].range = ['gash', 'gash']
         self.keyword_error(token, s.b_attack, 1)
 
     def test_b_attack_05_number(self):
         token = ('15', 12)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_reprocess_ok(token, s.b_attack, nodestr, s.p_range, 2)
 
     def test_b_attack_06_token_before_attack_parameters(self):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_attack, 1)
 
     def test_b_between_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_between(), None)
@@ -2094,29 +2184,29 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_between, None, None, 0)
 
     def test_b_between_03_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_between, nodestr, s.b_two_set_filters, 2)
 
     def test_b_between_04_token_before_attack_parameters(self):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_between, 1)
 
     def test_b_countsquares_power_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_countsquares_power(), None)
@@ -2125,8 +2215,8 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_countsquares_power, None, None, 0)
 
@@ -2134,16 +2224,16 @@ class StatementMethods(unittest.TestCase):
         token = ('15', 12)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack[-1].range = ['gash', 'gash']
         self.keyword_error(token, s.b_countsquares_power, 1)
 
     def test_b_countsquares_power_05_number(self):
         token = ('15', 12)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_reprocess_ok(
             token,
             s.b_countsquares_power,
@@ -2155,12 +2245,12 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_countsquares_power, 1)
 
     def test_b_powerdifference_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_powerdifference(), None)
@@ -2169,8 +2259,8 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_powerdifference, None, None, 0)
 
@@ -2178,15 +2268,15 @@ class StatementMethods(unittest.TestCase):
         token = ('(', 0)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_powerdifference, 1)
 
     def test_b_powerdifference_04_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash<1,1>, [((, [], None)], None)'
+        nodestr = '(gash<1,1>, [((, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        n = statement.Node('gash')
+        n = statement.Statement.create_node('gash')
         n.range = [1, 1]
         s.node_stack.append(n)
         self.keyword_ok(
@@ -2196,16 +2286,16 @@ class StatementMethods(unittest.TestCase):
         token = ('15', 12)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack[-1].range = ['gash', 'gash']
         self.keyword_error(token, s.b_powerdifference, 1)
 
     def test_b_powerdifference_06_number(self):
         token = ('15', 12)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_reprocess_ok(
             token, s.b_powerdifference, nodestr, s.p_range, 2)
 
@@ -2213,12 +2303,12 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_powerdifference, 1)
 
     def test_b_ray_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_ray(), None)
@@ -2227,61 +2317,61 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_ray, None, None, 0)
 
     def test_b_ray_03_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_ray, nodestr, s.b_two_or_more_set_filters, 2)
 
     def test_b_ray_04_number_after_ray_parameters(self):
         token = ('15', 12)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack[-1].range = ['gash', 'gash']
         self.keyword_error(token, s.b_ray, 1)
 
     def test_b_ray_05_number(self):
         token = ('15', 12)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_reprocess_ok(token, s.b_ray, nodestr, s.p_range, 2)
 
     def test_b_ray_06_attack_before_ray_parameters(self):
         token = ('attack', 16)
-        nodestr = '(gash, [(attack, [], None)], None)'
+        nodestr = '(gash, [(attack, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_ray, nodestr, s.b_ray, 2)
 
     def test_b_ray_07_direction_before_ray_parameters(self):
         token = ('horizontal', 8)
-        nodestr = '(gash, [(horizontal, [], None)], None)'
+        nodestr = '(gash, [(horizontal, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token, s.b_ray, nodestr, s.b_ray, 2)
 
     def test_b_ray_08_token_before_ray_parameters(self):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_ray, 1)
 
     def test_b_next_previous_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_next_previous(), None)
@@ -2290,17 +2380,17 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(token, s.b_next_previous, None, None, 0)
 
     def test_b_next_previous_03_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_ok(token,
                         s.b_next_previous,
                         nodestr,
@@ -2311,16 +2401,16 @@ class StatementMethods(unittest.TestCase):
         token = ('15', 12)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack[-1].range = ['gash', 'gash']
         self.keyword_error(token, s.b_next_previous, 1)
 
     def test_b_next_previous_05_number(self):
         token = ('15', 12)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_reprocess_ok(
             token, s.b_next_previous, nodestr, s.p_range, 2)
 
@@ -2328,22 +2418,22 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_next_previous, 1)
 
     def test_b_relation_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_relation(), None)
 
     def test_b_relation_02_echo_parameter(self):
         token = ('echoflip', 10)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(
             token, s.b_relation, nodestr, s.b_relation_parameter, 1)
@@ -2352,41 +2442,41 @@ class StatementMethods(unittest.TestCase):
         token = ('tomove', 10)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_relation, 1)
 
     def test_b_relation_04_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(
             token, s.b_relation, nodestr, s.b_relation_parameter, 1)
 
     def test_b_relation_05_targetfilter(self):
         token = ('k', 6)
-        nodestr = '(relation, [(piece_designator, [], k)], None)'
+        nodestr = '(relation, [(piece_designator, [], k, True)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('relation'))
+        s.node_stack.append(statement.Statement.create_node('relation'))
         s.stack.append('relation')
         self.keyword_ok(token, s.b_relation, nodestr, 'relation', 1)
 
     def test_b_relation_parameter_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_relation_parameter(), None)
 
     def test_b_relation_parameter_02_echo_parameter(self):
         token = ('echoflip', 10)
-        nodestr = '(gash, [(echoflip, [], None)], None)'
+        nodestr = '(gash, [(echoflip, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2399,15 +2489,15 @@ class StatementMethods(unittest.TestCase):
         token = ('tomove', 10)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_relation_parameter, 1)
 
     def test_b_relation_parameter_04_left_parenthesis(self):
         token = ('(', 0)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(
             token,
@@ -2418,12 +2508,12 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_05_other_tokens(self):
         token = ('k', 6)
-        nodestr = '({, [], None)'
+        nodestr = '({, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('{'))
+        s.node_stack.append(statement.Statement.create_node('{'))
         s.stack.append('{')
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_reprocess_ok(
             token,
@@ -2434,17 +2524,17 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_left_parenthesis_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_relation_parameter_left_parenthesis(), None)
 
     def test_b_relation_parameter_left_parenthesis_02_right_relation_top(self):
         token = (')', 1)
-        nodestr = '({, [], None)'
+        nodestr = '({, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('relation'))
+        s.node_stack.append(statement.Statement.create_node('relation'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2455,10 +2545,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_left_parenthesis_03_right_other_top(self):
         token = (')', 1)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2469,10 +2559,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_left_parenthesis_04_right_more_tokens(self):
         token = (')', 1)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token, ('q',6)))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2485,15 +2575,15 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_relation_parameter_left_parenthesis, 1)
 
     def test_b_relation_parameter_left_parenthesis_06_token(self):
         token = ('(', 0)
-        nodestr = '(gash, [((, [], None)], None)'
+        nodestr = '(gash, [((, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2504,17 +2594,17 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_type_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_relation_parameter_type(), None)
 
     def test_b_relation_parameter_type_02_lca_range(self):
         token = ('lcasum', 10)
-        nodestr = '(gash, [(lcasum, [], [])], None)'
+        nodestr = '(gash, [(lcasum, [], [], None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2525,10 +2615,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_type_03_lca_plain(self):
         token = ('ancestor', 10)
-        nodestr = '(gash, [(relation_parameter, [], ancestor)], None)'
+        nodestr = '(gash, [(relation_parameter, [], ancestor, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2539,10 +2629,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_type_04_tomove(self):
         token = ('tomove', 10)
-        nodestr = '(gash, [(tomove, [], None)], None)'
+        nodestr = '(gash, [(tomove, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2553,10 +2643,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_type_05_square_tomove(self):
         token = ('match', 10)
-        nodestr = '(gash, [(match, [], None)], None)'
+        nodestr = '(gash, [(match, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2567,10 +2657,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_type_06_square_set_filter(self):
         token = ('targetsquares', 10)
-        nodestr = '(gash, [(targetsquares, [], None)], None)'
+        nodestr = '(gash, [(targetsquares, [], None, None)], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2581,12 +2671,12 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_parameter_type_07_right_parenthesis(self):
         token = (')', 1)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
-        s.node_stack.append(statement.Node('('))
+        s.node_stack.append(statement.Statement.create_node('('))
         s.stack.append('gash')
         self.keyword_ok(
             token,
@@ -2600,12 +2690,12 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_relation_parameter_type, 1)
 
     def test_b_relation_tomove_argument_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_relation_tomove_argument(), None)
@@ -2614,7 +2704,7 @@ class StatementMethods(unittest.TestCase):
         token = ('match', 10)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.keyword_error(token,
@@ -2627,7 +2717,7 @@ class StatementMethods(unittest.TestCase):
         token = ('match', 10)
         s = self.statement
         s.tokens = self.expected_matches((token, ('k', 6)))
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.keyword_error(token,
@@ -2638,10 +2728,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_tomove_argument_04_right_parenthesis_after(self):
         token = ('match', 10)
-        nodestr = '(gash, [], match)'
+        nodestr = '(gash, [], match, None)'
         s = self.statement
         s.tokens = self.expected_matches((token, (')', 1)))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.keyword_ok(token,
@@ -2655,22 +2745,22 @@ class StatementMethods(unittest.TestCase):
         token = ('k', 6)
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(token, s.b_relation_tomove_argument, 1)
 
     def test_b_relation_square_tomove_argument_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_relation_square_tomove_argument(), None)
 
     def test_b_relation_sqaure_tomove_argument_02_no_range(self):
         token = ('k', 6)
-        nodestr = '(gash, [], None)'
+        nodestr = '(gash, [], None, None)'
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.keyword_ok(token,
@@ -2682,10 +2772,10 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_relation_sqaure_tomove_argument_03_range(self):
         token = ('k', 6)
-        nodestr = "((<1,1>, [], ['1'])"
+        nodestr = "((<1,1>, [], ['1'], False)"
         s = self.statement
         s.tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('('))
+        s.node_stack.append(statement.Statement.create_node('('))
         s.node_stack.append(s.node_stack[-1])
         s.node_stack[-1].range = ['1']
         s.stack.append('gash')
@@ -2705,35 +2795,35 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_elo_white_black_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_elo_white_black(), None)
 
     def test_b_player_white_black_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_player_white_black(), None)
 
     def test_b_site_event_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_double_quoted_string(), None)
 
     def test_b_result_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_allowed_strings_result(), None)
 
     def test_b_year_01_no_tokens(self):
         s = self.statement
-        s.node_stack.append(statement.Node('cql'))
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.stack.append('gash')
         s.variables_stack.append({})
         self.assertEqual(s.b_numbers(), None)
@@ -2757,27 +2847,27 @@ class StatementMethods(unittest.TestCase):
         s = self.statement
         s.tokens = []
         s.cql_tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.keyword_error(None, s._is_binary_operator_not_allowed, 1)
 
     def test__is_binary_operator_not_allowed_04_false_children(self):
         token = ('k', 6)
-        nodestr = '(gash, [(gash, [], None)], None)'
+        nodestr = '(gash, [(gash, [], None, None)], None, None)'
         s = self.statement
         s.tokens = []
         s.cql_tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('gash'))
         self.keyword_reprocess_ok(
             None, s._is_binary_operator_not_allowed, nodestr, None, 1)
 
     def test__is_binary_operator_not_allowed_05_false_leaf(self):
         token = ('k', 6)
-        nodestr = '(gash, [], gash)'
+        nodestr = '(gash, [], gash, None)'
         s = self.statement
         s.tokens = []
         s.cql_tokens = self.expected_matches((token,))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.node_stack[-1].leaf = 'gash'
         self.keyword_reprocess_ok(
             None, s._is_binary_operator_not_allowed, nodestr, None, 1)
@@ -2785,8 +2875,8 @@ class StatementMethods(unittest.TestCase):
     def test_add_argument_01_(self):
         token_identity = 'k'
         token = (token_identity, 6)
-        nodestr = '(gash, [(k, [], None)], None)'
-        node = statement.Node('gash')
+        nodestr = '(gash, [(k, [], None, None)], None, None)'
+        node = statement.Statement.create_node('gash')
         s = self.statement
         s.node_stack.append(node)
         s.tokens = self.expected_matches((token,))
@@ -2799,8 +2889,8 @@ class StatementMethods(unittest.TestCase):
     def test_add_argument_leaf_01_(self):
         token_identity = 'ancestor'
         token = (token_identity, 10)
-        nodestr = '(gash, [(relation_parameter, [], ancestor)], None)'
-        node = statement.Node('gash')
+        nodestr = '(gash, [(relation_parameter, [], ancestor, None)], None, None)'
+        node = statement.Statement.create_node('gash')
         s = self.statement
         s.node_stack.append(node)
         s.tokens = self.expected_matches((token,))
@@ -2820,8 +2910,8 @@ class StatementMethods(unittest.TestCase):
         token = ('or', 14)
         nodestr = '(gash, [(or, [(op1, [], None)], None)], None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack[-1].children.append(statement.Node('op1'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].children.append(statement.Statement.create_node('op1'))
         s.tokens = self.expected_matches((token, ('gash', 1),))
         s.cql_tokens.extend(self.expected_matches((('gash', 3),)))
         #self.body_keyword_ok(token, s.add_or, nodestr, None, 2)
@@ -2829,21 +2919,21 @@ class StatementMethods(unittest.TestCase):
     def test_b_piece_square_filter_01_error_piece_all(self):
         token = ('all', 37)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.b_piece_square_filter, 1)
 
     def test_b_piece_square_filter_02_error_square_all_variable(self):
         token = ('all', 37)
         s = self.statement
-        s.node_stack.append(statement.Node('square'))
+        s.node_stack.append(statement.Statement.create_node('square'))
         s.tokens = self.expected_matches((token, ('k', 6),))
         self.keyword_error(token, s.b_piece_square_filter, 1, poptokens=1)
 
     def test_b_piece_square_filter_03_error_square_all_variable_exists(self):
         token = ('all', 37)
         s = self.statement
-        s.node_stack.append(statement.Node('square'))
+        s.node_stack.append(statement.Statement.create_node('square'))
         s.variables = {'$x':None}
         s.tokens = self.expected_matches((token, ('$x', 39),))
         self.keyword_error(token, s.b_piece_square_filter, 1, poptokens=1)
@@ -2851,14 +2941,14 @@ class StatementMethods(unittest.TestCase):
     def test_b_piece_square_filter_04_error_square_variable(self):
         token = ('k', 6)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.b_piece_square_filter, 1)
 
     def test_b_piece_square_filter_05_error_square_variable_exists(self):
         token = ('$x', 39)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.variables = {'$x':None}
         s.tokens = self.expected_matches((token,))
         self.keyword_error(token, s.b_piece_square_filter, 1)
@@ -2866,22 +2956,22 @@ class StatementMethods(unittest.TestCase):
     def test_b_piece_square_filter_06_error_square_all_variable_in(self):
         token = ('all', 37)
         s = self.statement
-        s.node_stack.append(statement.Node('square'))
+        s.node_stack.append(statement.Statement.create_node('square'))
         s.tokens = self.expected_matches((token, ('$x', 39), ('k', 6),))
         self.keyword_error(token, s.b_piece_square_filter, 1, poptokens=2)
 
     def test_b_piece_square_filter_07_error_square_variable_in(self):
         token = ('$x', 39)
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token, ('k', 6),))
         self.keyword_error(token, s.b_piece_square_filter, 1, poptokens=1)
 
     def test_b_piece_square_filter_08_ok_square_all_variable_in(self):
         token = ('all', 37)
-        nodestr = '(square<all,all>, [($x, [(in, [], None)], None)], None)'
+        nodestr = '(square<all,all>, [($x, [(in, [], None, None)], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('square'))
+        s.node_stack.append(statement.Statement.create_node('square'))
         s.tokens = self.expected_matches((token, ('$x', 39), ('in', 37),))
         self.keyword_ok(token,
                         s.b_piece_square_filter,
@@ -2893,9 +2983,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_piece_square_filter_09_ok_square_variable_in(self):
         token = ('$x', 39)
-        nodestr = '(square, [($x, [(in, [], None)], None)], None)'
+        nodestr = '(square, [($x, [(in, [], None, None)], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('square'))
+        s.node_stack.append(statement.Statement.create_node('square'))
         s.tokens = self.expected_matches((token, ('in', 37),))
         self.keyword_ok(token,
                         s.b_piece_square_filter,
@@ -2907,9 +2997,9 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_piece_square_filter_10_ok_piece_variable_in(self):
         token = ('$x', 39)
-        nodestr = '(gash, [($x, [(in, [], None)], None)], None)'
+        nodestr = '(gash, [($x, [(in, [], None, None)], None, None)], None, None)'
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         s.tokens = self.expected_matches((token, ('in', 37),))
         self.keyword_ok(token,
                         s.b_piece_square_filter,
@@ -2924,16 +3014,18 @@ class StatementMethods(unittest.TestCase):
 
     def test_b_note_piece_square_variable_02_no_piece_square_keyword(self):
         s = self.statement
-        s.node_stack.append(statement.Node('gash'))
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack.append(statement.Statement.create_node('gash'))
         self.assertEqual(s.b_note_piece_square_variable(), True)
 
     def test_b_note_piece_square_variable_03_ok(self):
         s = self.statement
-        n = statement.Node('piece')
-        s.node_stack.append(statement.Node('cql'))
+        n = statement.Statement.create_node('piece')
+        s.node_stack.append(statement.Statement.create_node('cql'))
         s.node_stack.append(n)
-        s.node_stack.append(statement.Node('gash'))
+        s.node_stack[-1].range = [1, 2]
+        s.node_stack.append(statement.Statement.create_node('gash'))
+        s.node_stack[-1].range = [1, 2]
         s.variables_stack.append(set())
         s.stack.append('gash')
         s.stack.append('gash')

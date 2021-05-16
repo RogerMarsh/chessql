@@ -34,8 +34,8 @@ class CQLConstants(unittest.TestCase):
 
     def test____assumptions(self):
         """"""
-        self.assertEqual(constants.FILE_NAME_RANGE, r'a-h')
-        self.assertEqual(constants.RANK_NAME_RANGE, r'1-8')
+        self.assertEqual(constants.FILE_RANGE, r'[a-h]-[a-h]')
+        self.assertEqual(constants.RANK_RANGE, r'[1-8]-[1-8]')
         self.assertEqual(constants.RANGE_SEPARATOR, r'-')
         self.assertEqual(constants.COMPOUND_DESIGNATOR_START, r'\[')
         self.assertEqual(constants.COMPOUND_DESIGNATOR_END, r'\]')
@@ -61,7 +61,7 @@ class CQLConstants(unittest.TestCase):
         self.assertEqual(constants.ANY_WHITE_PIECE_NAME, r'A')
         self.assertEqual(constants.BLACK_PIECE_NAMES, r'kqrbnp')
         self.assertEqual(constants.ANY_BLACK_PIECE_NAME, r'a')
-        self.assertEqual(constants.EMPTY_SQUARE_NAME, r'\.')
+        self.assertEqual(constants.EMPTY_SQUARE_NAME, r'.')
         self.assertEqual(constants.PIECE_NAMES, r'KQRBNPkqrbnpAa\.')
         self.assertEqual(
             constants.PIECE_TYPE_DESIGNATOR,
@@ -310,10 +310,9 @@ class CQLConstants(unittest.TestCase):
         self.assertEqual(constants.DOUBLE_QUOTED_STRING,
                          r'"[^\\"]*(?:\\.[^\\"]*)*"')
         self.assertEqual(constants.COMMENT_STRING, r';[^\n]*')
-        self.assertEqual(constants.WHITE_WIN, r'1-0')
-        self.assertEqual(constants.BLACK_WIN, r'0-1')
-        self.assertEqual(constants.DRAW, r'1/2-1/2')
         self.assertEqual(constants.PGN_FILE, r'\.pgn')
+        self.assertEqual(constants.ALLOWED_STRINGS,
+                         r'(?:1-0)|(?:0-1)|(?:1/2-1/2)|(?:[^\s]+\.pgn)')
         self.assertEqual(constants.ZERO_OR_MORE, r'\*')
         self.assertEqual(constants.ONE_OR_MORE, r'\+')
         self.assertEqual(constants.REPEAT_OPERATORS, r'\?|\*|\+')
@@ -469,7 +468,7 @@ class CQLConstants(unittest.TestCase):
         self.assertEqual(constants.RANGE, 'range')
         self.assertEqual(constants.NAME_DELIMITER, '\n')
         self.assertEqual(len([c for c in dir(constants)
-                              if not c.startswith('__')]), 165)
+                              if not c.startswith('__')]), 185)
         self.assertEqual(len(constants.TOKEN_NAMES.split(' ')),
                          len(self.expected_matches((('', 1),))[0]))
         self.assertEqual(constants.RIGHT_PARENTHESIS_INDEX, 1)

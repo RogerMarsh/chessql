@@ -4,13 +4,13 @@
 
 """Constants used when parsing Chess Query Language statements.
 """
-import pgn.core.constants
+import pgn_read.core.constants
 
 RANGE_SEPARATOR = r'-'
 COMPOUND_DESIGNATOR_START = r'\['
 COMPOUND_DESIGNATOR_END = r'\]'
-FILE_DESIGNATOR = r'[' + pgn.core.constants.FNR + r']'
-RANK_DESIGNATOR = r'[' + pgn.core.constants.RNR + r']'
+FILE_DESIGNATOR = r'[' + pgn_read.core.constants.FNR + r']'
+RANK_DESIGNATOR = r'[' + pgn_read.core.constants.RNR + r']'
 SQUARE_DESIGNATOR_SEPARATOR = r','
 FILE_RANGE = FILE_DESIGNATOR + RANGE_SEPARATOR + FILE_DESIGNATOR
 RANK_RANGE = RANK_DESIGNATOR + RANGE_SEPARATOR + RANK_DESIGNATOR
@@ -29,22 +29,22 @@ SQUARE_DESIGNATOR = r''.join(
      COMPOUND_DESIGNATOR_END, r')',
      ))
 
-# Perhaps piece names should be imported from pgn package?
-# See WKING so named to fit pgn.core.constants names.
+# Perhaps piece names should be imported from pgn_read package?
+# See WKING so named to fit pgn_read.core.constants names.
 WHITE_PIECE_NAMES = (
-    pgn.core.constants.WKING +
-    pgn.core.constants.WQUEEN +
-    pgn.core.constants.WROOK +
-    pgn.core.constants.WBISHOP +
-    pgn.core.constants.WKNIGHT +
-    pgn.core.constants.WPAWN)
+    pgn_read.core.constants.WKING +
+    pgn_read.core.constants.WQUEEN +
+    pgn_read.core.constants.WROOK +
+    pgn_read.core.constants.WBISHOP +
+    pgn_read.core.constants.WKNIGHT +
+    pgn_read.core.constants.WPAWN)
 BLACK_PIECE_NAMES = (
-    pgn.core.constants.BKING +
-    pgn.core.constants.BQUEEN +
-    pgn.core.constants.BROOK +
-    pgn.core.constants.BBISHOP +
-    pgn.core.constants.BKNIGHT +
-    pgn.core.constants.BPAWN)
+    pgn_read.core.constants.BKING +
+    pgn_read.core.constants.BQUEEN +
+    pgn_read.core.constants.BROOK +
+    pgn_read.core.constants.BBISHOP +
+    pgn_read.core.constants.BKNIGHT +
+    pgn_read.core.constants.BPAWN)
 
 ANY_WHITE_PIECE_NAME = r'A'
 ANY_BLACK_PIECE_NAME = r'a'
@@ -53,8 +53,8 @@ EMPTY_SQUARE_NAME_RE = r'\.'
 ALL_GAMES_MATCH_PIECE_DESIGNATORS = (
     ANY_WHITE_PIECE_NAME +
     ANY_BLACK_PIECE_NAME +
-    pgn.core.constants.WKING +
-    pgn.core.constants.BKING +
+    pgn_read.core.constants.WKING +
+    pgn_read.core.constants.BKING +
     EMPTY_SQUARE_NAME)
 ALL_PIECES = WHITE_PIECE_NAMES + BLACK_PIECE_NAMES + EMPTY_SQUARE_NAME
 
@@ -359,11 +359,11 @@ COMMENT_STRING = r';[^\n]*'
 # 'cql ( input mygames.pgn )'.  Spaces are not allowed in filenames.
 PGN_FILE = r'\.pgn'
 ALLOWED_STRINGS = r''.join((r'(?:',
-                            pgn.core.constants.WHITE_WIN,
+                            pgn_read.core.constants.WHITE_WIN,
                             r')|(?:',
-                            pgn.core.constants.BLACK_WIN,
+                            pgn_read.core.constants.BLACK_WIN,
                             r')|(?:',
-                            pgn.core.constants.DRAW,
+                            pgn_read.core.constants.DRAW,
                             r')|(?:[^\s]+',
                             PGN_FILE,
                             r')',
@@ -556,27 +556,27 @@ RANGE = 'range'
 NAME_DELIMITER = '\n'
 
 # File and rank names for piece designators.
-FILE_NAMES = ''.join(tuple(sorted(pgn.core.constants.MAPFILE)))
-RANK_NAMES = ''.join(tuple(sorted(pgn.core.constants.MAPRANK)))
+FILE_NAMES = ''.join(tuple(sorted(pgn_read.core.constants.MAPFILE)))
+RANK_NAMES = ''.join(tuple(sorted(pgn_read.core.constants.MAPRANK)))
 
-# Derive all lists of squares in rays from pgn.core.constants.GAPS, where GAPS
-# excludes the squares at each end of the gap but these are included in a ray
-# when distinct.  Each gap is represented by a bitarray of square numbers, but
-# ray processing needs an ordered list of square identities.
+# Derive all lists of squares in rays from pgn_read.core.constants.GAPS, where
+# GAPS excludes the squares at each end of the gap but these are included in a
+# ray when distinct.  Each gap is represented by a bitarray of square numbers,
+# but ray processing needs an ordered list of square identities.
 mfosn = {v:k
          for k, v
-         in pgn.core.constants.MAP_PGN_SQUARE_NAME_TO_FEN_ORDER.items()}
+         in pgn_read.core.constants.MAP_PGN_SQUARE_NAME_TO_FEN_ORDER.items()}
 RAYS = {}
-for ef, f in enumerate(pgn.core.constants.GAPS):
+for ef, f in enumerate(pgn_read.core.constants.GAPS):
     for et, t in enumerate(f):
-        if t == pgn.core.constants.ALL_SQUARES or t == 0:
+        if t == pgn_read.core.constants.ALL_SQUARES or t == 0:
             continue
         fr = RAYS.setdefault(mfosn[ef], {})
         ls = [mfosn[ef]]
         fr[mfosn[et]] = ls
         step = 1 if et > ef else -1
         for s in range(ef + step, et, step):
-            if pgn.core.constants.SQUARE_BITS[s] & t:
+            if pgn_read.core.constants.SQUARE_BITS[s] & t:
                 ls.append(mfosn[s])
         ls.append(mfosn[et])
 
