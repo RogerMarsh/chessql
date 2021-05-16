@@ -18,9 +18,7 @@ This package does not implement an evaluator to find games in a 'PGN'_ file whic
 Installation Instructions
 =========================
 
-Build dependencies
-
-* `Python`_ 3.3 or later 
+Usually this package will be installed by installing `ChessTab`_.
 
 Install the package by typing
 
@@ -42,8 +40,11 @@ You may need to give the path and version of Python depending on your system's c
 
          on Unix-like systems.
 
+Use `Python`_ 3.3 or later.
+
 
 .. _Python: https://python.org
 .. _CQL: http://www.gadycosteff.com
 .. _PGN: http://www6.chessclub/help/PGN-spec
 .. _documentation: http://www.gadycosteff.com/cql/doc/allindex.html
+.. _`ChessTab`: http://www.solentware.co.uk/downloads.html
