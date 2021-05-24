@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     setup(
         name='chessql',
-        version='1.2',
+        version='2.0',
         description='Chess Query Language (cql) parser',
         author='Roger Marsh',
         author_email='roger.marsh@solentware.co.uk',
@@ -18,7 +18,7 @@ if __name__ == '__main__':
         packages=[
             'chessql',
             'chessql.core',
-            'chessql.core.test',
+            'chessql.core.tests',
             ],
         long_description=long_description,
         license='BSD',
@@ -33,12 +33,6 @@ if __name__ == '__main__':
             'Topic :: Software Development',
             'Topic :: Games/Entertainment :: Board Games',
             'Intended Audience :: Developers',
-            'Development Status :: 4 - Beta',
-            ],
-        install_requires=[
-            'pgn-read==1.3',
-            ],
-        dependency_links=[
-            'http://solentware.co.uk/files/pgn-read-1.3.tar.gz',
+            'Development Status :: 3 - Alpha',
             ],
         )

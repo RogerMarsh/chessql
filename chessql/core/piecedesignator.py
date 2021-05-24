@@ -30,6 +30,7 @@ from .constants import (
 # definition.
 # The CQL syntax is very different but the piece designator syntax is the same,
 # so some of this class needs to be re-written.
+# A further change occurs at cql6.0 where empty square is '_', not '.'.
 class PieceDesignator:
     """ChessQL piece designator base class.
 
@@ -38,34 +39,37 @@ class PieceDesignator:
     look at the database for them.
 
     """
-
-    # Assume string selected by cql.core.constants.PIECE_DESIGNATOR when using
-    # these re elements, which have the same names as their counterparts.
-    SIMPLE_SQUARE_DESIGNATOR = r''.join(
+    simple_square_designator = r''.join(
         (r'(', FILE_RANGE, RANK_RANGE, r')', r'|',
          r'(', FILE_RANGE, RANK_DESIGNATOR, r')', r'|',
          r'(', FILE_DESIGNATOR, RANK_RANGE, r')', r'|',
          r'(', FILE_DESIGNATOR, RANK_DESIGNATOR, r')'
          ))
-    SQUARE_DESIGNATOR = r''.join(
+    square_designator = r''.join(
         (r'(?:', COMPOUND_DESIGNATOR_START,
          r'([a-h][-a-h1-8]*[1-8](?:,[a-h][-a-h1-8]*[1-8])*)',
          COMPOUND_DESIGNATOR_END, r')', r'|',
-         r'(?:', SIMPLE_SQUARE_DESIGNATOR, r')',
+         r'(?:', simple_square_designator, r')',
          ))
-    PIECE_TYPE_DESIGNATOR = r''.join(
+    piece_type_designator = r''.join(
         (r'(?:', COMPOUND_DESIGNATOR_START,
          r'([^', COMPOUND_DESIGNATOR_END, r']+)',
          COMPOUND_DESIGNATOR_END, r')', r'|',
          r'([', PIECE_NAMES, r'])',
          ))
+
+    # This is used to split the piece designator to fit the processing needed.
+    # The constants module defines a PIECE_DESIGNATOR which consumes a piece
+    # designator without collecting the component parts.
     PIECE_DESIGNATOR = r''.join(
-        (r'(?:', SQUARE_DESIGNATOR, r')', r'|',
-         r'(?:(?:(?:', PIECE_TYPE_DESIGNATOR,
-         r')(?:', SQUARE_DESIGNATOR, r'))', r'|',
-         r'(?:', PIECE_TYPE_DESIGNATOR, r')',
+        (r'(?:', square_designator, r')', r'|',
+         r'(?:(?:(?:', piece_type_designator,
+         r')(?:', square_designator, r'))', r'|',
+         r'(?:', piece_type_designator, r')',
          r')',
          ))
+    del simple_square_designator, square_designator, piece_type_designator
+
     piece_designator = re.compile(PIECE_DESIGNATOR)
 
     PieceDesignator = collections.namedtuple(
@@ -91,7 +95,6 @@ class PieceDesignator:
     emptysquare = False
 
     def __init__(self, token):
-        """"""
         self._token = token
         self._designator_set = None
         self._square_ranges_valid = None
@@ -99,7 +102,11 @@ class PieceDesignator:
         self._groups = None
 
     def parse(self):
-        """"""
+        """Match the token for this PieceDesignator instance using regular
+        expression PieceDesignator.PIECE_DESIGNATOR and make the collected
+        groups available in self._groups.
+
+        """
         self._match = self.piece_designator.match(self._token)
         if self._match:
             self._groups = self.PieceDesignator(*self._match.groups(default=''))
@@ -123,12 +130,10 @@ class PieceDesignator:
 
     @property
     def designator_set(self):
-        """"""
         return self._designator_set
 
     @staticmethod
     def _expand_composite_square(startfile, endfile, startrank, endrank):
-        """"""
         files = FILE_NAMES[
             FILE_NAMES.index(startfile):FILE_NAMES.index(endfile)]
         files += endfile
@@ -138,7 +143,13 @@ class PieceDesignator:
         return {f + r for f in files for r in ranks}
 
     def expand_piece_designator(self):
-        """"""
+        """Expand a piece designator into a set of simple piece designators.
+
+        The set is available in property designator_set.
+
+        Return None.
+
+        """
         if self._groups is None:
             return
         squareset = set()
@@ -165,58 +176,9 @@ class PieceDesignator:
                         s[0], s[0], s[1], s[3]))
             else:
                 squareset.add('') # Any square, s assumed to be ''.
-
-        # Back to 'for p in self.get_pieces()' if 'all white pieces' and
-        # 'all black pieces' indexes are created.  Similarely 'empty square',
-        # which does not, and cannot, give correct answer yet.
         self._designator_set = {p + s
                                 for p in self.get_pieces()
                                 for s in squareset}
-
-    @staticmethod
-    def piece_square_to_index(designator_set, index_prefix):
-        """Convert piece designator set values to index format: Qa4 to a4Q.
-
-        Assumed that having all index values for a square adjacent is better
-        than having index values for piece together, despite the need for
-        conversion.
-
-        """
-        ds = set()
-        for ps in designator_set:
-            if len(ps) != 1:
-                ds.add(index_prefix + ps)
-            else:
-                ds.update({index_prefix + ps + s
-                           for s in PieceDesignator._expand_composite_square(
-                               FILE_NAMES[0],
-                               FILE_NAMES[-1],
-                               RANK_NAMES[0],
-                               RANK_NAMES[-1])})
-        return ds
-
-    # If 'square piece' is better order than 'piece square'
-    @staticmethod
-    def piece_square_to_index(designator_set, index_prefix):
-        """Convert piece designator set values to index format: Qa4 to a4Q.
-
-        Assumed that having all index values for a square adjacent is better
-        than having index values for piece together, despite the need for
-        conversion.
-
-        """
-        ds = set()
-        for ps in designator_set:
-            if len(ps) != 1:
-                ds.add(index_prefix + ps[1:] + ps[0])
-            else:
-                ds.update({index_prefix + s + ps
-                           for s in PieceDesignator._expand_composite_square(
-                               FILE_NAMES[0],
-                               FILE_NAMES[-1],
-                               RANK_NAMES[0],
-                               RANK_NAMES[-1])})
-        return ds
 
     def get_shift_limits(self, ranklimits, filelimits):
         """Adjust ranges in ranklimits and filelimits to fit square designator.
@@ -304,7 +266,12 @@ class PieceDesignator:
             filelimits[1] = max(filelimits[1], highfile)
 
     def get_pieces(self):
-        """"""
+        """Return the piece type designator component of the piece designator.
+
+        The absence of any piece type, including empty square, means any white
+        or black piece.  In this case 'Aa' is returned.
+
+        """
         g = self._groups
         pieces = ''.join((g.compoundpiece_s,
                           g.piece_s,
@@ -315,7 +282,7 @@ class PieceDesignator:
         return pieces
 
     def get_squares(self):
-        """"""
+        """Return the square designator component of the piece designator."""
         g = self._groups
         return ''.join((g.compoundsquare,
                         g.filerankrange,
@@ -329,16 +296,18 @@ class PieceDesignator:
                         g.p_square))
 
     def get_squares_list(self):
-        """"""
+        """Return list of squares in the piece designator."""
         return self.get_squares().split(SQUARE_DESIGNATOR_SEPARATOR)
 
     def is_compound_squares(self):
-        """"""
-        return self._groups.compoundsquare or self._groups.p_compoundsquare
+        """Return True if a compound square is given, otherwise False."""
+        g = self._groups
+        return bool(g.compoundsquare or g.p_compoundsquare)
 
     def is_compound_pieces(self):
-        """"""
-        return self._groups.compoundpiece_s or self._groups.compoundpiece
+        """Return True if a compound piece is given, otherwise False."""
+        g = self._groups
+        return bool(g.compoundpiece_s or g.compoundpiece)
 
 
 def empty_copy(obj):
