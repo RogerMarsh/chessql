@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     setup(
         name='chessql',
-        version='2.0',
+        version='2.0.1.dev0',
         description='Chess Query Language (cql) parser',
         author='Roger Marsh',
         author_email='roger.marsh@solentware.co.uk',
@@ -18,17 +18,15 @@ if __name__ == '__main__':
         packages=[
             'chessql',
             'chessql.core',
-            'chessql.core.tests',
             ],
         long_description=long_description,
         license='BSD',
         classifiers=[
             'License :: OSI Approved :: BSD License',
-            'Programming Language :: Python :: 3.3',
-            'Programming Language :: Python :: 3.4',
-            'Programming Language :: Python :: 3.5',
             'Programming Language :: Python :: 3.6',
             'Programming Language :: Python :: 3.7',
+            'Programming Language :: Python :: 3.8',
+            'Programming Language :: Python :: 3.9',
             'Operating System :: OS Independent',
             'Topic :: Software Development',
             'Topic :: Games/Entertainment :: Board Games',
