@@ -2,9 +2,7 @@
 # Copyright 2017 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Chess Query Language (ChessQL) piece designator evaluator.
-
-"""
+"""Chess Query Language (ChessQL) piece designator evaluator."""
 import re
 import collections
 
@@ -39,6 +37,7 @@ class PieceDesignator:
     look at the database for them.
 
     """
+
     simple_square_designator = r''.join(
         (r'(', FILE_RANGE, RANK_RANGE, r')', r'|',
          r'(', FILE_RANGE, RANK_DESIGNATOR, r')', r'|',
@@ -95,6 +94,7 @@ class PieceDesignator:
     emptysquare = False
 
     def __init__(self, token):
+        """Initialise a PieceDesignator instance for token."""
         self._token = token
         self._designator_set = None
         self._square_ranges_valid = None
@@ -102,9 +102,10 @@ class PieceDesignator:
         self._groups = None
 
     def parse(self):
-        """Match the token for this PieceDesignator instance using regular
-        expression PieceDesignator.PIECE_DESIGNATOR and make the collected
-        groups available in self._groups.
+        """Extract the piece designator from this instance's token.
+
+        The groups extracted using the PieceDesignator.PIECE_DESIGNATOR
+        regular expression are made available self._groups.
 
         """
         self._match = self.piece_designator.match(self._token)
@@ -130,6 +131,7 @@ class PieceDesignator:
 
     @property
     def designator_set(self):
+        """Return the piece designator set."""
         return self._designator_set
 
     @staticmethod
@@ -154,26 +156,26 @@ class PieceDesignator:
             return
         squareset = set()
         self._square_ranges_valid = True
-        for s in self.get_squares_list():
-            if len(s) == 2:
+        for sqr in self.get_squares_list():
+            if len(sqr) == 2:
                 squareset.update(self._expand_composite_square(
-                    s[0], s[0], s[1], s[1]))
-            elif len(s) == 6:
-                if s[0] > s[2] or s[3] > s[5]:
+                    sqr[0], sqr[0], sqr[1], sqr[1]))
+            elif len(sqr) == 6:
+                if sqr[0] > sqr[2] or sqr[3] > sqr[5]:
                     self._square_ranges_valid = False
                 squareset.update(self._expand_composite_square(
-                    s[0], s[2], s[3], s[5]))
-            elif len(s) == 4:
-                if s[1] == '-':
-                    if s[0] > s[2]:
+                    sqr[0], sqr[2], sqr[3], sqr[5]))
+            elif len(sqr) == 4:
+                if sqr[1] == '-':
+                    if sqr[0] > sqr[2]:
                         self._square_ranges_valid = False
                     squareset.update(self._expand_composite_square(
-                        s[0], s[2], s[3], s[3]))
-                elif s[2] == '-':
-                    if s[1] > s[3]:
+                        sqr[0], sqr[2], sqr[3], sqr[3]))
+                elif sqr[2] == '-':
+                    if sqr[1] > sqr[3]:
                         self._square_ranges_valid = False
                     squareset.update(self._expand_composite_square(
-                        s[0], s[0], s[1], s[3]))
+                        sqr[0], sqr[0], sqr[1], sqr[3]))
             else:
                 squareset.add('') # Any square, s assumed to be ''.
         self._designator_set = {p + s
@@ -224,40 +226,40 @@ class PieceDesignator:
         highfile = FILE_NAMES[0]
         lowrank = RANK_NAMES[-1]
         highrank = RANK_NAMES[0]
-        for s in self.get_squares_list():
-            if len(s) == 2:
-                lowfile = min(lowfile, s[0])
-                highfile = max(highfile, s[0])
-                lowrank = min(lowrank, s[1])
-                highrank = max(highrank, s[1])
-            elif len(s) == 6:
-                if s[0] > s[2] or s[3] > s[5]:
+        for sqr in self.get_squares_list():
+            if len(sqr) == 2:
+                lowfile = min(lowfile, sqr[0])
+                highfile = max(highfile, sqr[0])
+                lowrank = min(lowrank, sqr[1])
+                highrank = max(highrank, sqr[1])
+            elif len(sqr) == 6:
+                if sqr[0] > sqr[2] or sqr[3] > sqr[5]:
                     self._square_ranges_valid = False
-                if s[0] != FILE_NAMES[0] or s[2] != FILE_NAMES[-1]:
-                    lowfile = min(lowfile, s[0])
-                    highfile = max(highfile, s[2])
-                if s[3] != RANK_NAMES[0] or s[5] != RANK_NAMES[-1]:
-                    lowrank = min(lowrank, s[3])
-                    highrank = max(highrank, s[5])
-            elif len(s) == 4:
-                if s[1] == RANGE_SEPARATOR:
-                    if s[0] > s[2]:
+                if sqr[0] != FILE_NAMES[0] or sqr[2] != FILE_NAMES[-1]:
+                    lowfile = min(lowfile, sqr[0])
+                    highfile = max(highfile, sqr[2])
+                if sqr[3] != RANK_NAMES[0] or sqr[5] != RANK_NAMES[-1]:
+                    lowrank = min(lowrank, sqr[3])
+                    highrank = max(highrank, sqr[5])
+            elif len(sqr) == 4:
+                if sqr[1] == RANGE_SEPARATOR:
+                    if sqr[0] > sqr[2]:
                         self._square_ranges_valid = False
-                    if (s[0] != FILE_NAMES[0] or
-                        s[2] != FILE_NAMES[-1]):
-                        lowfile = min(lowfile, s[0])
-                        highfile = max(highfile, s[2])
-                    lowrank = min(lowrank, s[3])
-                    highrank = max(highrank, s[3])
-                elif s[2] == RANGE_SEPARATOR:
-                    if s[1] > s[3]:
+                    if (sqr[0] != FILE_NAMES[0] or
+                        sqr[2] != FILE_NAMES[-1]):
+                        lowfile = min(lowfile, sqr[0])
+                        highfile = max(highfile, sqr[2])
+                    lowrank = min(lowrank, sqr[3])
+                    highrank = max(highrank, sqr[3])
+                elif sqr[2] == RANGE_SEPARATOR:
+                    if sqr[1] > sqr[3]:
                         self._square_ranges_valid = False
-                    lowfile = min(lowfile, s[0])
-                    highfile = max(highfile, s[0])
-                    if (s[1] != RANK_NAMES[0] or
-                        s[3] != RANK_NAMES[-1]):
-                        lowrank = min(lowrank, s[1])
-                        highrank = max(highrank, s[3])
+                    lowfile = min(lowfile, sqr[0])
+                    highfile = max(highfile, sqr[0])
+                    if (sqr[1] != RANK_NAMES[0] or
+                        sqr[3] != RANK_NAMES[-1]):
+                        lowrank = min(lowrank, sqr[1])
+                        highrank = max(highrank, sqr[3])
         if ranklimits:
             ranklimits[0] = min(ranklimits[0], lowrank)
             ranklimits[1] = max(ranklimits[1], highrank)
@@ -272,28 +274,28 @@ class PieceDesignator:
         or black piece.  In this case 'Aa' is returned.
 
         """
-        g = self._groups
-        pieces = ''.join((g.compoundpiece_s,
-                          g.piece_s,
-                          g.compoundpiece,
-                          g.piece))
+        groups = self._groups
+        pieces = ''.join((groups.compoundpiece_s,
+                          groups.piece_s,
+                          groups.compoundpiece,
+                          groups.piece))
         if not pieces:
             pieces = ANY_WHITE_PIECE_NAME + ANY_BLACK_PIECE_NAME
         return pieces
 
     def get_squares(self):
         """Return the square designator component of the piece designator."""
-        g = self._groups
-        return ''.join((g.compoundsquare,
-                        g.filerankrange,
-                        g.filerange,
-                        g.rankrange,
-                        g.square,
-                        g.p_compoundsquare,
-                        g.p_filerankrange,
-                        g.p_filerange,
-                        g.p_rankrange,
-                        g.p_square))
+        groups = self._groups
+        return ''.join((groups.compoundsquare,
+                        groups.filerankrange,
+                        groups.filerange,
+                        groups.rankrange,
+                        groups.square,
+                        groups.p_compoundsquare,
+                        groups.p_filerankrange,
+                        groups.p_filerange,
+                        groups.p_rankrange,
+                        groups.p_square))
 
     def get_squares_list(self):
         """Return list of squares in the piece designator."""
@@ -301,16 +303,17 @@ class PieceDesignator:
 
     def is_compound_squares(self):
         """Return True if a compound square is given, otherwise False."""
-        g = self._groups
-        return bool(g.compoundsquare or g.p_compoundsquare)
+        groups = self._groups
+        return bool(groups.compoundsquare or groups.p_compoundsquare)
 
     def is_compound_pieces(self):
         """Return True if a compound piece is given, otherwise False."""
-        g = self._groups
-        return bool(g.compoundpiece_s or g.compoundpiece)
+        groups = self._groups
+        return bool(groups.compoundpiece_s or groups.compoundpiece)
 
 
 def empty_copy(obj):
+    """Return an empty instance of obj's class."""
     class Empty(obj.__class__):
         def __init__(self):
             pass

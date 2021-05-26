@@ -6,23 +6,28 @@
 
 import copy
 
-from .cql import TokenTypes, Token, RANGE, QUOTED_STRING, FUNCTION_NAME
+from .cql import Token, RANGE, QUOTED_STRING, FUNCTION_NAME
 
 
 class NodeError(Exception):
-    pass
+    """Exception raised for problems in Nodes."""
 
 
 class Node:
-    """"""
+    """An element generated when parsing a CQL statement."""
+
     # self.tokendef.name == 'not' means the result of the first child node is
     # inverted.
     # 'cql() not p k' produces a 'not' node with two children, 'p' node first.
     # 'cql() not p or k produces a 'not' node with one child, an 'or' node
     #  which has two children, nodes for 'p' and 'q'.
-    
+
     def __init__(self, tokendef, children=None, leaf=None):
-        """"""
+        """Initialise node.
+
+        self.children is set to [] if children evaluates False.
+
+        """
         super().__init__()
         self.tokendef = tokendef
         if children:
@@ -36,15 +41,21 @@ class Node:
 
     @property
     def name(self):
-        t = self.tokendef
-        return t.variant_name if t.variant_name is not None else t.name
+        """Return name of token type.
+
+        This is self.tokendef.variant_name if set, or self.tokendef.name
+        if not.
+
+        """
+        tdf = self.tokendef
+        return tdf.variant_name if tdf.variant_name is not None else tdf.name
 
     @property
     def precedence(self):
+        """Return precedence if set, or tokendef.precedence if not."""
         if self._precedence is None:
             return self.tokendef.precedence
-        else:
-            return self._precedence
+        return self._precedence
 
     @precedence.setter
     def precedence(self, value):
@@ -53,10 +64,10 @@ class Node:
 
     @property
     def returntype(self):
+        """Return returntype if set, or tokendef.returntype if not."""
         if self._returntype is None:
             return self.tokendef.returntype
-        else:
-            return self._returntype
+        return self._returntype
 
     @returntype.setter
     def returntype(self, value):
@@ -73,6 +84,7 @@ class Node:
             same_flags=True,
             same_returntype=False,
             same_arguments=True):
+        """Adjust self to be same kind of token as tokendef."""
         if same_flags:
             assert tokendef[1] == self.tokendef[1]
             pass
@@ -87,7 +99,7 @@ class Node:
         self.tokendef = tokendef
 
     def __deepcopy__(self, memo):
-        """"""
+        """Return deepcopy of self."""
         newcopy = empty_copy(self)
         newcopy.tokendef = self.tokendef
         newcopy.children = copy.deepcopy(self.children, memo)
@@ -96,59 +108,65 @@ class Node:
         return newcopy
 
     def __str__(self):
-
+        """Return string representation of self."""
         # Assumption is these four parameters are mutually exclusive.
-        for rp in (RANGE, Token.REPEATRANGE, Token.FUNCTION, QUOTED_STRING,
+        for rtd in (RANGE, Token.REPEATRANGE, Token.FUNCTION, QUOTED_STRING,
                    FUNCTION_NAME):
-            if rp in self.parameters:
-                r = self.parameters[rp]
-                if isinstance(r, str):
-                    s = [''.join((self.name, '<', r, '>'))]
-                elif len(r) == 1:
-                    s = [''.join((self.name, '<', str(r[0]), '>'))]
-                elif len(r) == 2:
-                    s = [''.join(
-                        (self.name, '<', str(r[0]), ',', str(r[1]), '>'))]
-                elif rp is Token.FUNCTION:
-                    s = [''.join((self.name, '<', ','.join(r), '>'))]
+            if rtd in self.parameters:
+                rng = self.parameters[rtd]
+                if isinstance(rng, str):
+                    text = [''.join((self.name, '<', rng, '>'))]
+                elif len(rng) == 1:
+                    text = [''.join((self.name, '<', str(rng[0]), '>'))]
+                elif len(rng) == 2:
+                    text = [''.join(
+                        (self.name, '<', str(rng[0]), ',', str(rng[1]), '>'))]
+                elif rtd is Token.FUNCTION:
+                    text = [''.join((self.name, '<', ','.join(rng), '>'))]
                 else:
-                    s = [''.join((self.name, '<?,?>'))]
+                    text = [''.join((self.name, '<?,?>'))]
                 break
         else:
-            s = [self.name]
+            text = [self.name]
 
-        for p in self.parameters:
-            if p is rp:
+        for parameter in self.parameters:
+            if parameter is rtd:
                 continue
-            s.extend(('<', p.name, '>'))
+            text.extend(('<', parameter.name, '>'))
         if self.children:
-            d = ', '.join((str(c) for c in self.children)).join(('[', ']'))
+            dtxt = ', '.join((str(c) for c in self.children)).join(('[', ']'))
         else:
-            d = str(self.leaf)
-        return ', '.join((''.join(s), d)).join(('(', ')'))
+            dtxt = str(self.leaf)
+        return ', '.join((''.join(text), dtxt)).join(('(', ')'))
 
     @property
     def occupied(self):
+        """Return True if self has children or is a leaf."""
         return bool(self.children or self.leaf)
 
     # Not used at present: *.tokendef may need changing to *.name.
-    def repeated_parameter(self, t=None):
-        """"""
-        if t is None:
-            t = self.tokendef
-        return t in {n.tokendef for n in self.children}
+    def repeated_parameter(self, tokendef=None):
+        """Return True if tokendef is in self's children."""
+        if tokendef is None:
+            tokendef = self.tokendef
+        return tokendef in {n.tokendef for n in self.children}
 
     # Not used at present: *.tokendef may need changing to *.name.
-    def get_repeatable_parameter(self, t, node_factory):
-        """"""
-        for n in self.children:
-            if t == n.tokendef:
-                return n
-        self.children.append(node_factory(t))
+    def get_repeatable_parameter(self, tokendef, node_factory):
+        """Return first repeatable parameter tokendef in self's children.
+
+        Create one if none exist yet.
+
+        """
+        for node in self.children:
+            if tokendef == node.tokendef:
+                return node
+        self.children.append(node_factory(tokendef))
         return self.children[-1]
 
 
 def empty_copy(obj):
+    """Return an empty instance of obj's class."""
     class Empty(obj.__class__):
         def __init__(self):
             pass

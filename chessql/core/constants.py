@@ -2,8 +2,7 @@
 # Copyright 2017 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""Constants used when parsing Chess Query Language statements.
-"""
+"""Constants used when parsing Chess Query Language statements."""
 # It may not be possible to sustain this attempt to break the dependency on
 # pgn_read if it proves necessary to retain the 'RAYS' attribute from the
 # previous version of constants.

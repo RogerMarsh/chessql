@@ -75,6 +75,8 @@ TokenDefinition = namedtuple(
 # a new filter or the end of the statement may be next.  ALLOW_TOP_STACK_AT_END
 # flag replaces non-empty arguments as the indicator.
 class Flags(Enum):
+    """Flags defined to control parsing of CQL statements."""
+
     HALT_POP_CHAINED_FILTERS = 'halt_pop_chained_filters'
     CLOSE_BRACE_OR_PARENTHESIS = 'close_brace_or_parenthesis'
     NAMED_COMPOUND_FILTER = 'named_compound_filter'
@@ -115,6 +117,8 @@ _line_frame = frozenset({Flags.LINE_FRAME})
 _if_frame = frozenset({Flags.IF_FRAME})
 
 class TokenTypes(Enum):
+    """The token types defined in the CQL documentation."""
+
     NUMERAL = 'numeral'
     UNSET_VARIABLE = 'unset variable'
     NUMERIC_FILTER = 'numeric'
@@ -208,7 +212,7 @@ class Token:
     A method with the name from each '?P<name>' construct must exist in class
     .statement.Statement taking a match against CQL_PATTERN and the expected
     token's TokenDefinition instance as it's arguments.
-    
+
     """
 
     # Four kinds of filter are defined in the filters documentation for CQL
@@ -626,7 +630,7 @@ class Token:
         r'comment(?:\s*\()?',
         _logical_filter,
         _any_filter)
-    
+
     # _halt_pop_chained_filters is not correct any more, '(' is not consumed
     # by this token, but _parameter_takes_argument is not correct either as
     # multiple keywords ending with '(' are taken.
@@ -827,7 +831,7 @@ class Token:
         r'move\b',
         _logical_filter,
         _move_parameter)
-    
+
     NOTRANSFORM = TokenDefinition(
         'notransform', frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}),
         200, r'notransform\b',
