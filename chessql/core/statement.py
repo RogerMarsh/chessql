@@ -37,7 +37,7 @@ import re
 # now remaining evaluation code has been moved to ChessTab.
 try:
     from pgn_read.core.constants import WHITE_WIN, BLACK_WIN, DRAW
-except ImportError: # Not ModuleNotFoundError for Pythons earlier than 3.6
+except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
     from .constants import WHITE_WIN, BLACK_WIN, DRAW
 
 from .node import Node
@@ -62,7 +62,7 @@ class Statement:
     def __init__(self):
         """Initialise as a valid empty statement."""
         super().__init__()
-        self._statement_string = ''
+        self._statement_string = ""
         self._reset_state()
         self._error_information = None
 
@@ -138,7 +138,8 @@ class Statement:
     def cql_error(self, value):
         if not self._error_information:
             self._error_information = ErrorInformation(
-                self._statement_string.strip())
+                self._statement_string.strip()
+            )
         self._error_information.description = value
 
     def get_statement_text(self):
@@ -158,11 +159,12 @@ class Statement:
         # It's finditer() rather than findall() for access to the dict of
         # groups whose keys are the names of methods in the Statement class.
         #
-        #self.tokens = [[m for m in re.finditer(cql.CQL_PATTERN,
+        # self.tokens = [[m for m in re.finditer(cql.CQL_PATTERN,
         #                                       self._statement_string)]]
         self.tokens = [
-            list(re.finditer(cql.CQL_PATTERN, self._statement_string))]
-        if self._statement_string.strip() == '':
+            list(re.finditer(cql.CQL_PATTERN, self._statement_string))
+        ]
+        if self._statement_string.strip() == "":
             self._error_information = False
             return
 
@@ -180,13 +182,16 @@ class Statement:
         # null cql filter if it isn't, so everything else has a parent node
         # available.
         if len(tokens):
-            if not tokens[0].groupdict()['cql']:
-                node_stack.append(self.create_node(cql.CQL_TOKENS['cql']))
+            if not tokens[0].groupdict()["cql"]:
+                node_stack.append(self.create_node(cql.CQL_TOKENS["cql"]))
 
         while len(tokens):
             match = tokens[0]
-            groupkey = ''.join(k for k, v in match.groupdict().items()
-                               if v is not None and ('_' not in k[:-1]))
+            groupkey = "".join(
+                k
+                for k, v in match.groupdict().items()
+                if v is not None and ("_" not in k[:-1])
+            )
             self._process_token(match, groupkey)
             if self._error_information and self._error_information.error_found:
                 break
@@ -200,13 +205,17 @@ class Statement:
 
     def _collapse_stack_frame(self, frame):
         node_stack = self.node_stack
-        if (node_stack and
-            cql.Flags.ALLOWED_TOP_STACK_AT_END in node_stack[
-                -1].tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.ALLOWED_TOP_STACK_AT_END
+            in node_stack[-1].tokendef.flags
+        ):
             while True:
-                if cql.Flags.END_FILTER_NON_PARAMETER in node_stack[
-                    -1].tokendef.flags:
-                    getattr(self, 'collapse_' + node_stack[-1].name)()
+                if (
+                    cql.Flags.END_FILTER_NON_PARAMETER
+                    in node_stack[-1].tokendef.flags
+                ):
+                    getattr(self, "collapse_" + node_stack[-1].name)()
                     if self.cql_error:
                         return
                 self._pop_top_stack(node_stack)
@@ -216,8 +225,10 @@ class Statement:
                 # can be at end of statement because it is not converted to
                 # one of IF_LOGICAL, IF_NUMERIC, IF_POSITION, and IF_SET, until
                 # the next token.  So call _pop_top_stack for IF filter.
-                if cql.Flags.INCOMPLETE_IF_ON_STACK in node_stack[
-                    -1].tokendef.flags:
+                if (
+                    cql.Flags.INCOMPLETE_IF_ON_STACK
+                    in node_stack[-1].tokendef.flags
+                ):
                     if frame is not cql.Flags.STATEMENT_FRAME:
                         break
                     if node_stack[-1].tokendef is not cql.Token.IF:
@@ -228,8 +239,10 @@ class Statement:
                     if frame in node_stack[-1].tokendef.flags:
                         break
 
-                if cql.Flags.HALT_POP_CHAINED_FILTERS in node_stack[
-                    -1].tokendef.flags:
+                if (
+                    cql.Flags.HALT_POP_CHAINED_FILTERS
+                    in node_stack[-1].tokendef.flags
+                ):
                     if frame not in node_stack[-1].tokendef.flags:
                         self._pop_top_stack(node_stack)
                     break
@@ -259,40 +272,53 @@ class Statement:
     def _pop_top_stack(self, stack):
         top = stack.pop()
         if top.tokendef is cql.EQ_SET:
-            if (cql.TokenTypes.SET_FILTER in
-                top.children[-1].returntype):
+            if cql.TokenTypes.SET_FILTER in top.children[-1].returntype:
                 top.set_tokendef_to_variant(
-                    cql.EQ_BOTH_SETS, same_arguments=False)
+                    cql.EQ_BOTH_SETS, same_arguments=False
+                )
         elif top.tokendef is cql.NE_SET:
-            if (cql.TokenTypes.SET_FILTER in
-                top.children[-1].returntype):
+            if cql.TokenTypes.SET_FILTER in top.children[-1].returntype:
                 top.set_tokendef_to_variant(
-                    cql.NE_BOTH_SETS, same_arguments=False)
+                    cql.NE_BOTH_SETS, same_arguments=False
+                )
 
         # Presence of valid ELSE clause is assumed to imply presence of valid
         # THEN clause.
         elif top.tokendef is cql.Token.IF:
             if cql.Token.ELSE in top.parameters and len(top.children) != 3:
                 self.cql_error = "".join(
-                    ("'", top.tokendef.name,
-                     "' filter does not have a filter as the '",
-                     cql.Token.ELSE.name,
-                     "' parameter"))
+                    (
+                        "'",
+                        top.tokendef.name,
+                        "' filter does not have a filter as the '",
+                        cql.Token.ELSE.name,
+                        "' parameter",
+                    )
+                )
             elif cql.Token.THEN in top.parameters and len(top.children) < 2:
                 self.cql_error = "".join(
-                    ("'", top.tokendef.name,
-                     "' filter does not have a filter as the '",
-                     cql.Token.THEN.name,
-                     "' parameter"))
+                    (
+                        "'",
+                        top.tokendef.name,
+                        "' filter does not have a filter as the '",
+                        cql.Token.THEN.name,
+                        "' parameter",
+                    )
+                )
             elif cql.Token.THEN not in top.parameters:
                 self.cql_error = "".join(
-                    ("'", top.tokendef.name,
-                     "' filter does not have the '",
-                     cql.Token.THEN.name,
-                     "' parameter"))
+                    (
+                        "'",
+                        top.tokendef.name,
+                        "' filter does not have the '",
+                        cql.Token.THEN.name,
+                        "' parameter",
+                    )
+                )
             elif cql.Token.ELSE in top.parameters:
                 srt = top.children[1].returntype.intersection(
-                    top.children[2].returntype)
+                    top.children[2].returntype
+                )
                 if cql.TokenTypes.NUMERIC_FILTER in srt:
                     variant = cql.IF_NUMERIC
                 elif cql.TokenTypes.POSITION_FILTER in srt:
@@ -302,11 +328,12 @@ class Statement:
                 else:
                     variant = cql.IF_LOGICAL
                 top.set_tokendef_to_variant(
-                    variant, same_flags=False, same_arguments=False)
+                    variant, same_flags=False, same_arguments=False
+                )
             else:
                 top.set_tokendef_to_variant(
-                    cql.IF_LOGICAL,
-                    same_flags=False, same_arguments=False)
+                    cql.IF_LOGICAL, same_flags=False, same_arguments=False
+                )
 
         elif len(top.returntype) > 1:
             for returntype in top.children[-1].returntype:
@@ -341,7 +368,7 @@ class Statement:
     def get_filter_type_of_variable(self, variable_name):
         """Return the type (CQL) of variable name."""
         variable = self.variables[variable_name]
-        return variable['type']
+        return variable["type"]
 
     def process_statement(self, text):
         """Lex and parse the ChessQL statement."""
@@ -433,11 +460,13 @@ class Statement:
     # tokens which are always consumed by preceding legal tokens, for example
     # 'silent' a parameter for 'cql'.
     def _badtoken(self, match, tokendef):
-        self.cql_error = ''.join(
-            ("Either unknown token or misplaced known token '",
-             match.groupdict()[tokendef.name],
-             "'",
-             ))
+        self.cql_error = "".join(
+            (
+                "Either unknown token or misplaced known token '",
+                match.groupdict()[tokendef.name],
+                "'",
+            )
+        )
 
     # Named 'z' rather than 'badtoken' as the name must sort high when creating
     # the full statement regular expression using the (?P<>) construct because
@@ -511,9 +540,12 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Expecting filter as argument for '",
-                 self.node_stack[-1].name.strip("_"),
-                 "' parameter"))
+                (
+                    "Expecting filter as argument for '",
+                    self.node_stack[-1].name.strip("_"),
+                    "' parameter",
+                )
+            )
 
     def castle(self, match, tokendef):
         """Add 'castle' parameter to 'move' filter.
@@ -548,7 +580,8 @@ class Statement:
         if len(match.group().split()) == 1:
             self._insert_leaf_filter(match, tokendef)
             self.node_stack[-1].set_tokendef_to_variant(
-                cql.CHILD_NO_ARGUMENT, same_flags=False, same_arguments=False)
+                cql.CHILD_NO_ARGUMENT, same_flags=False, same_arguments=False
+            )
             return
         self._insert_filter(match, tokendef)
 
@@ -593,7 +626,8 @@ class Statement:
         self._insert_filter(match, tokendef)
         if len(match.group().split()) == 1:
             node_stack[-1].set_tokendef_to_variant(
-                cql.SINGLE_COMMENT_ARGUMENT, same_flags=False)
+                cql.SINGLE_COMMENT_ARGUMENT, same_flags=False
+            )
         if tns.tokendef is cql.Token.MOVE or tns.tokendef is cql.MOVE_SET:
             child = node_stack[-2].children.pop()
             node_stack[-2].children[-1].children.append(child)
@@ -659,17 +693,23 @@ class Statement:
         assert tokendef is cql.Token.CQL
         if self.tokens_consumed:
             self.cql_error = "".join(
-                ("The 'cql' keyword is only allowed at start of statement",))
+                ("The 'cql' keyword is only allowed at start of statement",)
+            )
             return
-        cql_name, cql_parameters = match.groupdict()[
-            cql.Token.CQL.name].split(maxsplit=1)[-1].split('(', 1)
-        if len(cql_parameters.split(')')) == 1:
-            self.cql_error = ''.join(
-                ("The ",
-                 cql_name,
-                 " keyword must have parenthesized parameters, ",
-                 "even if empty like '()'",
-                 ))
+        cql_name, cql_parameters = (
+            match.groupdict()[cql.Token.CQL.name]
+            .split(maxsplit=1)[-1]
+            .split("(", 1)
+        )
+        if len(cql_parameters.split(")")) == 1:
+            self.cql_error = "".join(
+                (
+                    "The ",
+                    cql_name,
+                    " keyword must have parenthesized parameters, ",
+                    "even if empty like '()'",
+                )
+            )
             return
         self.node_stack.append(self.create_node(tokendef))
         self._consume_token(tokendef)
@@ -758,56 +798,65 @@ class Statement:
         self._insert_filter(match, tokendef)
         words = match.group().split()
         for name in words[2], words[3]:
-            if name.startswith(
-                cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
+            if name.startswith(cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
                 self.cql_error = "".join(
-                    ("Variable name '",
-                     name,
-                     "' starts with reserved sequence '",
-                     cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
-                     "' in '",
-                     tokendef.name,
-                     "' filter",
-                     ))
+                    (
+                        "Variable name '",
+                        name,
+                        "' starts with reserved sequence '",
+                        cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
+                        "' in '",
+                        tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
-            if (name in self.variables and
-                self.variables[name] is not cql.TokenTypes.POSITION_VARIABLE):
+            if (
+                name in self.variables
+                and self.variables[name]
+                is not cql.TokenTypes.POSITION_VARIABLE
+            ):
                 self.cql_error = "".join(
-                    ("Variable name '",
-                     name,
-                     "' exists but is not a ",
-                     cql.TokenTypes.POSITION_VARIABLE.value,
-                     "' in '",
-                     tokendef.name,
-                     "' filter",
-                     ))
+                    (
+                        "Variable name '",
+                        name,
+                        "' exists but is not a ",
+                        cql.TokenTypes.POSITION_VARIABLE.value,
+                        "' in '",
+                        tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
             variable = re.match(cql.CQL_PATTERN, name)
             if variable is None:
                 self.cql_error = "".join(
-                    ("'",
-                     name,
-                     "' is not allowed as a ",
-                     cql.TokenTypes.POSITION_VARIABLE.value,
-                     "' in '",
-                     tokendef.name,
-                     "' filter",
-                     ))
+                    (
+                        "'",
+                        name,
+                        "' is not allowed as a ",
+                        cql.TokenTypes.POSITION_VARIABLE.value,
+                        "' in '",
+                        tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
-            if variable.groupdict()['y'] is None:
+            if variable.groupdict()["y"] is None:
                 self.cql_error = "".join(
-                    ("'",
-                     name,
-                     "' is not allowed as a ",
-                     cql.TokenTypes.POSITION_VARIABLE.value,
-                     "' in '",
-                     tokendef.name,
-                     "' filter",
-                     ))
+                    (
+                        "'",
+                        name,
+                        "' is not allowed as a ",
+                        cql.TokenTypes.POSITION_VARIABLE.value,
+                        "' in '",
+                        tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
             if name not in self.variables:
-                self.variables[name] = {
-                    'type': cql.POSITION_VARIABLE}
+                self.variables[name] = {"type": cql.POSITION_VARIABLE}
             node_stack = self.node_stack
             child = node_stack[-1].children
             child.append(self.create_node(cql.POSITION_VARIABLE, leaf=name))
@@ -815,7 +864,8 @@ class Statement:
             # Note following pop.
             self._append_node_to_node_stack(child[-1])
             self.node_stack.pop().set_tokendef_to_variant(
-                self.get_filter_type_of_variable(name))
+                self.get_filter_type_of_variable(name)
+            )
 
         # 'in all' clause present.
         if len(words) == 7:
@@ -855,48 +905,64 @@ class Statement:
         self._consume_token(cql.Token.RIGHTBRACE)
         self._pop_top_stack(self.node_stack)
         if len(clbns.children) == 0:
-            self.cql_error = 'Empty compound filter found'
+            self.cql_error = "Empty compound filter found"
             return
         for child in clbns.children:
-            if (child.tokendef is cql.Token.NUMBER or
-                child.tokendef is cql.NUMERIC_VARIABLE):
+            if (
+                child.tokendef is cql.Token.NUMBER
+                or child.tokendef is cql.NUMERIC_VARIABLE
+            ):
                 self.cql_error = "".join(
-                    ("Literal numbers and numeric variables are not ",
-                     "accepted in compound filters"))
+                    (
+                        "Literal numbers and numeric variables are not ",
+                        "accepted in compound filters",
+                    )
+                )
                 return
         variant = cql.map_filter_type_to_leftbrace_type.get(
-            clbns.children[-1].returntype)
+            clbns.children[-1].returntype
+        )
         if variant is None:
             self.cql_error = "".join(
-                ("Unable to set filter type for compound filter'",))
+                ("Unable to set filter type for compound filter'",)
+            )
             return
         clbns.set_tokendef_to_variant(
-            variant, same_flags=False, same_arguments=False)
+            variant, same_flags=False, same_arguments=False
+        )
 
         # Same as _insert_filter version except clbns.tokendef for tokendef.
         tns = self.node_stack[-1]
-        if (tns.tokendef is cql.Token.ASSIGN and
-            len(clbns.returntype) == 1):
+        if tns.tokendef is cql.Token.ASSIGN and len(clbns.returntype) == 1:
             variable_name = tns.children[0].leaf
             variable = self.variables.get(variable_name)
             if variable is None:
                 self.cql_error = "".join(
-                    ("Variable '", variable_name,
-                     "' is not defined so it's type cannot be set"))
+                    (
+                        "Variable '",
+                        variable_name,
+                        "' is not defined so it's type cannot be set",
+                    )
+                )
                 return
-            type_ = cql.map_filter_assign_to_variable.get(
-                clbns.returntype)
+            type_ = cql.map_filter_assign_to_variable.get(clbns.returntype)
             if type_:
-                variable_type = variable['type']
+                variable_type = variable["type"]
                 if cql.TokenTypes.UNSET_VARIABLE in variable_type.returntype:
-                    variable['type'] = type_
+                    variable["type"] = type_
                     tns.children[0].tokendef = type_
                 elif variable_type is not type_:
                     self.cql_error = "".join(
-                        ("Variable '", variable_name,
-                         "' is a '", tns.children[0].name,
-                         "' but assigned filter is a '",
-                         self.create_node(clbns.tokendef).name, "'"))
+                        (
+                            "Variable '",
+                            variable_name,
+                            "' is a '",
+                            tns.children[0].name,
+                            "' but assigned filter is a '",
+                            self.create_node(clbns.tokendef).name,
+                            "'",
+                        )
+                    )
                     return
 
         self._append_node_to_node_stack(clbns)
@@ -922,14 +988,15 @@ class Statement:
         node_stack = self.node_stack
         while True:
             if not node_stack:
-                self.cql_error = "".join(
-                    ("Unmatched '}'",))
+                self.cql_error = "".join(("Unmatched '}'",))
                 return
-            if cql.Flags.PARENTHESIZED_ARGUMENTS not in node_stack[
-                -1].tokendef.flags:
+            if (
+                cql.Flags.PARENTHESIZED_ARGUMENTS
+                not in node_stack[-1].tokendef.flags
+            ):
                 stacked_arguments.append(self._pop_top_stack(node_stack))
                 continue
-            getattr(self, 'collapse_' + node_stack[-1].name)()
+            getattr(self, "collapse_" + node_stack[-1].name)()
             break
 
     def leftparenthesis(self, match, tokendef):
@@ -969,41 +1036,53 @@ class Statement:
         self._consume_token(cql.Token.RIGHTPARENTHESIS)
         self._pop_top_stack(self.node_stack)
         if len(clpns.children) == 0:
-            self.cql_error = 'Empty parenthesized expression found'
+            self.cql_error = "Empty parenthesized expression found"
             return
         if len(clpns.children) != 1:
-            self.cql_error = ''.join(
-                ('Parenthesized expression contains more than one filter'))
+            self.cql_error = "".join(
+                ("Parenthesized expression contains more than one filter")
+            )
             return
         clpns.set_tokendef_to_variant(
             cql.map_filter_type_to_leftparenthesis_type[
-                clpns.children[0].returntype],
-            same_flags=False, same_arguments=False)
+                clpns.children[0].returntype
+            ],
+            same_flags=False,
+            same_arguments=False,
+        )
 
         # Same as _insert_filter version except clpns.tokendef for tokendef.
         tns = self.node_stack[-1]
-        if (tns.tokendef is cql.Token.ASSIGN and
-            len(clpns.returntype) == 1):
+        if tns.tokendef is cql.Token.ASSIGN and len(clpns.returntype) == 1:
             variable_name = tns.children[0].leaf
             variable = self.variables.get(variable_name)
             if variable is None:
                 self.cql_error = "".join(
-                    ("Variable '", variable_name,
-                     "' is not defined so it's type cannot be set"))
+                    (
+                        "Variable '",
+                        variable_name,
+                        "' is not defined so it's type cannot be set",
+                    )
+                )
                 return
-            type_ = cql.map_filter_assign_to_variable.get(
-                clpns.returntype)
+            type_ = cql.map_filter_assign_to_variable.get(clpns.returntype)
             if type_:
-                variable_type = variable['type']
+                variable_type = variable["type"]
                 if cql.TokenTypes.UNSET_VARIABLE in variable_type.returntype:
-                    variable['type'] = type_
+                    variable["type"] = type_
                     tns.children[0].tokendef = type_
                 elif variable_type is not type_:
                     self.cql_error = "".join(
-                        ("Variable '", variable_name,
-                         "' is a '", tns.children[0].name,
-                         "' but assigned filter is a '",
-                         self.create_node(clpns.tokendef).name, "'"))
+                        (
+                            "Variable '",
+                            variable_name,
+                            "' is a '",
+                            tns.children[0].name,
+                            "' but assigned filter is a '",
+                            self.create_node(clpns.tokendef).name,
+                            "'",
+                        )
+                    )
                     return
 
         self._append_node_to_node_stack(clpns)
@@ -1016,13 +1095,15 @@ class Statement:
         node_stack = self.node_stack
         while True:
             if not node_stack:
-                self.cql_error = 'Empty node stack'
+                self.cql_error = "Empty node stack"
                 break
-            if cql.Flags.PARENTHESIZED_ARGUMENTS not in node_stack[
-                -1].tokendef.flags:
+            if (
+                cql.Flags.PARENTHESIZED_ARGUMENTS
+                not in node_stack[-1].tokendef.flags
+            ):
                 stacked_arguments.append(self._pop_top_stack(node_stack))
                 continue
-            getattr(self, 'collapse_' + node_stack[-1].name)(stacked_arguments)
+            getattr(self, "collapse_" + node_stack[-1].name)(stacked_arguments)
             break
 
     def enpassant(self, match, tokendef):
@@ -1069,9 +1150,12 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Expecting filter as argument for '",
-                 self.node_stack[-1].name.strip("_"),
-                 "' parameter"))
+                (
+                    "Expecting filter as argument for '",
+                    self.node_stack[-1].name.strip("_"),
+                    "' parameter",
+                )
+            )
 
     def eolcomment(self, match, tokendef):
         """Add the CQL 'eolcomment' filter."""
@@ -1145,7 +1229,8 @@ class Statement:
         self._insert_filter(match, tokendef)
         if len(match.group().split()) == 2:
             self.node_stack[-1].set_tokendef_to_variant(
-                cql.FLIPHORIZONTAL_COUNT)
+                cql.FLIPHORIZONTAL_COUNT
+            )
 
     def flipvertical(self, match, tokendef):
         """Add the CQL 'flipvertical' filter."""
@@ -1176,9 +1261,12 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Expecting filter as argument for '",
-                 self.node_stack[-1].name.strip("_"),
-                 "' parameter"))
+                (
+                    "Expecting filter as argument for '",
+                    self.node_stack[-1].name.strip("_"),
+                    "' parameter",
+                )
+            )
 
     # 'y=currentposition function z(y){shift y} z(y)' is accepted by -parse
     # but is rejected as a likely error when evaluated by CQL version 6.0.4.
@@ -1219,71 +1307,78 @@ class Statement:
 
         """
         assert tokendef is cql.Token.FUNCTION
-        function_name, function_parameters = match.groupdict()[
-            cql.Token.FUNCTION.name].split(maxsplit=1)[-1].split('(', 1)
-        function_parameters = function_parameters.split(')')[0].split()
-        if function_name.startswith(
-            cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
+        function_name, function_parameters = (
+            match.groupdict()[cql.Token.FUNCTION.name]
+            .split(maxsplit=1)[-1]
+            .split("(", 1)
+        )
+        function_parameters = function_parameters.split(")")[0].split()
+        if function_name.startswith(cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
             self.cql_error = "".join(
-                ("Function name '",
-                 function_name,
-                 "' starts with reserved sequence '",
-                 cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
-                 "' in '",
-                 tokendef.name,
-                 "' filter",
-                 ))
+                (
+                    "Function name '",
+                    function_name,
+                    "' starts with reserved sequence '",
+                    cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
+                    "' in '",
+                    tokendef.name,
+                    "' filter",
+                )
+            )
             return
         if function_name in self.variables:
             self.cql_error = "".join(
-                ("Variable name '",
-                 function_name,
-                 "' exists already and cannot be name of a new function"
-                 ))
+                (
+                    "Variable name '",
+                    function_name,
+                    "' exists already and cannot be name of a new function",
+                )
+            )
             return
         fn_match = re.match(cql.CQL_PATTERN, function_name)
         if fn_match.groupdict()[cql.Token.VARIABLE.name] is None:
             self.cql_error = "".join(
-                ("'",
-                 function_name,
-                 "' cannot be name of a function"
-                 ))
+                ("'", function_name, "' cannot be name of a function")
+            )
             return
         parameters = []
         for name in function_parameters:
-            if name.startswith(
-                cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
+            if name.startswith(cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
                 self.cql_error = "".join(
-                    ("Parameter name '",
-                     name,
-                     "' starts with reserved sequence '",
-                     cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
-                     "' in '",
-                     tokendef.name,
-                     "' filter",
-                     ))
+                    (
+                        "Parameter name '",
+                        name,
+                        "' starts with reserved sequence '",
+                        cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
+                        "' in '",
+                        tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
             if name in parameters:
                 self.cql_error = "".join(
-                    ("Parameter name '",
-                     name,
-                     "' exists already and cannot be name of ",
-                     "another parameter in function '",
-                     function_name,
-                     "'",
-                     ))
+                    (
+                        "Parameter name '",
+                        name,
+                        "' exists already and cannot be name of ",
+                        "another parameter in function '",
+                        function_name,
+                        "'",
+                    )
+                )
                 return
             fn_match = re.match(cql.CQL_PATTERN, name)
             if fn_match.groupdict()[cql.Token.VARIABLE.name] is None:
                 self.cql_error = "".join(
-                    ("'",
-                     name,
-                     "' cannot be name of a function parameter"
-                     ))
+                    ("'", name, "' cannot be name of a function parameter")
+                )
                 return
             parameters.append(name)
         self.variables[function_name] = {
-            'type': cql.Token.FUNCTION, 'parameters': tuple(parameters)}
+            "type": cql.Token.FUNCTION,
+            "parameters": tuple(parameters),
+        }
 
         # Strictly it is not necessary to put the function definition on the
         # node stack, but doing so makes the definition visible in traces.
@@ -1293,18 +1388,21 @@ class Statement:
         self.node_stack[-1].parameters[cql.Token.FUNCTION] = parameters
         self.node_stack[-1].leaf = function_name
 
-        function_body = ['{']
+        function_body = ["{"]
         brace_stack = []
         while self.tokens_available:
             match = self._peek_token(0)
-            groupkey = ''.join(k for k, v in match.groupdict().items()
-                               if v is not None and ('_' not in k[:-1]))
+            groupkey = "".join(
+                k
+                for k, v in match.groupdict().items()
+                if v is not None and ("_" not in k[:-1])
+            )
             token_definition = cql.CQL_TOKENS[groupkey]
             if token_definition is cql.Token.LEFTBRACE:
                 brace_stack.append((match, token_definition))
             elif token_definition is cql.Token.RIGHTBRACE:
                 if not brace_stack:
-                    self.variables[function_name]['body'] = function_body
+                    self.variables[function_name]["body"] = function_body
                     break
                 brace_stack.pop()
             function_body.append(match.group())
@@ -1323,8 +1421,8 @@ class Statement:
         self._consume_token(cql.Token.RIGHTBRACE)
         variable = self.variables[self.node_stack.pop().leaf]
         del self.node_stack[-1].children[-1]
-        variable['body'].append('}')
-        variable['body'] = tuple(w.strip() for w in variable['body'])
+        variable["body"].append("}")
+        variable["body"] = tuple(w.strip() for w in variable["body"])
 
     # There is not a 'function_call' method because function names are a subset
     # of variable names.
@@ -1338,14 +1436,18 @@ class Statement:
         top = self._pop_top_stack(self.node_stack)
         child = top.children
         function_name = child[0].leaf
-        if len(child) - 1 != len(self.variables[function_name]['parameters']):
+        if len(child) - 1 != len(self.variables[function_name]["parameters"]):
             self.cql_error = "".join(
-                ("Function '",
-                 child[0].leaf,
-                 "' takes ",
-                 str(len(self.variables[function_name]['parameters'])),
-                 " arguments but ", str(len(child) - 1), " were given",
-                 ))
+                (
+                    "Function '",
+                    child[0].leaf,
+                    "' takes ",
+                    str(len(self.variables[function_name]["parameters"])),
+                    " arguments but ",
+                    str(len(child) - 1),
+                    " were given",
+                )
+            )
             return
 
         # Replace the formal parameters in the function definition body by the
@@ -1368,21 +1470,26 @@ class Statement:
         # The function body is extended to '{<variable definitions>{<body>}}'.
         substitutions = {}
         local_variables = []
-        parameters = self.variables[function_name]['parameters']
+        parameters = self.variables[function_name]["parameters"]
         for item, node in enumerate(child[1:]):
             if node.tokendef in cql.ASSIGNMENT_VARIABLE_TYPES:
                 substitutions[parameters[item]] = node.leaf
             else:
-                substitutions[parameters[item]] = '_'.join(
-                    (cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
-                     str(self._formal_parameter_number),
-                     parameters[item]))
+                substitutions[parameters[item]] = "_".join(
+                    (
+                        cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
+                        str(self._formal_parameter_number),
+                        parameters[item],
+                    )
+                )
                 local_variables.append(
-                    (substitutions[parameters[item]],
-                     child[item+1]))
+                    (substitutions[parameters[item]], child[item + 1])
+                )
                 self._formal_parameter_number += 1
-        body = [substitutions.get(node, node)
-                for node in self.variables[function_name]['body']]
+        body = [
+            substitutions.get(node, node)
+            for node in self.variables[function_name]["body"]
+        ]
 
         # Create variable assignment structures.
         # 'v = 1' is '(assign, [(numeric_variable, v), (x, 1)])'.
@@ -1395,29 +1502,36 @@ class Statement:
         # statement start, and process the modified function body plus the '}'
         # matching the '{' in '{ v = ?'.
         # Implication is filters like 'true' cannot be actual arguments.
-        self.tokens.append(re.finditer(cql.CQL_PATTERN, ' '.join(body)))
+        self.tokens.append(re.finditer(cql.CQL_PATTERN, " ".join(body)))
         self.cql_tokens_stack.append([])
         top.tokendef = cql.Token.LEFTBRACE
         top.parameters[top.children[0].tokendef] = function_name
         if local_variables:
             self.node_stack.append(self.node_stack[-1].children[-1])
-            top.children = [self.create_node(cql.Token.LEFTBRACE,
-                                             children=top.children)]
-            body.append('}')
+            top.children = [
+                self.create_node(cql.Token.LEFTBRACE, children=top.children)
+            ]
+            body.append("}")
         for item, local_variable in enumerate(local_variables):
             lvname, apnode = local_variable
             lvtype = cql.map_filter_assign_to_variable.get(apnode.returntype)
             if lvtype is None:
-                self.cql_error = ''.join((
-                    "Invalid argument type for corresponding variable '",
-                    lvname, "'"))
+                self.cql_error = "".join(
+                    (
+                        "Invalid argument type for corresponding variable '",
+                        lvname,
+                        "'",
+                    )
+                )
                 break
             top.children.insert(
                 item,
                 self.create_node(
                     cql.Token.ASSIGN,
-                    children=[self.create_node(lvtype, leaf=lvname), apnode]))
-            self.variables[lvname] = {'persistent': False, 'type': lvtype}
+                    children=[self.create_node(lvtype, leaf=lvname), apnode],
+                ),
+            )
+            self.variables[lvname] = {"persistent": False, "type": lvtype}
         if local_variables:
             top.children[-1].children.clear()
         else:
@@ -1438,8 +1552,11 @@ class Statement:
         self._consume_token(cql.Token.LEFTBRACE)
         while len(self.tokens[-1]):
             match = self.tokens[-1][0]
-            groupkey = ''.join(k for k, v in match.groupdict().items()
-                               if v is not None and ('_' not in k[:-1]))
+            groupkey = "".join(
+                k
+                for k, v in match.groupdict().items()
+                if v is not None and ("_" not in k[:-1])
+            )
             self._process_token(match, groupkey)
             if self._error_information and self._error_information.error_found:
                 break
@@ -1515,17 +1632,27 @@ class Statement:
         if cql.TokenTypes.POSITION_FILTER in lhsrt:
             tns.set_tokendef_to_variant(
                 cql.INTERSECTION_POSITION,
-                same_returntype=True, same_arguments=False)
+                same_returntype=True,
+                same_arguments=False,
+            )
         elif cql.TokenTypes.SET_FILTER in lhsrt:
             tns.set_tokendef_to_variant(
                 cql.INTERSECTION_SET,
-                same_returntype=True, same_arguments=False)
+                same_returntype=True,
+                same_arguments=False,
+            )
         else:
             self.cql_error = "".join(
-                ("Left argument for '",
-                 tokendef.name, "' filter must be a '",
-                 cql.TokenTypes.POSITION_FILTER.value, "' or '",
-                 cql.TokenTypes.SET_FILTER.value, "' filter"))
+                (
+                    "Left argument for '",
+                    tokendef.name,
+                    "' filter must be a '",
+                    cql.TokenTypes.POSITION_FILTER.value,
+                    "' or '",
+                    cql.TokenTypes.SET_FILTER.value,
+                    "' filter",
+                )
+            )
 
     def ipdivide(self, match, tokendef):
         """Add the CQL '%=' (in-place divide) filter."""
@@ -1610,23 +1737,25 @@ class Statement:
         tns = self.node_stack[-1]
         if not self._accept_as_find_or_line_parameter(tokendef, tns):
             return
-        if (tns.tokendef is cql.Token.FIND or
-            tns.tokendef is cql.FIND_NUMERIC):
+        if tns.tokendef is cql.Token.FIND or tns.tokendef is cql.FIND_NUMERIC:
             if tns.parameters:
-                self.cql_error = ''.join(
-                    ("Parameter '",
-                     tokendef.name,
-                     "' can only be first parameter in '",
-                     tns.name,
-                     "' filter",
-                     ))
+                self.cql_error = "".join(
+                    (
+                        "Parameter '",
+                        tokendef.name,
+                        "' can only be first parameter in '",
+                        tns.name,
+                        "' filter",
+                    )
+                )
                 return
             self._add_filter_parameter(tokendef, tns)
         elif tns.tokendef is cql.Token.LINE:
             self._insert_filter(match, tokendef)
             self._add_filter_parameter(tokendef, tns, consume_token=False)
             tns.set_tokendef_to_variant(
-                cql.LINE_LEFTARROW, same_arguments=False, same_flags=False)
+                cql.LINE_LEFTARROW, same_arguments=False, same_flags=False
+            )
         elif tns.tokendef is cql.LINE_LEFTARROW:
             self._insert_filter(match, tokendef)
             self._add_filter_parameter(tokendef, tns, consume_token=False)
@@ -1730,7 +1859,8 @@ class Statement:
         self._insert_filter(match, tokendef)
         if len(match.group().split()) == 1:
             self.node_stack[-1].set_tokendef_to_variant(
-                cql.SINGLE_MESSAGE_ARGUMENT, same_flags=False)
+                cql.SINGLE_MESSAGE_ARGUMENT, same_flags=False
+            )
 
     def collapse_message(self, *args):
         """Add ')' for 'message' filter.
@@ -1783,7 +1913,8 @@ class Statement:
         assert tokendef is cql.Token.MINUS
         if self.tokens_available < 2:
             self.cql_error = cql.UNARY_MINUS.name.join(
-                ("'", "' operator at end of statement"))
+                ("'", "' operator at end of statement")
+            )
             return
 
         # Left operand is countable if unary minus could be applied to it, in
@@ -1797,7 +1928,8 @@ class Statement:
         while node_stack:
             if len(node_stack) == 1:
                 self._insert_unary_minus(
-                    match, cql.CQL_TOKENS[self._peek_token(0).lastgroup])
+                    match, cql.CQL_TOKENS[self._peek_token(0).lastgroup]
+                )
                 return
             if tokendef.precedence > node_stack[-1].precedence:
                 self._pop_top_stack(node_stack)
@@ -1806,7 +1938,8 @@ class Statement:
                 self._insert_infix_arithmetic(match, tokendef)
             else:
                 self._insert_unary_minus(
-                    match, cql.CQL_TOKENS[self._peek_token(0).lastgroup])
+                    match, cql.CQL_TOKENS[self._peek_token(0).lastgroup]
+                )
             return
 
     def modulus(self, match, tokendef):
@@ -1830,14 +1963,18 @@ class Statement:
 
         """
         top = self.node_stack[-1]
-        if  top.tokendef is cql.Token.MOVE:
-            if (cql.Token.COUNT in top.parameters and
-                cql.Token.LEGAL not in top.parameters and
-                cql.Token.PSEUDOLEGAL not in top.parameters):
+        if top.tokendef is cql.Token.MOVE:
+            if (
+                cql.Token.COUNT in top.parameters
+                and cql.Token.LEGAL not in top.parameters
+                and cql.Token.PSEUDOLEGAL not in top.parameters
+            ):
                 self.cql_error = "".join(
-                    ("Parameter 'count' present in 'move' filter ",
-                     "without 'legal' or 'pseudolegal' parameters",
-                     ))
+                    (
+                        "Parameter 'count' present in 'move' filter ",
+                        "without 'legal' or 'pseudolegal' parameters",
+                    )
+                )
 
     # Because there is a MOVE_SET version of MOVE to collapse too, and the
     # same things are done.
@@ -2001,51 +2138,62 @@ class Statement:
         node_stack = self.node_stack
         if cql.Flags.NO_ARITHMETIC_FILTERS in node_stack[-1].tokendef.flags:
             self.cql_error = "".join(
-                ("Attempt to use number as constituent of '",
-                 cql.Token.LINE.name,
-                 "' filter",
-                 ))
+                (
+                    "Attempt to use number as constituent of '",
+                    cql.Token.LINE.name,
+                    "' filter",
+                )
+            )
             return
         if node_stack[-1].tokendef is cql.Token.NUMBER:
             self._pop_top_stack(node_stack)
         tns = node_stack[-1]
-        if (cql.Flags.NAMED_COMPOUND_FILTER in tns.tokendef.flags or
-            tns.tokendef.arguments.intersection(tokendef.returntype)
-            ):
+        if (
+            cql.Flags.NAMED_COMPOUND_FILTER in tns.tokendef.flags
+            or tns.tokendef.arguments.intersection(tokendef.returntype)
+        ):
             self._insert_leaf_filter(match, tokendef)
         elif cql.Flags.ACCEPT_RANGE in node_stack[-1].tokendef.flags:
             if len(self._range) > 1:
                 self.cql_error = "".join(
-                    ("Attempt to collect second range for '",
-                     tns.name,
-                     "' filter",
-                     ))
+                    (
+                        "Attempt to collect second range for '",
+                        tns.name,
+                        "' filter",
+                    )
+                )
                 return
             range_ = self._range
             if cql.RANGE not in tns.parameters:
                 tns.parameters[cql.RANGE] = range_
             if tns.parameters[cql.RANGE] is not range_:
                 self.cql_error = "".join(
-                    ("Attempt to collect different range for '",
-                     tns.name,
-                     "' filter",
-                     ))
+                    (
+                        "Attempt to collect different range for '",
+                        tns.name,
+                        "' filter",
+                    )
+                )
                 return
             if len(tns.parameters[cql.RANGE]) > 1:
                 self.cql_error = "".join(
-                    ("Attempt to collect more than two items in range for '",
-                     tns.name,
-                     "' filter",
-                     ))
+                    (
+                        "Attempt to collect more than two items in range for '",
+                        tns.name,
+                        "' filter",
+                    )
+                )
                 return
             range_.append(match.groupdict()[tokendef.name])
             self._consume_token(tokendef)
         else:
             self.cql_error = "".join(
-                ("Number '",
-                 match.group(),
-                 "' is not allowed at this point",
-                 ))
+                (
+                    "Number '",
+                    match.group(),
+                    "' is not allowed at this point",
+                )
+            )
 
     def oo(self, match, tokendef):
         """Add 'o-o' parameter to 'move' filter.
@@ -2135,16 +2283,22 @@ class Statement:
         self._insert_filter(match, tokendef)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Filter '",
-                 self.node_stack[-1].name,
-                 "' found at end of statement"))
+                (
+                    "Filter '",
+                    self.node_stack[-1].name,
+                    "' found at end of statement",
+                )
+            )
         elif self._peek_token(0).groupdict()[cql.Token.VARIABLE.name] is None:
             self.cql_error = "".join(
-                ("A variable name must follow '",
-                 self.node_stack[-1].name,
-                 "' filter, not '",
-                 self._peek_token(0).group().strip(),
-                 "'"))
+                (
+                    "A variable name must follow '",
+                    self.node_stack[-1].name,
+                    "' filter, not '",
+                    self._peek_token(0).group().strip(),
+                    "'",
+                )
+            )
 
     def piece(self, match, tokendef):
         """Add the CQL 'piece' parameter."""
@@ -2155,25 +2309,26 @@ class Statement:
         """Add the CQL 'piece <variable name> in' filter."""
         assert tokendef is cql.Token.PIECE_IN
         self.piece_or_square_variable(
-            match, tokendef,
-            cql.PIECE_VARIABLE, cql.TokenTypes.PIECE_VARIABLE)
+            match, tokendef, cql.PIECE_VARIABLE, cql.TokenTypes.PIECE_VARIABLE
+        )
 
     def pieceallin(self, match, tokendef):
         """Add the CQL 'piece all <variable name> in' filter."""
         assert tokendef is cql.Token.PIECE_ALL_IN
         self.piece_or_square_variable(
-            match, tokendef,
-            cql.PIECE_VARIABLE, cql.TokenTypes.PIECE_VARIABLE)
+            match, tokendef, cql.PIECE_VARIABLE, cql.TokenTypes.PIECE_VARIABLE
+        )
 
     def pieceassignment(self, match, tokendef):
         """Add the CQL 'piece <variable name> =' filter."""
         assert tokendef is cql.Token.PIECE_ASSIGNMENT
         self.piece_or_square_variable(
-            match, tokendef,
-            cql.PIECE_VARIABLE, cql.TokenTypes.PIECE_VARIABLE)
+            match, tokendef, cql.PIECE_VARIABLE, cql.TokenTypes.PIECE_VARIABLE
+        )
 
     def piece_or_square_variable(
-        self, match, tokendef, filtertype, variabletype):
+        self, match, tokendef, filtertype, variabletype
+    ):
         """Add variable name to CQL statement.
 
         The name must not start '__CQL'.
@@ -2186,55 +2341,61 @@ class Statement:
         """
         self._insert_filter(match, tokendef)
         name = match.group().split()[-2]
-        if name.startswith(
-            cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
+        if name.startswith(cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
             self.cql_error = "".join(
-                ("Variable name '",
-                 name,
-                 "' starts with reserved sequence '",
-                 cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
-                 "' in '",
-                 tokendef.name,
-                 "' filter",
-                 ))
+                (
+                    "Variable name '",
+                    name,
+                    "' starts with reserved sequence '",
+                    cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
+                    "' in '",
+                    tokendef.name,
+                    "' filter",
+                )
+            )
             return
-        if (name in self.variables and
-            self.variables[name] is not variabletype):
+        if name in self.variables and self.variables[name] is not variabletype:
             self.cql_error = "".join(
-                ("Variable name '",
-                 name,
-                 "' exists but is not a ",
-                 variabletype.value,
-                 "' in '",
-                 tokendef.name,
-                 "'",
-                 ))
+                (
+                    "Variable name '",
+                    name,
+                    "' exists but is not a ",
+                    variabletype.value,
+                    "' in '",
+                    tokendef.name,
+                    "'",
+                )
+            )
             return
         variable = re.match(cql.CQL_PATTERN, name)
         if variable is None:
             self.cql_error = "".join(
-                ("'",
-                 name,
-                 "' is not allowed as a ",
-                 variabletype.value,
-                 "' in '",
-                 tokendef.name,
-                 "'",
-                 ))
+                (
+                    "'",
+                    name,
+                    "' is not allowed as a ",
+                    variabletype.value,
+                    "' in '",
+                    tokendef.name,
+                    "'",
+                )
+            )
             return
-        if variable.groupdict()['y'] is None:
+        if variable.groupdict()["y"] is None:
             self.cql_error = "".join(
-                ("'",
-                 name,
-                 "' is not allowed as a ",
-                 variabletype.value,
-                 "' in '",
-                 tokendef.name,
-                 "'",
-                 ))
+                (
+                    "'",
+                    name,
+                    "' is not allowed as a ",
+                    variabletype.value,
+                    "' in '",
+                    tokendef.name,
+                    "'",
+                )
+            )
             return
         if name not in self.variables:
-            self.variables[name] = {'type': filtertype}
+            self.variables[name] = {"type": filtertype}
         node_stack = self.node_stack
         child = node_stack[-1].children
         child.append(self.create_node(cql.PIECE_VARIABLE, leaf=name))
@@ -2242,7 +2403,8 @@ class Statement:
         # Note following pop.
         self._append_node_to_node_stack(child[-1])
         self.node_stack.pop().set_tokendef_to_variant(
-            self.get_filter_type_of_variable(name))
+            self.get_filter_type_of_variable(name)
+        )
 
     def pieceid(self, match, tokendef):
         """Add the CQL 'pieceid' filter."""
@@ -2360,9 +2522,12 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Expecting filter as argument for '",
-                 self.node_stack[-1].name.strip("_"),
-                 "' parameter"))
+                (
+                    "Expecting filter as argument for '",
+                    self.node_stack[-1].name.strip("_"),
+                    "' parameter",
+                )
+            )
 
     def quiet(self, match, tokendef):
         """Add 'quiet' parameter to 'consecutivemoves' filter.
@@ -2393,14 +2558,16 @@ class Statement:
             for line in directions:
                 if line in tns.parameters:
                     self.cql_error = "".join(
-                        ("Direction parameter '",
-                         line.name,
-                         "' duplicated by '",
-                         name,
-                         "' in '",
-                         match.group(),
-                         "' filter",
-                         ))
+                        (
+                            "Direction parameter '",
+                            line.name,
+                            "' duplicated by '",
+                            name,
+                            "' in '",
+                            match.group(),
+                            "' filter",
+                        )
+                    )
                     return
                 tns.parameters[line] = True
 
@@ -2426,9 +2593,13 @@ class Statement:
         """
         assert tokendef is cql.Token.REPEATRANGE
         self._insert_repeat_regular_expression(
-            match, tokendef,
-            value=tuple(int(s) for s in
-                        match.group().strip().lstrip('{').rstrip('}').split()))
+            match,
+            tokendef,
+            value=tuple(
+                int(s)
+                for s in match.group().strip().lstrip("{").rstrip("}").split()
+            ),
+        )
 
     def repeatstar(self, match, tokendef):
         """Add the CQL '*' (repeat) filter."""
@@ -2471,7 +2642,8 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if tns.tokendef is cql.Token.LINE:
             tns.set_tokendef_to_variant(
-                cql.LINE_RIGHTARROW, same_arguments=False, same_flags=False)
+                cql.LINE_RIGHTARROW, same_arguments=False, same_flags=False
+            )
 
     def rotate45(self, match, tokendef):
         """Add the CQL 'rotate45' filter."""
@@ -2528,14 +2700,17 @@ class Statement:
         self._insert_filter(match, tokendef)
         if len(match.group().split()) == 2:
             self.node_stack[-1].set_tokendef_to_variant(
-                cql.SHIFTHORIZONTAL_COUNT)
+                cql.SHIFTHORIZONTAL_COUNT
+            )
 
     def shiftvertical(self, match, tokendef):
         """Add the CQL 'shiftvertical' filter."""
         assert tokendef is cql.Token.SHIFTVERTICAL
         self._insert_filter(match, tokendef)
         if len(match.group().split()) == 2:
-            self.node_stack[-1].set_tokendef_to_variant(cql.SHIFTVERTICAL_COUNT)
+            self.node_stack[-1].set_tokendef_to_variant(
+                cql.SHIFTVERTICAL_COUNT
+            )
 
     def sidetomove(self, match, tokendef):
         """Add the CQL 'sidetomove' filter."""
@@ -2576,8 +2751,9 @@ class Statement:
         if words.group(2):
             node_stack[-1].set_tokendef_to_variant(cql.SORT_MIN)
         if words.group(3):
-            node_stack[-1].parameters[cql.QUOTED_STRING
-                                      ] = words.group(3).strip()
+            node_stack[-1].parameters[cql.QUOTED_STRING] = words.group(
+                3
+            ).strip()
 
     def southeast(self, match, tokendef):
         """Add the CQL 'southeast' filter."""
@@ -2613,15 +2789,15 @@ class Statement:
         """Add the CQL 'square <variable name> in' filter."""
         assert tokendef is cql.Token.SQUARE_IN
         self.piece_or_square_variable(
-            match, tokendef,
-            cql.SET_VARIABLE, cql.TokenTypes.SET_VARIABLE)
+            match, tokendef, cql.SET_VARIABLE, cql.TokenTypes.SET_VARIABLE
+        )
 
     def squareallin(self, match, tokendef):
         """Add the CQL 'square all <variable name> in' filter."""
         assert tokendef is cql.Token.SQUARE_ALL_IN
         self.piece_or_square_variable(
-            match, tokendef,
-            cql.SET_VARIABLE, cql.TokenTypes.SET_VARIABLE)
+            match, tokendef, cql.SET_VARIABLE, cql.TokenTypes.SET_VARIABLE
+        )
 
     def stalemate(self, match, tokendef):
         """Add the CQL 'stalemate' filter."""
@@ -2649,9 +2825,12 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Expecting filter as argument for '",
-                 self.node_stack[-1].name.strip("_"),
-                 "' parameter"))
+                (
+                    "Expecting filter as argument for '",
+                    self.node_stack[-1].name.strip("_"),
+                    "' parameter",
+                )
+            )
 
     def tilde(self, match, tokendef):
         """Add the CQL '~' filter."""
@@ -2680,9 +2859,12 @@ class Statement:
         self._add_filter_parameter(tokendef, tns, consume_token=False)
         if not self.tokens_available:
             self.cql_error = "".join(
-                ("Expecting filter as argument for '",
-                 self.node_stack[-1].name.strip("_"),
-                 "' parameter"))
+                (
+                    "Expecting filter as argument for '",
+                    self.node_stack[-1].name.strip("_"),
+                    "' parameter",
+                )
+            )
 
     def true(self, match, tokendef):
         """Add the CQL 'true' filter."""
@@ -2716,63 +2898,79 @@ class Statement:
         """
         assert tokendef is cql.Token.VARIABLE
         variable_name = match.groupdict()[tokendef.name]
-        if variable_name.startswith(
-            cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
+        if variable_name.startswith(cql.CQL_RESERVED_VARIABLE_NAME_PREFIX):
             self.cql_error = "".join(
-                ("Variable name '",
-                 variable_name,
-                 "' starts with reserved sequence '",
-                 cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
-                 "'"))
+                (
+                    "Variable name '",
+                    variable_name,
+                    "' starts with reserved sequence '",
+                    cql.CQL_RESERVED_VARIABLE_NAME_PREFIX,
+                    "'",
+                )
+            )
             return
         node_stack = self.node_stack
         variable = self.variables.get(variable_name)
         if node_stack[-1].tokendef is cql.Token.PERSISTENT:
-            if variable and not variable['persistent']:
+            if variable and not variable["persistent"]:
                 self.cql_error = "".join(
-                    ("Variable '",
-                     variable_name,
-                    "' exists but is not a persistent numeric variable"))
+                    (
+                        "Variable '",
+                        variable_name,
+                        "' exists but is not a persistent numeric variable",
+                    )
+                )
                 return
             del node_stack[-1]
             del node_stack[-1].children[-1]
             if variable:
-                tokendef = variable['type']
+                tokendef = variable["type"]
                 assert tokendef is cql.NUMERIC_VARIABLE
                 self._insert_leaf_filter(match, tokendef)
                 return
             self._insert_leaf_filter(match, cql.NUMERIC_VARIABLE)
-            self.variables[variable_name] = {'persistent': True,
-                                             'type': node_stack[-1].tokendef}
+            self.variables[variable_name] = {
+                "persistent": True,
+                "type": node_stack[-1].tokendef,
+            }
             return
         if variable:
-            tokendef = variable['type']
+            tokendef = variable["type"]
             if tokendef is cql.Token.VARIABLE:
                 self.cql_error = "".join(
-                    ("Variable '",
-                     variable_name,
-                    "' exists but has not been set to a value"))
+                    (
+                        "Variable '",
+                        variable_name,
+                        "' exists but has not been set to a value",
+                    )
+                )
                 return
             if tokendef is cql.NUMERIC_VARIABLE:
-                if cql.Flags.NO_ARITHMETIC_FILTERS in node_stack[
-                    -1].tokendef.flags:
+                if (
+                    cql.Flags.NO_ARITHMETIC_FILTERS
+                    in node_stack[-1].tokendef.flags
+                ):
                     self.cql_error = "".join(
-                        ("Attempt to use numeric variable '",
-                         variable_name,
-                         "' as constituent of '",
-                         cql.Token.LINE.name,
-                         "' filter",
-                         ))
+                        (
+                            "Attempt to use numeric variable '",
+                            variable_name,
+                            "' as constituent of '",
+                            cql.Token.LINE.name,
+                            "' filter",
+                        )
+                    )
                     return
             if tokendef is cql.Token.FUNCTION:
                 if variable_name in self._called_functions:
                     self.cql_error = "".join(
-                        ("Attempt to call function '",
-                         variable_name,
-                         "' within a call of function '",
-                         variable_name,
-                         "'",
-                         ))
+                        (
+                            "Attempt to call function '",
+                            variable_name,
+                            "' within a call of function '",
+                            variable_name,
+                            "'",
+                        )
+                    )
                     return
                 self._called_functions.add(variable_name)
                 self._insert_filter(match, cql.FUNCTION_CALL)
@@ -2784,29 +2982,37 @@ class Statement:
             return
         if cql.Flags.NO_ARITHMETIC_FILTERS in node_stack[-1].tokendef.flags:
             self.cql_error = "".join(
-                ("Attempt to use unset variable '",
-                 variable_name,
-                 "' as constituent of '",
-                 cql.Token.LINE.name,
-                 "' filter",
-                 ))
+                (
+                    "Attempt to use unset variable '",
+                    variable_name,
+                    "' as constituent of '",
+                    cql.Token.LINE.name,
+                    "' filter",
+                )
+            )
             return
-        if (self.tokens_available == 1 or
-              self._peek_token(1).groupdict()[cql.Token.ASSIGN.name] is None):
+        if (
+            self.tokens_available == 1
+            or self._peek_token(1).groupdict()[cql.Token.ASSIGN.name] is None
+        ):
             self.cql_error = "".join(
-                ("Expecting assignment to variable '",
-                 variable_name,
-                 "' on first use",
-                 ))
+                (
+                    "Expecting assignment to variable '",
+                    variable_name,
+                    "' on first use",
+                )
+            )
             return
         if node_stack[-1].tokendef is cql.CONSECUTIVEMOVES_LEFTPARENTHESIS:
             type_ = cql.POSITION_VARIABLE
-        elif (node_stack[-1].tokendef is cql.POSITION_VARIABLE and
-              node_stack[-2].tokendef is cql.CONSECUTIVEMOVES_LEFTPARENTHESIS):
+        elif (
+            node_stack[-1].tokendef is cql.POSITION_VARIABLE
+            and node_stack[-2].tokendef is cql.CONSECUTIVEMOVES_LEFTPARENTHESIS
+        ):
             type_ = cql.POSITION_VARIABLE
         else:
             type_ = cql.Token.VARIABLE
-        self.variables[variable_name] = {'persistent': False, 'type': type_}
+        self.variables[variable_name] = {"persistent": False, "type": type_}
         self._insert_leaf_filter(match, type_)
 
     def variation(self, match, tokendef):
@@ -2875,10 +3081,14 @@ class Statement:
         while True:
             if len(node_stack[-1].children) < 1:
                 self.cql_error = "".join(
-                    ("'", tokendef.name,
-                     "' parameter given before condition filter for '",
-                     node_stack[-1].tokendef.name,
-                     "' filter"))
+                    (
+                        "'",
+                        tokendef.name,
+                        "' parameter given before condition filter for '",
+                        node_stack[-1].tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
             if len(node_stack[-1].children) > 1:
                 self._pop_top_stack(node_stack)
@@ -2887,17 +3097,25 @@ class Statement:
         tns = self.node_stack[-1]
         if tokendef in tns.parameters:
             self.cql_error = "".join(
-                ("'", tokendef.name,
-                 "' parameter already present in '",
-                 tns.tokendef.name,
-                 "' filter"))
+                (
+                    "'",
+                    tokendef.name,
+                    "' parameter already present in '",
+                    tns.tokendef.name,
+                    "' filter",
+                )
+            )
             return
         if tns.tokendef is not cql.Token.IF:
             self.cql_error = "".join(
-                ("'", tokendef.name,
-                 "' parameter is not allowed in '",
-                 tns.tokendef.name,
-                 "' filter"))
+                (
+                    "'",
+                    tokendef.name,
+                    "' parameter is not allowed in '",
+                    tns.tokendef.name,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         tns.parameters[cql.Token.THEN] = True
@@ -2912,10 +3130,14 @@ class Statement:
         while True:
             if len(node_stack[-1].children) < 2:
                 self.cql_error = "".join(
-                    ("'", tokendef.name,
-                     "' parameter given before then filter for '",
-                     node_stack[-1].tokendef.name,
-                     "' filter"))
+                    (
+                        "'",
+                        tokendef.name,
+                        "' parameter given before then filter for '",
+                        node_stack[-1].tokendef.name,
+                        "' filter",
+                    )
+                )
                 return
             if len(node_stack[-1].children) > 2:
                 self._pop_top_stack(node_stack)
@@ -2924,34 +3146,51 @@ class Statement:
         tns = self.node_stack[-1]
         if tokendef in tns.parameters:
             self.cql_error = "".join(
-                ("'", tokendef.name,
-                 "' parameter already present in '",
-                 tns.tokendef.name,
-                 "' filter"))
+                (
+                    "'",
+                    tokendef.name,
+                    "' parameter already present in '",
+                    tns.tokendef.name,
+                    "' filter",
+                )
+            )
             return
         if tns.tokendef is not cql.Token.IF:
             self.cql_error = "".join(
-                ("'", tokendef.name,
-                 "' parameter is not allowed in '",
-                 tns.tokendef.name,
-                 "' filter"))
+                (
+                    "'",
+                    tokendef.name,
+                    "' parameter is not allowed in '",
+                    tns.tokendef.name,
+                    "' filter",
+                )
+            )
             return
         if cql.Token.THEN not in tns.parameters:
             self.cql_error = "".join(
-                ("'", tokendef.name,
-                 "' parameter is not allowed unless '",
-                 cql.Token.THEN.name,
-                 "' parameter is already given in '",
-                 tns.tokendef.name,
-                 "' filter"))
+                (
+                    "'",
+                    tokendef.name,
+                    "' parameter is not allowed unless '",
+                    cql.Token.THEN.name,
+                    "' parameter is already given in '",
+                    tns.tokendef.name,
+                    "' filter",
+                )
+            )
             return
         if len(tns.children) != 2:
             self.cql_error = "".join(
-                ("The filter for '", cql.Token.THEN.name,
-                 "' parameter has not been given in '",
-                 tns.tokendef.name,
-                 "' filter: cannot specify '",
-                 tokendef.name, "' parameter"))
+                (
+                    "The filter for '",
+                    cql.Token.THEN.name,
+                    "' parameter has not been given in '",
+                    tns.tokendef.name,
+                    "' filter: cannot specify '",
+                    tokendef.name,
+                    "' parameter",
+                )
+            )
             return
         self.node_stack[-1].parameters[cql.Token.ELSE] = True
         self._consume_token(tokendef)
@@ -2966,8 +3205,10 @@ class Statement:
         # Put node on stack if next token will generate a node which grabs it
         # from the filter to left.  Precedence comparison and '{}' and '()'
         # will decide this.
-        elif (cql.CQL_TOKENS[self._peek_token(0).lastgroup].precedence >
-              node_stack[-1].precedence):
+        elif (
+            cql.CQL_TOKENS[self._peek_token(0).lastgroup].precedence
+            > node_stack[-1].precedence
+        ):
             node_stack.append(node)
 
         # So this method can replace existing 'node_stack.append(node)'
@@ -2996,75 +3237,106 @@ class Statement:
         # Same as collapse_leftparenthesis version except tokendef for
         # clpns.tokendef.
         tns = node_stack[-1]
-        if (tns.tokendef is cql.Token.ASSIGN and
-            len(tokendef.returntype) == 1):
+        if tns.tokendef is cql.Token.ASSIGN and len(tokendef.returntype) == 1:
             variable_name = tns.children[0].leaf
             variable = self.variables.get(variable_name)
             if variable is None:
                 self.cql_error = "".join(
-                    ("Variable '", variable_name,
-                     "' is not defined so it's type cannot be set"))
+                    (
+                        "Variable '",
+                        variable_name,
+                        "' is not defined so it's type cannot be set",
+                    )
+                )
                 return
             type_ = cql.map_filter_assign_to_variable.get(tokendef.returntype)
             if type_:
-                variable_type = variable['type']
+                variable_type = variable["type"]
                 if cql.TokenTypes.UNSET_VARIABLE in variable_type.returntype:
-                    variable['type'] = type_
+                    variable["type"] = type_
                     tns.children[0].tokendef = type_
                 elif variable_type is not type_:
                     self.cql_error = "".join(
-                        ("Variable '", variable_name,
-                         "' is a '", tns.children[0].name,
-                         "' but assigned filter is a '",
-                         self.create_node(tokendef).name, "'"))
+                        (
+                            "Variable '",
+                            variable_name,
+                            "' is a '",
+                            tns.children[0].name,
+                            "' but assigned filter is a '",
+                            self.create_node(tokendef).name,
+                            "'",
+                        )
+                    )
                     return
 
         while True:
-            if cql.Flags.ALLOWED_TOP_STACK_AT_END in node_stack[
-                -1].tokendef.flags:
+            if (
+                cql.Flags.ALLOWED_TOP_STACK_AT_END
+                in node_stack[-1].tokendef.flags
+            ):
                 while True:
-                    if (cql.Flags.HALT_POP_CHAINED_FILTERS in
-                        node_stack[-1].tokendef.flags):
+                    if (
+                        cql.Flags.HALT_POP_CHAINED_FILTERS
+                        in node_stack[-1].tokendef.flags
+                    ):
                         break
-                    if (cql.Flags.HALT_POP_NO_BODY_FILTER in
-                        node_stack[-1].tokendef.flags):
+                    if (
+                        cql.Flags.HALT_POP_NO_BODY_FILTER
+                        in node_stack[-1].tokendef.flags
+                    ):
                         if len(node_stack[-1].children) < 3:
                             break
-                    if (cql.Flags.END_FILTER_NON_PARAMETER in
-                        node_stack[-1].tokendef.flags):
-                        getattr(self, 'collapse_' + node_stack[-1].name)()
+                    if (
+                        cql.Flags.END_FILTER_NON_PARAMETER
+                        in node_stack[-1].tokendef.flags
+                    ):
+                        getattr(self, "collapse_" + node_stack[-1].name)()
                         if self.cql_error:
                             return
                         break
                     self._pop_top_stack(node_stack)
-            if cql.Flags.HALT_POP_CHAINED_FILTERS in node_stack[
-                -1].tokendef.flags:
+            if (
+                cql.Flags.HALT_POP_CHAINED_FILTERS
+                in node_stack[-1].tokendef.flags
+            ):
                 break
-            if (cql.Flags.HALT_POP_CHAINED_FILTERS in tokendef.flags and
-                cql.Flags.PARAMETER_TAKES_ARGUMENT in node_stack[
-                    -1].tokendef.flags):
+            if (
+                cql.Flags.HALT_POP_CHAINED_FILTERS in tokendef.flags
+                and cql.Flags.PARAMETER_TAKES_ARGUMENT
+                in node_stack[-1].tokendef.flags
+            ):
                 break
-            if cql.Flags.HALT_POP_NO_BODY_FILTER in node_stack[
-                -1].tokendef.flags:
+            if (
+                cql.Flags.HALT_POP_NO_BODY_FILTER
+                in node_stack[-1].tokendef.flags
+            ):
                 if len(node_stack[-1].children) < 3:
                     break
             if tokendef.returntype.intersection(
-                node_stack[-1].tokendef.arguments):
+                node_stack[-1].tokendef.arguments
+            ):
                 break
-            if cql.Flags.END_FILTER_NON_PARAMETER in node_stack[
-                -1].tokendef.flags:
-                getattr(self, 'collapse_' + node_stack[-1].name)()
+            if (
+                cql.Flags.END_FILTER_NON_PARAMETER
+                in node_stack[-1].tokendef.flags
+            ):
+                getattr(self, "collapse_" + node_stack[-1].name)()
                 if self.cql_error:
                     return
                 break
             self.cql_error = "".join(
-                ("'", tokendef.name.strip("_"),
-                 "' filter type does not fit expected filter types for '",
-                 node_stack[-1].name.strip("_"), "'"))
+                (
+                    "'",
+                    tokendef.name.strip("_"),
+                    "' filter type does not fit expected filter types for '",
+                    node_stack[-1].name.strip("_"),
+                    "'",
+                )
+            )
             return
 
             # Unreachable, or was it supposed to be one level left?
-            #self._pop_top_stack(node_stack)
+            # self._pop_top_stack(node_stack)
 
         self._consume_token(tokendef)
         child = node_stack[-1].children
@@ -3093,17 +3365,22 @@ class Statement:
         tns = node_stack[-1]
         if tns.tokendef is cql.Token.ASSIGN:
             variable_name = tns.children[0].leaf
-            variable_type = self.variables[variable_name]['type']
+            variable_type = self.variables[variable_name]["type"]
             if variable_type is not cql.NUMERIC_VARIABLE:
                 if variable_type is not cql.Token.VARIABLE:
                     self.cql_error = "".join(
-                        ("Operand to left of '", tns.tokendef.name,
-                         "', a '",
-                         variable_type.variant_name,
-                         "', can not be used with '",
-                         cql.UNARY_MINUS.variant_name, "'"))
+                        (
+                            "Operand to left of '",
+                            tns.tokendef.name,
+                            "', a '",
+                            variable_type.variant_name,
+                            "', can not be used with '",
+                            cql.UNARY_MINUS.variant_name,
+                            "'",
+                        )
+                    )
                     return
-                self.variables[variable_name]['type'] = cql.NUMERIC_VARIABLE
+                self.variables[variable_name]["type"] = cql.NUMERIC_VARIABLE
                 tns.children[0].set_tokendef_to_variant(cql.NUMERIC_VARIABLE)
         if definition.arguments:
             self._insert_filter(match, definition)
@@ -3115,7 +3392,8 @@ class Statement:
     def _insert_infix_arithmetic(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
 
@@ -3125,15 +3403,19 @@ class Statement:
         while node_stack:
             if len(node_stack) == 1:
                 break
-            if cql.Flags.NO_ARITHMETIC_FILTERS in node_stack[
-                -1].tokendef.flags:
+            if (
+                cql.Flags.NO_ARITHMETIC_FILTERS
+                in node_stack[-1].tokendef.flags
+            ):
                 self._consume_token(tokendef)
                 if tokendef is cql.Token.STAR:
                     self._pop_top_stack(node_stack).parameters[
-                        cql.Token.REPEATSTAR] = True
+                        cql.Token.REPEATSTAR
+                    ] = True
                 elif tokendef is cql.Token.PLUS:
                     self._pop_top_stack(node_stack).parameters[
-                        cql.Token.REPEATPLUS] = True
+                        cql.Token.REPEATPLUS
+                    ] = True
                 else:
                     self._pop_top_stack(node_stack).parameters[tokendef] = True
                 return
@@ -3144,25 +3426,36 @@ class Statement:
 
         # Avoid the test for a bare filter which take arguments if the filter
         # has children or a leaf value.
-        if (cql.Flags.ALLOWED_UNARY_MINUS in node_stack[-1].tokendef.flags and
-            (node_stack[-1].leaf or node_stack[-1].children)):
+        if cql.Flags.ALLOWED_UNARY_MINUS in node_stack[-1].tokendef.flags and (
+            node_stack[-1].leaf or node_stack[-1].children
+        ):
             pass
-        elif cql.Flags.ALLOWED_TOP_STACK_AT_END not in node_stack[
-            -1].tokendef.flags:
+        elif (
+            cql.Flags.ALLOWED_TOP_STACK_AT_END
+            not in node_stack[-1].tokendef.flags
+        ):
             self.cql_error = tokendef.name.strip("_").join(
-                ("Argument expected, not '", "' filter"))
+                ("Argument expected, not '", "' filter")
+            )
             return
 
         if cql.TokenTypes.NUMERIC_FILTER not in node_stack[-1].returntype:
             self.cql_error = "".join(
-                ("Operand to left of '", tokendef.name, "' is not a '",
-                 cql.TokenTypes.NUMERIC_FILTER.value, "' filter"))
+                (
+                    "Operand to left of '",
+                    tokendef.name,
+                    "' is not a '",
+                    cql.TokenTypes.NUMERIC_FILTER.value,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags:
             child = node_stack[-1].children[-1]
@@ -3171,8 +3464,10 @@ class Statement:
             node.children.append(self._pop_top_stack(node_stack))
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
-        elif (node_stack[-1].tokendef is not tokendef and
-              cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags):
+        elif (
+            node_stack[-1].tokendef is not tokendef
+            and cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags
+        ):
             node = self.create_node(tokendef)
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
@@ -3181,13 +3476,17 @@ class Statement:
     def _insert_infix_arithmetic_inplace(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
-        if cql.Flags.ALLOWED_TOP_STACK_AT_END not in node_stack[
-            -1].tokendef.flags:
+        if (
+            cql.Flags.ALLOWED_TOP_STACK_AT_END
+            not in node_stack[-1].tokendef.flags
+        ):
             self.cql_error = tokendef.name.strip("_").join(
-                ("Argument expected, not '", "' filter"))
+                ("Argument expected, not '", "' filter")
+            )
             return
         if not tokendef.arguments.intersection(node_stack[-1].returntype):
             filter_types = [f.value for f in tokendef.arguments]
@@ -3198,25 +3497,36 @@ class Statement:
             else:
                 filter_type_report = ""
             self.cql_error = "".join(
-                ("Operand to left of '", tokendef.name, "' is not a '",
-                 filter_type_report, "' filter"))
+                (
+                    "Operand to left of '",
+                    tokendef.name,
+                    "' is not a '",
+                    filter_type_report,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
-        if (node_stack and
-            cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags
+        ):
             child = node_stack[-1].children[-1]
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if node_stack[-1].precedence > tokendef.precedence:
             node = self.create_node(tokendef)
             node.children.append(self._pop_top_stack(node_stack))
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
-        elif (node_stack[-1].tokendef is not tokendef and
-              cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags):
+        elif (
+            node_stack[-1].tokendef is not tokendef
+            and cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags
+        ):
             node = self.create_node(tokendef)
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
@@ -3233,13 +3543,17 @@ class Statement:
     def _insert_infix_relational(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
-        if cql.Flags.ALLOWED_TOP_STACK_AT_END not in node_stack[
-            -1].tokendef.flags:
+        if (
+            cql.Flags.ALLOWED_TOP_STACK_AT_END
+            not in node_stack[-1].tokendef.flags
+        ):
             self.cql_error = tokendef.name.strip("_").join(
-                ("Argument expected, not '", "' filter"))
+                ("Argument expected, not '", "' filter")
+            )
             return
         if not tokendef.arguments.intersection(node_stack[-1].returntype):
             filter_types = [f.value for f in tokendef.arguments]
@@ -3250,25 +3564,36 @@ class Statement:
             else:
                 filter_type_report = ""
             self.cql_error = "".join(
-                ("Operand to left of '", tokendef.name, "' is not a '",
-                 filter_type_report, "' filter"))
+                (
+                    "Operand to left of '",
+                    tokendef.name,
+                    "' is not a '",
+                    filter_type_report,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
-        if (node_stack and
-            cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags
+        ):
             child = node_stack[-1].children[-1]
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if node_stack[-1].precedence > tokendef.precedence:
             node = self.create_node(tokendef)
             node.children.append(self._pop_top_stack(node_stack))
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
-        elif (node_stack[-1].tokendef is not tokendef and
-              cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags):
+        elif (
+            node_stack[-1].tokendef is not tokendef
+            and cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags
+        ):
             node = self.create_node(tokendef)
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
@@ -3277,7 +3602,8 @@ class Statement:
     def _insert_infix_binary(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
         if not tokendef.arguments.intersection(node_stack[-1].returntype):
@@ -3289,25 +3615,36 @@ class Statement:
             else:
                 filter_type_report = ""
             self.cql_error = "".join(
-                ("Operand to left of '", tokendef.name, "' is not a '",
-                 filter_type_report, "' filter"))
+                (
+                    "Operand to left of '",
+                    tokendef.name,
+                    "' is not a '",
+                    filter_type_report,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
-        if (node_stack and
-            cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags
+        ):
             child = node_stack[-1].children[-1]
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if node_stack[-1].precedence > tokendef.precedence:
             node = self.create_node(tokendef)
             node.children.append(self._pop_top_stack(node_stack))
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
-        elif (node_stack[-1].tokendef is not tokendef and
-              cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags):
+        elif (
+            node_stack[-1].tokendef is not tokendef
+            and cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags
+        ):
             node = self.create_node(tokendef)
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
@@ -3316,30 +3653,39 @@ class Statement:
     def _insert_infix_boolean(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
-        if cql.Flags.ALLOWED_TOP_STACK_AT_END not in node_stack[
-            -1].tokendef.flags:
+        if (
+            cql.Flags.ALLOWED_TOP_STACK_AT_END
+            not in node_stack[-1].tokendef.flags
+        ):
             self.cql_error = tokendef.name.strip("_").join(
-                ("Argument expected, not '", "' filter"))
+                ("Argument expected, not '", "' filter")
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
-        if (node_stack and
-            cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags
+        ):
             child = node_stack[-1].children[-1]
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if node_stack[-1].precedence > tokendef.precedence:
             node = self.create_node(tokendef)
             node.children.append(self._pop_top_stack(node_stack))
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
-        elif (node_stack[-1].tokendef is not tokendef and
-              cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags):
+        elif (
+            node_stack[-1].tokendef is not tokendef
+            and cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags
+        ):
             node = self.create_node(tokendef)
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
@@ -3348,30 +3694,42 @@ class Statement:
     def _insert_infix_colon(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
         if cql.TokenTypes.POSITION_FILTER not in node_stack[-1].returntype:
             self.cql_error = "".join(
-                ("Operand to left of '", tokendef.name, "' is not a '",
-                 cql.TokenTypes.POSITION_FILTER.value, "' filter"))
+                (
+                    "Operand to left of '",
+                    tokendef.name,
+                    "' is not a '",
+                    cql.TokenTypes.POSITION_FILTER.value,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
-        if (node_stack and
-            cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags
+        ):
             child = node_stack[-1].children[-1]
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if node_stack[-1].precedence > tokendef.precedence:
             node = self.create_node(tokendef)
             node.children.append(self._pop_top_stack(node_stack))
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
-        elif (node_stack[-1].tokendef is not tokendef and
-              cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags):
+        elif (
+            node_stack[-1].tokendef is not tokendef
+            and cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags
+        ):
             node = self.create_node(tokendef)
             node_stack[-1].children[-1] = node
             self._append_node_to_node_stack(node)
@@ -3380,18 +3738,23 @@ class Statement:
     def _insert_infix_assign(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
         if cql.Flags.ASSIGN_TO_VARIABLE not in node_stack[-1].tokendef.flags:
-            self.cql_error = node_stack[-1].name.strip("_").join(
-                ("Cannot assign to a '", "', only a variable"))
+            self.cql_error = (
+                node_stack[-1]
+                .name.strip("_")
+                .join(("Cannot assign to a '", "', only a variable"))
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags:
             node = self.create_node(tokendef)
@@ -3408,22 +3771,32 @@ class Statement:
     def _insert_infix(self, match, tokendef):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
         if cql.TokenTypes.SET_FILTER not in node_stack[-1].returntype:
             self.cql_error = "".join(
-                ("Operand to left of '", tokendef.name, "' is not a '",
-                 cql.TokenTypes.SET_FILTER.value, "' filter"))
+                (
+                    "Operand to left of '",
+                    tokendef.name,
+                    "' is not a '",
+                    cql.TokenTypes.SET_FILTER.value,
+                    "' filter",
+                )
+            )
             return
         self._consume_token(tokendef)
         child = self._pop_top_stack(node_stack)
-        if (node_stack and
-            cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags):
+        if (
+            node_stack
+            and cql.Flags.CLOSE_BRACE_OR_PARENTHESIS in child.tokendef.flags
+        ):
             child = node_stack[-1].children[-1]
         if not node_stack:
             self.cql_error = tokendef.name.strip("_").join(
-                ("Empty node stack found processing '", "'"))
+                ("Empty node stack found processing '", "'")
+            )
             return
         if cql.Flags.NAMED_COMPOUND_FILTER in tokendef.flags:
             node = self.create_node(tokendef)
@@ -3440,41 +3813,53 @@ class Statement:
     def _insert_repeat_regular_expression(self, match, tokendef, value=True):
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
-                ("'", "' operator at start of statement"))
+                ("'", "' operator at start of statement")
+            )
             return
         node_stack = self.node_stack
         while node_stack:
             if len(node_stack) == 1:
                 break
-            if cql.Flags.NO_ARITHMETIC_FILTERS in node_stack[-1].tokendef.flags:
+            if (
+                cql.Flags.NO_ARITHMETIC_FILTERS
+                in node_stack[-1].tokendef.flags
+            ):
                 self._consume_token(tokendef)
                 self._pop_top_stack(node_stack).parameters[tokendef] = value
                 return
             self._pop_top_stack(node_stack)
         self.cql_error = tokendef.name.strip("_").join(
-            ("'", "' operator found outside 'line' filter"))
+            ("'", "' operator found outside 'line' filter")
+        )
 
     def _close_parentheses(self, argument_count=2, minimum_arguments=None):
         node_stack = self.node_stack
         if argument_count and len(node_stack[-1].children) != argument_count:
             self.cql_error = "".join(
-                ("Filter '", node_stack[-1].name,
-                 "' with parentheses takes ",
-                 str(argument_count),
-                 " arguments but ",
-                 str(len(node_stack[-1].children)), " given",
-                 ))
+                (
+                    "Filter '",
+                    node_stack[-1].name,
+                    "' with parentheses takes ",
+                    str(argument_count),
+                    " arguments but ",
+                    str(len(node_stack[-1].children)),
+                    " given",
+                )
+            )
             return
         if not argument_count:
             if minimum_arguments is None:
                 minimum_arguments = 1
             if len(node_stack[-1].children) < minimum_arguments:
                 self.cql_error = "".join(
-                    ("Filter '", node_stack[-1].name,
-                     "' with parentheses takes ",
-                     str(minimum_arguments),
-                     " or more arguments but none given",
-                     ))
+                    (
+                        "Filter '",
+                        node_stack[-1].name,
+                        "' with parentheses takes ",
+                        str(minimum_arguments),
+                        " or more arguments but none given",
+                    )
+                )
                 return
         self._consume_token(self.node_stack[-1].tokendef)
         self._pop_top_stack(self.node_stack)
@@ -3495,290 +3880,375 @@ class Statement:
     def _accept_as_filter_parameter(self, tokendef, filternode, tokenset):
         if filternode.tokendef in tokenset:
             return True
-        self.cql_error = ''.join(
-            ("'",
-             tokendef.name,
-             "' is not a parameter of the '",
-             filternode.name,
-             "' filter",
-             ))
+        self.cql_error = "".join(
+            (
+                "'",
+                tokendef.name,
+                "' is not a parameter of the '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return False
 
     def _accept_as_consecutivemoves_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.Token.CONSECUTIVEMOVES})
+            tokendef, filternode, {cql.Token.CONSECUTIVEMOVES}
+        )
 
     def _accept_as_find_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.Token.FIND})
+            tokendef, filternode, {cql.Token.FIND}
+        )
 
     def _accept_as_line_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.Token.LINE})
+            tokendef, filternode, {cql.Token.LINE}
+        )
 
     def _accept_as_find_or_line_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode,
-            {cql.Token.FIND, cql.Token.LINE, cql.LINE_LEFTARROW})
+            tokendef,
+            filternode,
+            {cql.Token.FIND, cql.Token.LINE, cql.LINE_LEFTARROW},
+        )
 
     def _accept_as_line_leftarrow_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.LINE_LEFTARROW})
+            tokendef, filternode, {cql.LINE_LEFTARROW}
+        )
 
     def _accept_as_line_rightarrow_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.Token.LINE, cql.LINE_RIGHTARROW})
+            tokendef, filternode, {cql.Token.LINE, cql.LINE_RIGHTARROW}
+        )
 
     def _accept_as_move_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.Token.MOVE, cql.MOVE_SET})
+            tokendef, filternode, {cql.Token.MOVE, cql.MOVE_SET}
+        )
 
     def _accept_as_pin_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode, {cql.Token.PIN})
+            tokendef, filternode, {cql.Token.PIN}
+        )
 
     def _accept_as_line_or_move_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode,
-            {cql.Token.LINE, cql.Token.MOVE, cql.MOVE_SET})
+            tokendef,
+            filternode,
+            {cql.Token.LINE, cql.Token.MOVE, cql.MOVE_SET},
+        )
 
     def _accept_as_move_or_pin_parameter(self, tokendef, filternode):
         return self._accept_as_filter_parameter(
-            tokendef, filternode,
-            {cql.Token.MOVE, cql.MOVE_SET, cql.Token.PIN})
+            tokendef, filternode, {cql.Token.MOVE, cql.MOVE_SET, cql.Token.PIN}
+        )
 
     def _legal_or_pseudolegal_parameter_present(self, tokendef, filternode):
-        if (cql.Token.LEGAL not in filternode.parameters and
-            cql.Token.PSEUDOLEGAL not in filternode.parameters):
+        if (
+            cql.Token.LEGAL not in filternode.parameters
+            and cql.Token.PSEUDOLEGAL not in filternode.parameters
+        ):
             return False
-        names = "".join((
-            cql.Token.LEGAL.name,
-            "' or '",
-            cql.Token.PSEUDOLEGAL.name,
-            ))
-        self.cql_error = ''.join(
-            ("Parameter '",
-             tokendef.name,
-             "' cannot be used with '",
-             names,
-             "' in '",
-             filternode.name,
-             "' filter",
-             ))
+        names = "".join(
+            (
+                cql.Token.LEGAL.name,
+                "' or '",
+                cql.Token.PSEUDOLEGAL.name,
+            )
+        )
+        self.cql_error = "".join(
+            (
+                "Parameter '",
+                tokendef.name,
+                "' cannot be used with '",
+                names,
+                "' in '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return True
 
-    def _parameters_incompatible_with_legal_present(self, tokendef, filternode):
-        if (cql.Token.CAPTURE not in filternode.parameters and
-            cql.Token.NULL not in filternode.parameters and
-            cql.Token.PRIMARY not in filternode.parameters and
-            cql.Token.PROMOTE not in filternode.parameters and
-            cql.Token.SECONDARY not in filternode.parameters):
+    def _parameters_incompatible_with_legal_present(
+        self, tokendef, filternode
+    ):
+        if (
+            cql.Token.CAPTURE not in filternode.parameters
+            and cql.Token.NULL not in filternode.parameters
+            and cql.Token.PRIMARY not in filternode.parameters
+            and cql.Token.PROMOTE not in filternode.parameters
+            and cql.Token.SECONDARY not in filternode.parameters
+        ):
             return False
-        names = "".join((
-            cql.Token.CAPTURE.name,
-            "', '",
-            cql.Token.NULL.name,
-            "', '",
-            cql.Token.PRIMARY.name,
-            "', '",
-            cql.Token.PROMOTE.name,
-            "', or '",
-            cql.Token.SECONDARY.name,
-            ))
-        self.cql_error = ''.join(
-            ("Parameter '",
-             tokendef.name,
-             "' cannot be used with '",
-             names,
-             "' in '",
-             filternode.name,
-             "' filter",
-             ))
+        names = "".join(
+            (
+                cql.Token.CAPTURE.name,
+                "', '",
+                cql.Token.NULL.name,
+                "', '",
+                cql.Token.PRIMARY.name,
+                "', '",
+                cql.Token.PROMOTE.name,
+                "', or '",
+                cql.Token.SECONDARY.name,
+            )
+        )
+        self.cql_error = "".join(
+            (
+                "Parameter '",
+                tokendef.name,
+                "' cannot be used with '",
+                names,
+                "' in '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return True
 
     def _parameters_incompatible_with_null_present(self, tokendef, filternode):
-        if (cql.Token.ENPASSANT not in filternode.parameters and
-            cql.Token.ENPASSANT_SQUARE not in filternode.parameters and
-            cql.Token.FROM not in filternode.parameters and
-            cql.Token.LEGAL not in filternode.parameters and
-            cql.Token.PSEUDOLEGAL not in filternode.parameters and
-            cql.Token.PROMOTE not in filternode.parameters and
-            cql.Token.TO not in filternode.parameters):
+        if (
+            cql.Token.ENPASSANT not in filternode.parameters
+            and cql.Token.ENPASSANT_SQUARE not in filternode.parameters
+            and cql.Token.FROM not in filternode.parameters
+            and cql.Token.LEGAL not in filternode.parameters
+            and cql.Token.PSEUDOLEGAL not in filternode.parameters
+            and cql.Token.PROMOTE not in filternode.parameters
+            and cql.Token.TO not in filternode.parameters
+        ):
             return False
-        names = "".join((
-            cql.Token.ENPASSANT.name,
-            "', '",
-            cql.Token.ENPASSANT_SQUARE.name,
-            "', '",
-            cql.Token.FROM.name,
-            "', '",
-            cql.Token.LEGAL.name,
-            "', '",
-            cql.Token.PSEUDOLEGAL.name,
-            "', '",
-            cql.Token.PROMOTE.name,
-            "', or '",
-            cql.Token.TO.name,
-            ))
-        self.cql_error = ''.join(
-            ("Parameter '",
-             tokendef.name,
-             "' cannot be used with '",
-             names,
-             "' in '",
-             filternode.name,
-             "' filter",
-             ))
+        names = "".join(
+            (
+                cql.Token.ENPASSANT.name,
+                "', '",
+                cql.Token.ENPASSANT_SQUARE.name,
+                "', '",
+                cql.Token.FROM.name,
+                "', '",
+                cql.Token.LEGAL.name,
+                "', '",
+                cql.Token.PSEUDOLEGAL.name,
+                "', '",
+                cql.Token.PROMOTE.name,
+                "', or '",
+                cql.Token.TO.name,
+            )
+        )
+        self.cql_error = "".join(
+            (
+                "Parameter '",
+                tokendef.name,
+                "' cannot be used with '",
+                names,
+                "' in '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return True
 
     def _null_or_promote_parameter_present(self, tokendef, filternode):
-        if (cql.Token.NULL not in filternode.parameters and
-            cql.Token.PROMOTE not in filternode.parameters):
+        if (
+            cql.Token.NULL not in filternode.parameters
+            and cql.Token.PROMOTE not in filternode.parameters
+        ):
             return False
-        names = "".join((
-            cql.Token.NULL.name,
-            "' or '",
-            cql.Token.PROMOTE.name,
-            ))
-        self.cql_error = ''.join(
-            ("Parameter '",
-             tokendef.name,
-             "' cannot be used with '",
-             names,
-             "' in '",
-             filternode.name,
-             "' filter",
-             ))
+        names = "".join(
+            (
+                cql.Token.NULL.name,
+                "' or '",
+                cql.Token.PROMOTE.name,
+            )
+        )
+        self.cql_error = "".join(
+            (
+                "Parameter '",
+                tokendef.name,
+                "' cannot be used with '",
+                names,
+                "' in '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return True
 
     def _null_or_enpassant_parameter_present(self, tokendef, filternode):
-        if (cql.Token.NULL not in filternode.parameters and
-            cql.Token.ENPASSANT not in filternode.parameters and
-            cql.Token.ENPASSANT_SQUARE not in filternode.parameters):
+        if (
+            cql.Token.NULL not in filternode.parameters
+            and cql.Token.ENPASSANT not in filternode.parameters
+            and cql.Token.ENPASSANT_SQUARE not in filternode.parameters
+        ):
             return False
-        names = "".join((
-            cql.Token.NULL.name,
-            "', '",
-            cql.Token.ENPASSANT.name,
-            "', or '",
-            cql.Token.ENPASSANT_SQUARE.name,
-            ))
-        self.cql_error = ''.join(
-            ("Parameter '",
-             tokendef.name,
-             "' cannot be used with '",
-             names,
-             "' in '",
-             filternode.name,
-             "' filter",
-             ))
+        names = "".join(
+            (
+                cql.Token.NULL.name,
+                "', '",
+                cql.Token.ENPASSANT.name,
+                "', or '",
+                cql.Token.ENPASSANT_SQUARE.name,
+            )
+        )
+        self.cql_error = "".join(
+            (
+                "Parameter '",
+                tokendef.name,
+                "' cannot be used with '",
+                names,
+                "' in '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return True
 
     def _duplicate_parameter(self, tokendef, filternode):
         if tokendef not in filternode.parameters:
             return False
-        self.cql_error = ''.join(
-            ("Parameter '",
-             tokendef.name,
-             "' cannot be repeated in '",
-             filternode.name,
-             "' filter",
-             ))
+        self.cql_error = "".join(
+            (
+                "Parameter '",
+                tokendef.name,
+                "' cannot be repeated in '",
+                filternode.name,
+                "' filter",
+            )
+        )
         return True
 
     def _multiple_castling_parameters(self, tokendef, filternode):
-        if ((cql.Token.CASTLE in filternode.parameters and
-             tokendef is not cql.Token.CASTLE) or
-            (cql.Token.OO in filternode.parameters and
-             tokendef is not cql.Token.OO) or
-            (cql.Token.OOO in filternode.parameters and
-             tokendef is not cql.Token.OOO)):
-            names = "".join((
-                cql.Token.CASTLE.name,
-                "', '",
-                cql.Token.OO.name,
-                "', and '",
-                cql.Token.OOO.name,
-                ))
-            self.cql_error = ''.join(
-                ("Parameter '",
-                 tokendef.name,
-                 "' cannot be present in '",
-                 filternode.name,
-                 "' filter with other parameters from '",
-                 names,
-                 "'",
-                 ))
+        if (
+            (
+                cql.Token.CASTLE in filternode.parameters
+                and tokendef is not cql.Token.CASTLE
+            )
+            or (
+                cql.Token.OO in filternode.parameters
+                and tokendef is not cql.Token.OO
+            )
+            or (
+                cql.Token.OOO in filternode.parameters
+                and tokendef is not cql.Token.OOO
+            )
+        ):
+            names = "".join(
+                (
+                    cql.Token.CASTLE.name,
+                    "', '",
+                    cql.Token.OO.name,
+                    "', and '",
+                    cql.Token.OOO.name,
+                )
+            )
+            self.cql_error = "".join(
+                (
+                    "Parameter '",
+                    tokendef.name,
+                    "' cannot be present in '",
+                    filternode.name,
+                    "' filter with other parameters from '",
+                    names,
+                    "'",
+                )
+            )
             return True
         return False
 
     def _multiple_move_kind_parameters(self, tokendef, filternode):
-        if ((cql.Token.LEGAL in filternode.parameters and
-             tokendef is not cql.Token.LEGAL) or
-            (cql.Token.PSEUDOLEGAL in filternode.parameters and
-             tokendef is not cql.Token.PSEUDOLEGAL) or
-            (cql.Token.PREVIOUS in filternode.parameters and
-             tokendef is not cql.Token.PREVIOUS)):
-            names = "".join((
-                cql.Token.LEGAL.name,
-                "', '",
-                cql.Token.PSEUDOLEGAL.name,
-                "', and '",
-                cql.Token.PREVIOUS.name,
-                ))
-            self.cql_error = ''.join(
-                ("Parameter '",
-                 tokendef.name,
-                 "' cannot be present in '",
-                 filternode.name,
-                 "' filter with other parameters from '",
-                 names,
-                 "'",
-                 ))
+        if (
+            (
+                cql.Token.LEGAL in filternode.parameters
+                and tokendef is not cql.Token.LEGAL
+            )
+            or (
+                cql.Token.PSEUDOLEGAL in filternode.parameters
+                and tokendef is not cql.Token.PSEUDOLEGAL
+            )
+            or (
+                cql.Token.PREVIOUS in filternode.parameters
+                and tokendef is not cql.Token.PREVIOUS
+            )
+        ):
+            names = "".join(
+                (
+                    cql.Token.LEGAL.name,
+                    "', '",
+                    cql.Token.PSEUDOLEGAL.name,
+                    "', and '",
+                    cql.Token.PREVIOUS.name,
+                )
+            )
+            self.cql_error = "".join(
+                (
+                    "Parameter '",
+                    tokendef.name,
+                    "' cannot be present in '",
+                    filternode.name,
+                    "' filter with other parameters from '",
+                    names,
+                    "'",
+                )
+            )
             return True
         return False
 
     def _multiple_enpassant_parameters(self, tokendef, filternode):
-        if ((cql.Token.ENPASSANT in filternode.parameters and
-             tokendef is not cql.Token.ENPASSANT) or
-            (cql.Token.ENPASSANT_SQUARE in filternode.parameters and
-             tokendef is not cql.Token.ENPASSANT_SQUARE)):
-            names = "".join((
-                cql.Token.ENPASSANT.name,
-                "', and '",
-                cql.Token.ENPASSANT_SQUARE.name,
-                ))
-            self.cql_error = ''.join(
-                ("Parameter '",
-                 tokendef.name,
-                 "' cannot be present in '",
-                 filternode.name,
-                 "' filter with other parameters from '",
-                 names,
-                 "'",
-                 ))
+        if (
+            cql.Token.ENPASSANT in filternode.parameters
+            and tokendef is not cql.Token.ENPASSANT
+        ) or (
+            cql.Token.ENPASSANT_SQUARE in filternode.parameters
+            and tokendef is not cql.Token.ENPASSANT_SQUARE
+        ):
+            names = "".join(
+                (
+                    cql.Token.ENPASSANT.name,
+                    "', and '",
+                    cql.Token.ENPASSANT_SQUARE.name,
+                )
+            )
+            self.cql_error = "".join(
+                (
+                    "Parameter '",
+                    tokendef.name,
+                    "' cannot be present in '",
+                    filternode.name,
+                    "' filter with other parameters from '",
+                    names,
+                    "'",
+                )
+            )
             return True
         return False
 
     def _multiple_variation_parameters(self, tokendef, filternode):
-        if ((cql.Token.PRIMARY in filternode.parameters and
-             tokendef is not cql.Token.PRIMARY) or
-            (cql.Token.SECONDARY in filternode.parameters and
-             tokendef is not cql.Token.SECONDARY)):
-            names = "".join((
-                cql.Token.PRIMARY.name,
-                "', and '",
-                cql.Token.SECONDARY.name,
-                ))
-            self.cql_error = ''.join(
-                ("Parameter '",
-                 tokendef.name,
-                 "' cannot be present in '",
-                 filternode.name,
-                 "' filter with other parameters from '",
-                 names,
-                 "'",
-                 ))
+        if (
+            cql.Token.PRIMARY in filternode.parameters
+            and tokendef is not cql.Token.PRIMARY
+        ) or (
+            cql.Token.SECONDARY in filternode.parameters
+            and tokendef is not cql.Token.SECONDARY
+        ):
+            names = "".join(
+                (
+                    cql.Token.PRIMARY.name,
+                    "', and '",
+                    cql.Token.SECONDARY.name,
+                )
+            )
+            self.cql_error = "".join(
+                (
+                    "Parameter '",
+                    tokendef.name,
+                    "' cannot be present in '",
+                    filternode.name,
+                    "' filter with other parameters from '",
+                    names,
+                    "'",
+                )
+            )
             return True
         return False
 
@@ -3802,7 +4272,7 @@ class ErrorInformation:
         self._statement = statement
         self._tokens = None
         self._next_token = None
-        self._description = ''
+        self._description = ""
 
     @property
     def statement(self):
@@ -3817,7 +4287,7 @@ class ErrorInformation:
     @tokens.setter
     def tokens(self, value):
         if self._tokens is not None:
-            raise StatementError('A token error already exists.')
+            raise StatementError("A token error already exists.")
         self._tokens = value
 
     @property
@@ -3828,7 +4298,7 @@ class ErrorInformation:
     @next_token.setter
     def next_token(self, value):
         if self._next_token is not None:
-            raise StatementError('A token error already exists.')
+            raise StatementError("A token error already exists.")
         self._next_token = value
 
     @property
@@ -3851,61 +4321,69 @@ class ErrorInformation:
         """Return a str for error dialogue noting token being processed."""
         if self.error_found:
             if self._description:
-                return ''.join(
-                    ('Error processing statement:\n\n',
-                     self._statement.strip(),
-                     '\n\n',
-                     self._description,
-                     '.',
-                     ))
+                return "".join(
+                    (
+                        "Error processing statement:\n\n",
+                        self._statement.strip(),
+                        "\n\n",
+                        self._description,
+                        ".",
+                    )
+                )
             if self._next_token:
-                next_token = ''.join(
-                    ('\n\nThe item being processed is:\n\n',
-                     ''.join(self._next_token),
-                     ))
+                next_token = "".join(
+                    (
+                        "\n\nThe item being processed is:\n\n",
+                        "".join(self._next_token),
+                    )
+                )
             else:
-                next_token = ''
-            return ''.join(
-                ('Error, likely at or just after end of:\n\n',
-                 ' '.join(''.join(t) for t in self._tokens),
-                 '\n\nderived from:\n\n',
-                 self._statement.strip(),
-                 next_token,
-                 ))
-        return ''.join(('An unidentified error seems to exist in:\n\n',
-                         self._statement.strip(),
-                         ))
+                next_token = ""
+            return "".join(
+                (
+                    "Error, likely at or just after end of:\n\n",
+                    " ".join("".join(t) for t in self._tokens),
+                    "\n\nderived from:\n\n",
+                    self._statement.strip(),
+                    next_token,
+                )
+            )
+        return "".join(
+            (
+                "An unidentified error seems to exist in:\n\n",
+                self._statement.strip(),
+            )
+        )
 
-    def add_error_report_to_message(self, message, sep='\n\n'):
+    def add_error_report_to_message(self, message, sep="\n\n"):
         """Return message extended with an error report."""
-        return ''.join((message, sep, self.get_error_report()))
+        return "".join((message, sep, self.get_error_report()))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # To try out CQL version 6.0.4 statements run:
     # "python -m chessql.core.statement".
     # To additionally include a trace of the parsing run:
     # "python -m chessql.core.statement trace".
 
-
     import sys
 
     from .node import NodeError
-
 
     class StatementTest(Statement):
         """Extend Statement to demonstrate CQL statement parsing."""
 
         _options = set(s.lower() for s in sys.argv[1:])
 
-        if 'trace' in _options:
+        if "trace" in _options:
 
-            if 'append' in _options or 'pop' in _options:
+            if "append" in _options or "pop" in _options:
 
                 def _process_token(self, match, groupkey):
-                    print('_process_token',
-                          match.lastgroup, repr(match.group()))
+                    print(
+                        "_process_token", match.lastgroup, repr(match.group())
+                    )
                     getattr(self, groupkey)(match, cql.CQL_TOKENS[groupkey])
                     print(self._trace(groupkey))
 
@@ -3915,13 +4393,13 @@ if __name__ == '__main__':
                     getattr(self, groupkey)(match, cql.CQL_TOKENS[groupkey])
                     print(self._trace(groupkey))
 
-        if 'pop' in _options:
+        if "pop" in _options:
 
             def _pop_top_stack(self, stack):
-                print('_pop_top_stack', stack[-1])
+                print("_pop_top_stack", stack[-1])
                 return super()._pop_top_stack(stack)
 
-        if 'insert' in _options:
+        if "insert" in _options:
 
             # The 'end', 'precedence', 'skip', and 'default', annotations give
             # the condition in which a node is added to stack for tracing
@@ -3929,117 +4407,124 @@ if __name__ == '__main__':
             # Do not forget to change this definition to fit changes in the
             # superclass definition.
             def _append_node_to_node_stack(self, node):
-                ret = 'skip'
+                ret = "skip"
                 node_stack = self.node_stack
                 if not self.tokens_available:
                     node_stack.append(node)
-                    ret = 'end'
-                elif (cql.CQL_TOKENS[self._peek_token(0).lastgroup
-                                     ].precedence >
-                      node_stack[-1].precedence):
+                    ret = "end"
+                elif (
+                    cql.CQL_TOKENS[self._peek_token(0).lastgroup].precedence
+                    > node_stack[-1].precedence
+                ):
                     node_stack.append(node)
-                    ret = 'precedence'
+                    ret = "precedence"
                 else:
                     node_stack.append(node)
-                    ret = 'default'
-                print('_append_node_to_node_stack', ret, node)
+                    ret = "default"
+                print("_append_node_to_node_stack", ret, node)
 
             def _insert_filter(self, *args):
-                print('_insert_filter')
+                print("_insert_filter")
                 super()._insert_filter(*args)
 
             def _insert_leaf_filter(self, *args):
-                print('_insert_leaf_filter')
+                print("_insert_leaf_filter")
                 super()._insert_leaf_filter(*args)
 
             def _insert_unary_minus(self, *args):
-                print('_insert_unary_minus')
+                print("_insert_unary_minus")
                 super()._insert_unary_minus(*args)
 
             def _insert_infix_arithmetic(self, *args):
-                print('_insert_infix_arithmetic')
+                print("_insert_infix_arithmetic")
                 super()._insert_infix_arithmetic(*args)
 
             def _insert_infix_arithmetic_inplace(self, *args):
-                print('_insert_infix_arithmetic_inplace')
+                print("_insert_infix_arithmetic_inplace")
                 super()._insert_infix_arithmetic_inplace(*args)
 
             def _insert_infix_relational(self, *args):
-                print('_insert_infix_relational')
+                print("_insert_infix_relational")
                 super()._insert_infix_relational(*args)
 
             def _insert_infix_binary(self, *args):
-                print('_insert_infix_binary')
+                print("_insert_infix_binary")
                 super()._insert_infix_binary(*args)
 
             def _insert_infix_boolean(self, *args):
-                print('_insert_infix_boolean')
+                print("_insert_infix_boolean")
                 super()._insert_infix_boolean(*args)
 
             def _insert_infix_colon(self, *args):
-                print('_insert_infix_colon')
+                print("_insert_infix_colon")
                 super()._insert_infix_colon(*args)
 
             def _insert_infix_assign(self, *args):
-                print('_insert_infix_assign')
+                print("_insert_infix_assign")
                 super()._insert_infix_assign(*args)
 
             def _insert_infix(self, *args):
-                print('_insert_infix')
+                print("_insert_infix")
                 super()._insert_infix(*args)
 
         del _options
 
         @staticmethod
         def _trace_start(method_name):
-            return ' '.join(('--', str(method_name)))
+            return " ".join(("--", str(method_name)))
 
         def _trace_body(self):
             variables = self.variables
-            trace = [' '.join(('  ', str(len(variables)), 'variables'))]
+            trace = [" ".join(("  ", str(len(variables)), "variables"))]
             if variables:
                 for name, var in sorted(variables.items()):
-                    type_ = var['type']
-                    svtn = str(type_.variant_name
-                               if type_.variant_name is not None
-                               else type_.name)
-                    if var.get('persistent'):
-                        varstr = 'persistent ' + svtn
+                    type_ = var["type"]
+                    svtn = str(
+                        type_.variant_name
+                        if type_.variant_name is not None
+                        else type_.name
+                    )
+                    if var.get("persistent"):
+                        varstr = "persistent " + svtn
                     else:
                         varstr = svtn
-                    parameters = var.get('parameters')
+                    parameters = var.get("parameters")
                     if parameters:
-                        varstr += ','.join(parameters).join(('<', '>'))
-                    body = var.get('body')
+                        varstr += ",".join(parameters).join(("<", ">"))
+                    body = var.get("body")
                     if body:
-                        bodystr = ' '.join(body)
+                        bodystr = " ".join(body)
                         if len(bodystr) > 40:
-                            bodystr = ' ... '.join((bodystr[:25], bodystr[-6:]))
-                        varstr += bodystr.join(('<', '>'))
-                    trace.append(' '.join(('     ', name, varstr)))
+                            bodystr = " ... ".join(
+                                (bodystr[:25], bodystr[-6:])
+                            )
+                        varstr += bodystr.join(("<", ">"))
+                    trace.append(" ".join(("     ", name, varstr)))
             trace.append(
-                ' '.join(('  ', str(len(self.node_stack)), 'node_stack')))
+                " ".join(("  ", str(len(self.node_stack)), "node_stack"))
+            )
             for node in self.node_stack:
-                trace.append(' '.join(('     ', str(node))))
-            return '\n'.join(trace)
+                trace.append(" ".join(("     ", str(node))))
+            return "\n".join(trace)
 
         @staticmethod
         def _trace_end():
-            return '-- end'
+            return "-- end"
 
         def _trace(self, method_name):
-            return '\n'.join((self._trace_start(method_name),
-                              self._trace_body(),
-                              self._trace_end(),
-                              ))
-
+            return "\n".join(
+                (
+                    self._trace_start(method_name),
+                    self._trace_body(),
+                    self._trace_end(),
+                )
+            )
 
     del sys
 
-
     while True:
         try:
-            s = input('cql> ')
+            s = input("cql> ")
         except EOFError as exc:
             print(exc)
             break
@@ -4053,8 +4538,10 @@ if __name__ == '__main__':
             query.process_statement(s)
             print()
             for stmatch in query.tokens[0]:
-                print(*[(k, v) for k, v in stmatch.groupdict().items() if v],
-                      sep='\t')
+                print(
+                    *[(k, v) for k, v in stmatch.groupdict().items() if v],
+                    sep="\t"
+                )
             # pylint objection to svtn, vs, and bs, as dodgy constant
             # names was not understood: especially as s, t, p, v, (at
             # least) in nearby code do not attract the snake_case
@@ -4070,59 +4557,76 @@ if __name__ == '__main__':
             # to variable_name and variable, and probably other names
             # too.
             for vn, v in sorted(query.variables.items()):
-                t = v['type']
+                t = v["type"]
                 print(type(v), type(t))
-                SVTN = str(t.variant_name
-                           if t.variant_name is not None else t.name)
-                if v.get('persistent'):
-                    VS = 'persistent ' + SVTN
+                SVTN = str(
+                    t.variant_name if t.variant_name is not None else t.name
+                )
+                if v.get("persistent"):
+                    VS = "persistent " + SVTN
                 else:
                     VS = SVTN
-                p = v.get('parameters')
+                p = v.get("parameters")
                 if p:
-                    VS += ','.join(p).join(('<', '>'))
-                b = v.get('body')
+                    VS += ",".join(p).join(("<", ">"))
+                b = v.get("body")
                 if b:
-                    BS = ' '.join(b)
+                    BS = " ".join(b)
                     if len(BS) > 50:
-                        BS = ' ... '.join((BS[:30], BS[-11:]))
-                    VS += BS.join(('<', '>'))
-                print( " ".join((vn, VS)))
+                        BS = " ... ".join((BS[:30], BS[-11:]))
+                    VS += BS.join(("<", ">"))
+                print(" ".join((vn, VS)))
             print(query.cql_parameters)
             print(query.cql_filters)
             print(query.node_stack)
             if query.cql_error:
-                print("".join(
-                    ("error: ",
-                     query.cql_error.description,
-                     "\nin query: '",
-                     s,
-                     "'\nafter: '",
-                     " ".join((m.groupdict(default='<?>').get(k.name, '')
-                               for m, k in query.cql_tokens_stack[0])),
-                     "'",
-                     )))
+                print(
+                    "".join(
+                        (
+                            "error: ",
+                            query.cql_error.description,
+                            "\nin query: '",
+                            s,
+                            "'\nafter: '",
+                            " ".join(
+                                (
+                                    m.groupdict(default="<?>").get(k.name, "")
+                                    for m, k in query.cql_tokens_stack[0]
+                                )
+                            ),
+                            "'",
+                        )
+                    )
+                )
             else:
 
                 # Should not need this: it means stack has not collapsed in
                 # the correct way.
                 if not query.cql_filters and query.node_stack:
-                    print('node_stack[0]', query.node_stack[0])
+                    print("node_stack[0]", query.node_stack[0])
 
-                print('ok:', s)
+                print("ok:", s)
             print()
         except (NodeError, StatementError) as exc:
             print()
             print(exc)
             print()
-            print("".join(
-                ("error in query:\n'",
-                 s,
-                 "'\nafter:\n'",
-                 " ".join((m.groupdict(default='<?>').get(k.name, '')
-                           for m, k in query.cql_tokens_stack[0])),
-                 "'",
-                 )))
+            print(
+                "".join(
+                    (
+                        "error in query:\n'",
+                        s,
+                        "'\nafter:\n'",
+                        " ".join(
+                            (
+                                m.groupdict(default="<?>").get(k.name, "")
+                                for m, k in query.cql_tokens_stack[0]
+                            )
+                        ),
+                        "'",
+                    )
+                )
+            )
             print()
             continue
         except RuntimeError as exc:

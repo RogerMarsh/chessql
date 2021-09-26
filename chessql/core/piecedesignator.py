@@ -20,7 +20,7 @@ from .constants import (
     SQUARE_DESIGNATOR_SEPARATOR,
     FILE_NAMES,
     RANK_NAMES,
-    )
+)
 
 
 # Originally written to the cql1.0 definition.
@@ -38,56 +38,104 @@ class PieceDesignator:
 
     """
 
-    simple_square_designator = r''.join(
-        (r'(', FILE_RANGE, RANK_RANGE, r')', r'|',
-         r'(', FILE_RANGE, RANK_DESIGNATOR, r')', r'|',
-         r'(', FILE_DESIGNATOR, RANK_RANGE, r')', r'|',
-         r'(', FILE_DESIGNATOR, RANK_DESIGNATOR, r')'
-         ))
-    square_designator = r''.join(
-        (r'(?:', COMPOUND_DESIGNATOR_START,
-         r'([a-h][-a-h1-8]*[1-8](?:,[a-h][-a-h1-8]*[1-8])*)',
-         COMPOUND_DESIGNATOR_END, r')', r'|',
-         r'(?:', simple_square_designator, r')',
-         ))
-    piece_type_designator = r''.join(
-        (r'(?:', COMPOUND_DESIGNATOR_START,
-         r'([^', COMPOUND_DESIGNATOR_END, r']+)',
-         COMPOUND_DESIGNATOR_END, r')', r'|',
-         r'([', PIECE_NAMES, r'])',
-         ))
+    simple_square_designator = r"".join(
+        (
+            r"(",
+            FILE_RANGE,
+            RANK_RANGE,
+            r")",
+            r"|",
+            r"(",
+            FILE_RANGE,
+            RANK_DESIGNATOR,
+            r")",
+            r"|",
+            r"(",
+            FILE_DESIGNATOR,
+            RANK_RANGE,
+            r")",
+            r"|",
+            r"(",
+            FILE_DESIGNATOR,
+            RANK_DESIGNATOR,
+            r")",
+        )
+    )
+    square_designator = r"".join(
+        (
+            r"(?:",
+            COMPOUND_DESIGNATOR_START,
+            r"([a-h][-a-h1-8]*[1-8](?:,[a-h][-a-h1-8]*[1-8])*)",
+            COMPOUND_DESIGNATOR_END,
+            r")",
+            r"|",
+            r"(?:",
+            simple_square_designator,
+            r")",
+        )
+    )
+    piece_type_designator = r"".join(
+        (
+            r"(?:",
+            COMPOUND_DESIGNATOR_START,
+            r"([^",
+            COMPOUND_DESIGNATOR_END,
+            r"]+)",
+            COMPOUND_DESIGNATOR_END,
+            r")",
+            r"|",
+            r"([",
+            PIECE_NAMES,
+            r"])",
+        )
+    )
 
     # This is used to split the piece designator to fit the processing needed.
     # The constants module defines a PIECE_DESIGNATOR which consumes a piece
     # designator without collecting the component parts.
-    PIECE_DESIGNATOR = r''.join(
-        (r'(?:', square_designator, r')', r'|',
-         r'(?:(?:(?:', piece_type_designator,
-         r')(?:', square_designator, r'))', r'|',
-         r'(?:', piece_type_designator, r')',
-         r')',
-         ))
+    PIECE_DESIGNATOR = r"".join(
+        (
+            r"(?:",
+            square_designator,
+            r")",
+            r"|",
+            r"(?:(?:(?:",
+            piece_type_designator,
+            r")(?:",
+            square_designator,
+            r"))",
+            r"|",
+            r"(?:",
+            piece_type_designator,
+            r")",
+            r")",
+        )
+    )
     del simple_square_designator, square_designator, piece_type_designator
 
     piece_designator = re.compile(PIECE_DESIGNATOR)
 
     PieceDesignator = collections.namedtuple(
-        'PieceDesignator',
-        ' '.join(('compoundsquare',
-                  'filerankrange',
-                  'filerange',
-                  'rankrange',
-                  'square',
-                  'compoundpiece_s',
-                  'piece_s',
-                  'p_compoundsquare',
-                  'p_filerankrange',
-                  'p_filerange',
-                  'p_rankrange',
-                  'p_square',
-                  'compoundpiece',
-                  'piece',
-                  )))
+        "PieceDesignator",
+        " ".join(
+            (
+                "compoundsquare",
+                "filerankrange",
+                "filerange",
+                "rankrange",
+                "square",
+                "compoundpiece_s",
+                "piece_s",
+                "p_compoundsquare",
+                "p_filerankrange",
+                "p_filerange",
+                "p_rankrange",
+                "p_square",
+                "compoundpiece",
+                "piece",
+            )
+        ),
+    )
 
     # Default value.
     # When True the items in designator_set must not be in position.
@@ -110,7 +158,9 @@ class PieceDesignator:
         """
         self._match = self.piece_designator.match(self._token)
         if self._match:
-            self._groups = self.PieceDesignator(*self._match.groups(default=''))
+            self._groups = self.PieceDesignator(
+                *self._match.groups(default="")
+            )
 
     def __deepcopy__(self, memo):
         """Make a copy to which a transform can be applied.
@@ -137,10 +187,12 @@ class PieceDesignator:
     @staticmethod
     def _expand_composite_square(startfile, endfile, startrank, endrank):
         files = FILE_NAMES[
-            FILE_NAMES.index(startfile):FILE_NAMES.index(endfile)]
+            FILE_NAMES.index(startfile) : FILE_NAMES.index(endfile)
+        ]
         files += endfile
         ranks = RANK_NAMES[
-            RANK_NAMES.index(startrank):RANK_NAMES.index(endrank)]
+            RANK_NAMES.index(startrank) : RANK_NAMES.index(endrank)
+        ]
         ranks += endrank
         return {f + r for f in files for r in ranks}
 
@@ -158,29 +210,41 @@ class PieceDesignator:
         self._square_ranges_valid = True
         for sqr in self.get_squares_list():
             if len(sqr) == 2:
-                squareset.update(self._expand_composite_square(
-                    sqr[0], sqr[0], sqr[1], sqr[1]))
+                squareset.update(
+                    self._expand_composite_square(
+                        sqr[0], sqr[0], sqr[1], sqr[1]
+                    )
+                )
             elif len(sqr) == 6:
                 if sqr[0] > sqr[2] or sqr[3] > sqr[5]:
                     self._square_ranges_valid = False
-                squareset.update(self._expand_composite_square(
-                    sqr[0], sqr[2], sqr[3], sqr[5]))
+                squareset.update(
+                    self._expand_composite_square(
+                        sqr[0], sqr[2], sqr[3], sqr[5]
+                    )
+                )
             elif len(sqr) == 4:
-                if sqr[1] == '-':
+                if sqr[1] == "-":
                     if sqr[0] > sqr[2]:
                         self._square_ranges_valid = False
-                    squareset.update(self._expand_composite_square(
-                        sqr[0], sqr[2], sqr[3], sqr[3]))
-                elif sqr[2] == '-':
+                    squareset.update(
+                        self._expand_composite_square(
+                            sqr[0], sqr[2], sqr[3], sqr[3]
+                        )
+                    )
+                elif sqr[2] == "-":
                     if sqr[1] > sqr[3]:
                         self._square_ranges_valid = False
-                    squareset.update(self._expand_composite_square(
-                        sqr[0], sqr[0], sqr[1], sqr[3]))
+                    squareset.update(
+                        self._expand_composite_square(
+                            sqr[0], sqr[0], sqr[1], sqr[3]
+                        )
+                    )
             else:
-                squareset.add('') # Any square, s assumed to be ''.
-        self._designator_set = {p + s
-                                for p in self.get_pieces()
-                                for s in squareset}
+                squareset.add("")  # Any square, s assumed to be ''.
+        self._designator_set = {
+            p + s for p in self.get_pieces() for s in squareset
+        }
 
     def get_shift_limits(self, ranklimits, filelimits):
         """Adjust ranges in ranklimits and filelimits to fit square designator.
@@ -245,8 +309,7 @@ class PieceDesignator:
                 if sqr[1] == RANGE_SEPARATOR:
                     if sqr[0] > sqr[2]:
                         self._square_ranges_valid = False
-                    if (sqr[0] != FILE_NAMES[0] or
-                        sqr[2] != FILE_NAMES[-1]):
+                    if sqr[0] != FILE_NAMES[0] or sqr[2] != FILE_NAMES[-1]:
                         lowfile = min(lowfile, sqr[0])
                         highfile = max(highfile, sqr[2])
                     lowrank = min(lowrank, sqr[3])
@@ -256,8 +319,7 @@ class PieceDesignator:
                         self._square_ranges_valid = False
                     lowfile = min(lowfile, sqr[0])
                     highfile = max(highfile, sqr[0])
-                    if (sqr[1] != RANK_NAMES[0] or
-                        sqr[3] != RANK_NAMES[-1]):
+                    if sqr[1] != RANK_NAMES[0] or sqr[3] != RANK_NAMES[-1]:
                         lowrank = min(lowrank, sqr[1])
                         highrank = max(highrank, sqr[3])
         if ranklimits:
@@ -275,10 +337,14 @@ class PieceDesignator:
 
         """
         groups = self._groups
-        pieces = ''.join((groups.compoundpiece_s,
-                          groups.piece_s,
-                          groups.compoundpiece,
-                          groups.piece))
+        pieces = "".join(
+            (
+                groups.compoundpiece_s,
+                groups.piece_s,
+                groups.compoundpiece,
+                groups.piece,
+            )
+        )
         if not pieces:
             pieces = ANY_WHITE_PIECE_NAME + ANY_BLACK_PIECE_NAME
         return pieces
@@ -286,16 +352,20 @@ class PieceDesignator:
     def get_squares(self):
         """Return the square designator component of the piece designator."""
         groups = self._groups
-        return ''.join((groups.compoundsquare,
-                        groups.filerankrange,
-                        groups.filerange,
-                        groups.rankrange,
-                        groups.square,
-                        groups.p_compoundsquare,
-                        groups.p_filerankrange,
-                        groups.p_filerange,
-                        groups.p_rankrange,
-                        groups.p_square))
+        return "".join(
+            (
+                groups.compoundsquare,
+                groups.filerankrange,
+                groups.filerange,
+                groups.rankrange,
+                groups.square,
+                groups.p_compoundsquare,
+                groups.p_filerankrange,
+                groups.p_filerange,
+                groups.p_rankrange,
+                groups.p_square,
+            )
+        )
 
     def get_squares_list(self):
         """Return list of squares in the piece designator."""
@@ -314,9 +384,11 @@ class PieceDesignator:
 
 def empty_copy(obj):
     """Return an empty instance of obj's class."""
+
     class Empty(obj.__class__):
         def __init__(self):
             pass
+
     newcopy = Empty()
     newcopy.__class__ = obj.__class__
     return newcopy

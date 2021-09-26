@@ -79,17 +79,18 @@ class Node:
     # usually the same; and returntype is usually different.
     # The precedence and pattern, tokendef[2:4], are always the same.
     def set_tokendef_to_variant(
-            self,
-            tokendef,
-            same_flags=True,
-            same_returntype=False,
-            same_arguments=True):
+        self,
+        tokendef,
+        same_flags=True,
+        same_returntype=False,
+        same_arguments=True,
+    ):
         """Adjust self to be same kind of token as tokendef."""
         if same_flags:
             assert tokendef[1] == self.tokendef[1]
             pass
         assert tokendef[2] == self.tokendef[2]
-        #assert tokendef[3] in self.tokendef[3]
+        # assert tokendef[3] in self.tokendef[3]
         if same_returntype:
             assert tokendef[4] == self.tokendef[4]
             pass
@@ -110,21 +111,36 @@ class Node:
     def __str__(self):
         """Return string representation of self."""
         # Assumption is these four parameters are mutually exclusive.
-        for rtd in (RANGE, Token.REPEATRANGE, Token.FUNCTION, QUOTED_STRING,
-                   FUNCTION_NAME):
+        for rtd in (
+            RANGE,
+            Token.REPEATRANGE,
+            Token.FUNCTION,
+            QUOTED_STRING,
+            FUNCTION_NAME,
+        ):
             if rtd in self.parameters:
                 rng = self.parameters[rtd]
                 if isinstance(rng, str):
-                    text = [''.join((self.name, '<', rng, '>'))]
+                    text = ["".join((self.name, "<", rng, ">"))]
                 elif len(rng) == 1:
-                    text = [''.join((self.name, '<', str(rng[0]), '>'))]
+                    text = ["".join((self.name, "<", str(rng[0]), ">"))]
                 elif len(rng) == 2:
-                    text = [''.join(
-                        (self.name, '<', str(rng[0]), ',', str(rng[1]), '>'))]
+                    text = [
+                        "".join(
+                            (
+                                self.name,
+                                "<",
+                                str(rng[0]),
+                                ",",
+                                str(rng[1]),
+                                ">",
+                            )
+                        )
+                    ]
                 elif rtd is Token.FUNCTION:
-                    text = [''.join((self.name, '<', ','.join(rng), '>'))]
+                    text = ["".join((self.name, "<", ",".join(rng), ">"))]
                 else:
-                    text = [''.join((self.name, '<?,?>'))]
+                    text = ["".join((self.name, "<?,?>"))]
                 break
         else:
             text = [self.name]
@@ -132,12 +148,12 @@ class Node:
         for parameter in self.parameters:
             if parameter is rtd:
                 continue
-            text.extend(('<', parameter.name, '>'))
+            text.extend(("<", parameter.name, ">"))
         if self.children:
-            dtxt = ', '.join((str(c) for c in self.children)).join(('[', ']'))
+            dtxt = ", ".join((str(c) for c in self.children)).join(("[", "]"))
         else:
             dtxt = str(self.leaf)
-        return ', '.join((''.join(text), dtxt)).join(('(', ')'))
+        return ", ".join(("".join(text), dtxt)).join(("(", ")"))
 
     @property
     def occupied(self):
@@ -167,9 +183,11 @@ class Node:
 
 def empty_copy(obj):
     """Return an empty instance of obj's class."""
+
     class Empty(obj.__class__):
         def __init__(self):
             pass
+
     newcopy = Empty()
     newcopy.__class__ = obj.__class__
     return newcopy

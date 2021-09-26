@@ -62,10 +62,18 @@ from enum import Enum
 from . import constants
 
 TokenDefinition = namedtuple(
-    'TokenDefinition',
-    ['name', 'flags', 'precedence', 'pattern', 'returntype', 'arguments',
-     'variant_name'],
-    defaults=(None,))
+    "TokenDefinition",
+    [
+        "name",
+        "flags",
+        "precedence",
+        "pattern",
+        "returntype",
+        "arguments",
+        "variant_name",
+    ],
+    defaults=(None,),
+)
 
 
 # The assumption a filter with arguments cannot be top of stack when all tokens
@@ -77,23 +85,23 @@ TokenDefinition = namedtuple(
 class Flags(Enum):
     """Flags defined to control parsing of CQL statements."""
 
-    HALT_POP_CHAINED_FILTERS = 'halt_pop_chained_filters'
-    CLOSE_BRACE_OR_PARENTHESIS = 'close_brace_or_parenthesis'
-    NAMED_COMPOUND_FILTER = 'named_compound_filter'
-    INHIBIT_ENCLOSING_TRANSFORMS = 'inhibit_enclosing_transforms'
-    ASSIGN_TO_VARIABLE = 'assign_to_variable'
-    INCOMPLETE_IF_ON_STACK = 'incomplete_if_on_stack'
-    ALLOWED_TOP_STACK_AT_END = 'allowed_top_stack_at_end'
-    PARAMETER_TAKES_ARGUMENT = 'parameter_takes_argument'
-    PARENTHESIZED_ARGUMENTS = 'parenthesized_arguments'
-    HALT_POP_NO_BODY_FILTER = 'halt_pop_no_body_filter'
-    ACCEPT_RANGE = 'accept_range'
-    END_FILTER_NON_PARAMETER = 'end_filter_non_parameter'
-    ALLOWED_UNARY_MINUS = 'allowed_unary_minus'
-    NO_ARITHMETIC_FILTERS = 'no_arithmetic_filters'
-    STATEMENT_FRAME = 'statement_frame'
-    LINE_FRAME = 'line_frame'
-    IF_FRAME = 'if_frame'
+    HALT_POP_CHAINED_FILTERS = "halt_pop_chained_filters"
+    CLOSE_BRACE_OR_PARENTHESIS = "close_brace_or_parenthesis"
+    NAMED_COMPOUND_FILTER = "named_compound_filter"
+    INHIBIT_ENCLOSING_TRANSFORMS = "inhibit_enclosing_transforms"
+    ASSIGN_TO_VARIABLE = "assign_to_variable"
+    INCOMPLETE_IF_ON_STACK = "incomplete_if_on_stack"
+    ALLOWED_TOP_STACK_AT_END = "allowed_top_stack_at_end"
+    PARAMETER_TAKES_ARGUMENT = "parameter_takes_argument"
+    PARENTHESIZED_ARGUMENTS = "parenthesized_arguments"
+    HALT_POP_NO_BODY_FILTER = "halt_pop_no_body_filter"
+    ACCEPT_RANGE = "accept_range"
+    END_FILTER_NON_PARAMETER = "end_filter_non_parameter"
+    ALLOWED_UNARY_MINUS = "allowed_unary_minus"
+    NO_ARITHMETIC_FILTERS = "no_arithmetic_filters"
+    STATEMENT_FRAME = "statement_frame"
+    LINE_FRAME = "line_frame"
+    IF_FRAME = "if_frame"
     # FUNCTION_FRAME for function calls may not work because function names are
     # not keywords, but a subset of variable names.
 
@@ -116,64 +124,76 @@ _statement_frame = frozenset({Flags.STATEMENT_FRAME})
 _line_frame = frozenset({Flags.LINE_FRAME})
 _if_frame = frozenset({Flags.IF_FRAME})
 
+
 class TokenTypes(Enum):
     """The token types defined in the CQL documentation."""
 
-    NUMERAL = 'numeral'
-    UNSET_VARIABLE = 'unset variable'
-    NUMERIC_FILTER = 'numeric'
-    POSITION_FILTER = 'position'
-    LOGICAL_FILTER = 'logical'
-    SET_FILTER = 'set'
+    NUMERAL = "numeral"
+    UNSET_VARIABLE = "unset variable"
+    NUMERIC_FILTER = "numeric"
+    POSITION_FILTER = "position"
+    LOGICAL_FILTER = "logical"
+    SET_FILTER = "set"
 
     # CQL documentation for variables says there are four types: numeric, set,
     # piece, and position.  Function names occupy the same name space.  The
     # 'square' filter refers to square variables, which seem to behave as set
     # variables.
-    NUMERIC_VARIABLE = 'numeric variable'
-    POSITION_VARIABLE = 'position variable'
-    PIECE_VARIABLE = 'piece variable'
-    SET_VARIABLE = 'set variable'
+    NUMERIC_VARIABLE = "numeric variable"
+    POSITION_VARIABLE = "position variable"
+    PIECE_VARIABLE = "piece variable"
+    SET_VARIABLE = "set variable"
 
-    FUNCTION_CALL = 'function call'
-    FUNCTION_NAME = 'function name'
-    PERSISTENT_NUMERIC_VARIABLE = 'persistent numeric variable'
+    FUNCTION_CALL = "function call"
+    FUNCTION_NAME = "function name"
+    PERSISTENT_NUMERIC_VARIABLE = "persistent numeric variable"
 
-    LINE_RE_SYMBOLS = 'line re symbols'
+    LINE_RE_SYMBOLS = "line re symbols"
 
-    CONSECUTIVEMOVES_PARAMETER = 'consecutivemoves parameter'
-    MOVE_PARAMETER = 'move parameter'
-    PIN_PARAMETER = 'pin parameter'
-    FIND_PARAMETER = 'find parameter'
-    LINE_PARAMETER = 'line parameter'
-    LINE_LEFTARROW_PARAMETER = 'line leftarrow parameter'
-    LINE_RIGHTARROW_PARAMETER = 'line rightarrow parameter'
+    CONSECUTIVEMOVES_PARAMETER = "consecutivemoves parameter"
+    MOVE_PARAMETER = "move parameter"
+    PIN_PARAMETER = "pin parameter"
+    FIND_PARAMETER = "find parameter"
+    LINE_PARAMETER = "line parameter"
+    LINE_LEFTARROW_PARAMETER = "line leftarrow parameter"
+    LINE_RIGHTARROW_PARAMETER = "line rightarrow parameter"
 
-    THEN_PARAMETER = 'then parameter'
-    ELSE_PARAMETER = 'else parameter'
+    THEN_PARAMETER = "then parameter"
+    ELSE_PARAMETER = "else parameter"
+
 
 _empty_set = frozenset()
-_numeric = frozenset((TokenTypes.NUMERAL, TokenTypes.NUMERIC_FILTER,))
+_numeric = frozenset(
+    (
+        TokenTypes.NUMERAL,
+        TokenTypes.NUMERIC_FILTER,
+    )
+)
 _numeric_filter = frozenset((TokenTypes.NUMERIC_FILTER,))
 _set_filter = frozenset((TokenTypes.SET_FILTER,))
 _logical_filter = frozenset((TokenTypes.LOGICAL_FILTER,))
 _position_filter = frozenset((TokenTypes.POSITION_FILTER,))
-_any_filter = frozenset((
-    TokenTypes.NUMERIC_FILTER,
-    TokenTypes.SET_FILTER,
-    TokenTypes.LOGICAL_FILTER,
-    TokenTypes.POSITION_FILTER,
-    ))
+_any_filter = frozenset(
+    (
+        TokenTypes.NUMERIC_FILTER,
+        TokenTypes.SET_FILTER,
+        TokenTypes.LOGICAL_FILTER,
+        TokenTypes.POSITION_FILTER,
+    )
+)
 _line_re_symbols = frozenset((TokenTypes.LINE_RE_SYMBOLS,))
-_line_constituents = frozenset((
-    TokenTypes.NUMERIC_FILTER,
-    TokenTypes.SET_FILTER,
-    TokenTypes.LOGICAL_FILTER,
-    TokenTypes.POSITION_FILTER,
-    TokenTypes.LINE_RE_SYMBOLS,
-    ))
+_line_constituents = frozenset(
+    (
+        TokenTypes.NUMERIC_FILTER,
+        TokenTypes.SET_FILTER,
+        TokenTypes.LOGICAL_FILTER,
+        TokenTypes.POSITION_FILTER,
+        TokenTypes.LINE_RE_SYMBOLS,
+    )
+)
 _consecutivemoves_parameter = frozenset(
-    (TokenTypes.CONSECUTIVEMOVES_PARAMETER,))
+    (TokenTypes.CONSECUTIVEMOVES_PARAMETER,)
+)
 _move_parameter = frozenset((TokenTypes.MOVE_PARAMETER,))
 _pin_parameter = frozenset((TokenTypes.PIN_PARAMETER,))
 _find_parameter = frozenset((TokenTypes.FIND_PARAMETER,))
@@ -181,26 +201,36 @@ _line_parameter = frozenset((TokenTypes.LINE_PARAMETER,))
 _line_leftarrow_parameter = frozenset((TokenTypes.LINE_LEFTARROW_PARAMETER,))
 _line_rightarrow_parameter = frozenset((TokenTypes.LINE_RIGHTARROW_PARAMETER,))
 _move_or_pin_parameter = frozenset(
-    (TokenTypes.MOVE_PARAMETER, TokenTypes.PIN_PARAMETER,))
-_assign_filters = frozenset((
-    TokenTypes.NUMERIC_FILTER,
-    TokenTypes.SET_FILTER,
-    TokenTypes.POSITION_FILTER,
-    ))
-_relation_filters = frozenset((
-    TokenTypes.NUMERIC_FILTER,
-    TokenTypes.SET_FILTER,
-    TokenTypes.POSITION_FILTER,
-    ))
+    (
+        TokenTypes.MOVE_PARAMETER,
+        TokenTypes.PIN_PARAMETER,
+    )
+)
+_assign_filters = frozenset(
+    (
+        TokenTypes.NUMERIC_FILTER,
+        TokenTypes.SET_FILTER,
+        TokenTypes.POSITION_FILTER,
+    )
+)
+_relation_filters = frozenset(
+    (
+        TokenTypes.NUMERIC_FILTER,
+        TokenTypes.SET_FILTER,
+        TokenTypes.POSITION_FILTER,
+    )
+)
 _position_variable = frozenset((TokenTypes.POSITION_VARIABLE,))
-_if_constituents = frozenset((
-    TokenTypes.NUMERIC_FILTER,
-    TokenTypes.SET_FILTER,
-    TokenTypes.LOGICAL_FILTER,
-    TokenTypes.POSITION_FILTER,
-    TokenTypes.THEN_PARAMETER,
-    TokenTypes.ELSE_PARAMETER,
-    ))
+_if_constituents = frozenset(
+    (
+        TokenTypes.NUMERIC_FILTER,
+        TokenTypes.SET_FILTER,
+        TokenTypes.LOGICAL_FILTER,
+        TokenTypes.POSITION_FILTER,
+        TokenTypes.THEN_PARAMETER,
+        TokenTypes.ELSE_PARAMETER,
+    )
+)
 _then_parameter = frozenset((TokenTypes.THEN_PARAMETER,))
 _else_parameter = frozenset((TokenTypes.ELSE_PARAMETER,))
 _unset_variable = frozenset((TokenTypes.UNSET_VARIABLE,))
@@ -282,53 +312,84 @@ class Token:
 
     # The transform filters: flip through shiftvertical.
     FLIP = TokenDefinition(
-        'flip', _no_flags, 40,
-        r'flip(?:\s+count)?\b',
-        _any_filter,
-        _any_filter)
+        "flip", _no_flags, 40, r"flip(?:\s+count)?\b", _any_filter, _any_filter
+    )
     FLIPCOLOR = TokenDefinition(
-        'flipcolor', _no_flags, 40,
-        r'flipcolor(?:\s+count)?\b',
+        "flipcolor",
+        _no_flags,
+        40,
+        r"flipcolor(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     FLIPHORIZONTAL = TokenDefinition(
-        'fliphorizontal', _no_flags, 40,
-        r'fliphorizontal(?:\s+count)?\b',
+        "fliphorizontal",
+        _no_flags,
+        40,
+        r"fliphorizontal(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     FLIPVERTICAL = TokenDefinition(
-        'flipvertical', _no_flags, 40,
-        r'flipvertical(?:\s+count)?\b',
+        "flipvertical",
+        _no_flags,
+        40,
+        r"flipvertical(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     # Table of filters gives a count parameter but reversecolor documentation
     # does not.  Syntax error if count included in cql6.exe call.
     REVERSECOLOR = TokenDefinition(
-        'reversecolor', _no_flags, 40, r'reversecolor\b',
+        "reversecolor",
+        _no_flags,
+        40,
+        r"reversecolor\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     ROTATE45 = TokenDefinition(
-        'rotate45', _no_flags, 40, r'rotate45(?:\s+count)?\b',
+        "rotate45",
+        _no_flags,
+        40,
+        r"rotate45(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     ROTATE90 = TokenDefinition(
-        'rotate90', _no_flags, 40, r'rotate90(?:\s+count)?\b',
+        "rotate90",
+        _no_flags,
+        40,
+        r"rotate90(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     SHIFT = TokenDefinition(
-        'shift', _no_flags, 40, r'shift(?:\s+count)?\b',
+        "shift",
+        _no_flags,
+        40,
+        r"shift(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     SHIFTHORIZONTAL = TokenDefinition(
-        'shifthorizontal', _no_flags, 40, r'shifthorizontal(?:\s+count)?\b',
+        "shifthorizontal",
+        _no_flags,
+        40,
+        r"shifthorizontal(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     SHIFTVERTICAL = TokenDefinition(
-        'shiftvertical', _no_flags, 40, r'shiftvertical(?:\s+count)?\b',
+        "shiftvertical",
+        _no_flags,
+        40,
+        r"shiftvertical(?:\s+count)?\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     # The direction filters: anydirection through vertical.
     # Ranges must be given as numeric literals or numeric variables, examples:
@@ -342,72 +403,100 @@ class Token:
     # but, on current thinking, clumsy compared with deciding what to do when a
     # numeric literal or numeric variable token is found.
     ANYDIRECTION = TokenDefinition(
-        'anydirection', _accept_range, 200, r'anydirection\b',
+        "anydirection",
+        _accept_range,
+        200,
+        r"anydirection\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     DIAGONAL = TokenDefinition(
-        'diagonal', _accept_range, 200, r'diagonal\b',
-        _set_filter,
-        _set_filter)
+        "diagonal", _accept_range, 200, r"diagonal\b", _set_filter, _set_filter
+    )
     DOWN = TokenDefinition(
-        'down', _accept_range, 200, r'down\b',
-        _set_filter,
-        _set_filter)
+        "down", _accept_range, 200, r"down\b", _set_filter, _set_filter
+    )
     HORIZONTAL = TokenDefinition(
-        'horizontal', _accept_range, 200, r'horizontal\b',
+        "horizontal",
+        _accept_range,
+        200,
+        r"horizontal\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     LEFT = TokenDefinition(
-        'left', _accept_range, 200, r'left\b',
-        _set_filter,
-        _set_filter)
+        "left", _accept_range, 200, r"left\b", _set_filter, _set_filter
+    )
     NORTHEAST = TokenDefinition(
-        'northeast', _accept_range, 200, r'northeast\b',
+        "northeast",
+        _accept_range,
+        200,
+        r"northeast\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     NORTHWEST = TokenDefinition(
-        'northwest', _accept_range, 200, r'northwest\b',
+        "northwest",
+        _accept_range,
+        200,
+        r"northwest\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     ORTHOGONAL = TokenDefinition(
-        'orthogonal', _accept_range, 200, r'orthogonal\b',
+        "orthogonal",
+        _accept_range,
+        200,
+        r"orthogonal\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     RIGHT = TokenDefinition(
-        'right', _accept_range, 200, r'right\b',
-        _set_filter,
-        _set_filter)
+        "right", _accept_range, 200, r"right\b", _set_filter, _set_filter
+    )
     SOUTHEAST = TokenDefinition(
-        'southeast', _accept_range, 200, r'southeast\b',
+        "southeast",
+        _accept_range,
+        200,
+        r"southeast\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     SOUTHWEST = TokenDefinition(
-        'southwest', _accept_range, 200, r'southwest\b',
+        "southwest",
+        _accept_range,
+        200,
+        r"southwest\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     UP = TokenDefinition(
-        'up', _accept_range, 200, r'up\b',
-        _set_filter,
-        _set_filter)
+        "up", _accept_range, 200, r"up\b", _set_filter, _set_filter
+    )
     VERTICAL = TokenDefinition(
-        'vertical', _accept_range, 200, r'vertical\b',
-        _set_filter,
-        _set_filter)
+        "vertical", _accept_range, 200, r"vertical\b", _set_filter, _set_filter
+    )
 
     # The binary infix filters.
 
     # Almost always 'and' and '{ ... }' are equivalent.  Documentation mentions
     # '{ ... }' sometimes returns a value but 'and' never does.
     AND = TokenDefinition(
-        'and_', _named_compound_filter,
-        60, r'and\b',
+        "and_",
+        _named_compound_filter,
+        60,
+        r"and\b",
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
     OR = TokenDefinition(
-        'or_', _named_compound_filter,
-        50, r'or\b',
+        "or_",
+        _named_compound_filter,
+        50,
+        r"or\b",
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     # The infix filters.
     # The ':' operator is included because it has same shape as the explicit
@@ -416,21 +505,37 @@ class Token:
     # 'position 0 : child : comment ("first position")' is the example.
     # But 'Q attacks r attacks K' is a legal statement too.
     ATTACKEDBY = TokenDefinition(
-        'attackedby', _named_compound_filter, 180, r'attackedby\b',
+        "attackedby",
+        _named_compound_filter,
+        180,
+        r"attackedby\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     ATTACKS = TokenDefinition(
-        'attacks', _named_compound_filter, 180, r'attacks\b',
+        "attacks",
+        _named_compound_filter,
+        180,
+        r"attacks\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     COLON = TokenDefinition(
-        'colon', _named_compound_filter, 210, r':',
+        "colon",
+        _named_compound_filter,
+        210,
+        r":",
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
     IN = TokenDefinition(
-        'in_', _named_compound_filter, 80, r'in\b',
+        "in_",
+        _named_compound_filter,
+        80,
+        r"in\b",
         _logical_filter,
-        _set_filter)
+        _set_filter,
+    )
 
     # The relational filters or comparison filters.
     # '<', '<=', '>', '>=', '==', and '!='.
@@ -447,32 +552,56 @@ class Token:
     # fit.  Otherwise the lhs operand found is a numeric filter, and the rhs
     # operand can be a set, position, or numeric, filter.
     LT = TokenDefinition(
-        'lt', _named_compound_filter, 90, r'<',
+        "lt",
+        _named_compound_filter,
+        90,
+        r"<",
         _numeric_filter,
-        _relation_filters)
+        _relation_filters,
+    )
     LE = TokenDefinition(
-        'le', _named_compound_filter, 90, r'<=',
+        "le",
+        _named_compound_filter,
+        90,
+        r"<=",
         _numeric_filter,
-        _relation_filters)
+        _relation_filters,
+    )
     GT = TokenDefinition(
-        'gt', _named_compound_filter, 90, r'>',
+        "gt",
+        _named_compound_filter,
+        90,
+        r">",
         _numeric_filter,
-        _relation_filters)
+        _relation_filters,
+    )
     GE = TokenDefinition(
-        'ge', _named_compound_filter, 90, r'>=',
+        "ge",
+        _named_compound_filter,
+        90,
+        r">=",
         _numeric_filter,
-        _relation_filters)
+        _relation_filters,
+    )
 
     # 'k==q' and 'k!=q' are accepted in addition to the other combinations,
     # implying a set comparison rather than a numeric comparison.
     EQ = TokenDefinition(
-        'eq', _named_compound_filter, 90, r'==',
+        "eq",
+        _named_compound_filter,
+        90,
+        r"==",
         _numeric_filter,
-        _relation_filters)
+        _relation_filters,
+    )
     NE = TokenDefinition(
-        'ne', _named_compound_filter, 90, r'!=',
+        "ne",
+        _named_compound_filter,
+        90,
+        r"!=",
         _logical_filter,
-        _relation_filters)
+        _relation_filters,
+    )
 
     # The arithmetic operations on numeric filters.
     # The arithmetic operator is seen as its own filter.
@@ -483,29 +612,24 @@ class Token:
     # interpretation is allowed only after a constituent of a 'line' filter.
     # The regular expression interpretation can be forced by '{*}' and '{+}'.
     STAR = TokenDefinition(
-        'star', _named_compound_filter, 130, r'\*',
-        _numeric_filter,
-        _numeric)
+        "star", _named_compound_filter, 130, r"\*", _numeric_filter, _numeric
+    )
     PLUS = TokenDefinition(
-        'plus', _named_compound_filter, 110, r'\+',
-        _numeric_filter,
-        _numeric)
+        "plus", _named_compound_filter, 110, r"\+", _numeric_filter, _numeric
+    )
 
     # Currently this is treated as the '2 - 1' minus, not unary minus.
     # If token to left is not a numeric filter or is minus: its unary minus!
     MINUS = TokenDefinition(
-        'minus', _named_compound_filter, 110, r'-',
-        _numeric_filter,
-        _numeric)
+        "minus", _named_compound_filter, 110, r"-", _numeric_filter, _numeric
+    )
 
     MODULUS = TokenDefinition(
-        'modulus', _named_compound_filter, 130, r'%',
-        _numeric_filter,
-        _numeric)
+        "modulus", _named_compound_filter, 130, r"%", _numeric_filter, _numeric
+    )
     DIVIDE = TokenDefinition(
-        'divide', _named_compound_filter, 130, r'/',
-        _numeric_filter,
-        _numeric)
+        "divide", _named_compound_filter, 130, r"/", _numeric_filter, _numeric
+    )
 
     # The '=' filter and its combinations with arithmetic operations.
 
@@ -516,106 +640,152 @@ class Token:
     # syntax error response).  Same with 'and' and '&'.
     # RHS must be set filter, countable filter, or a position filter.
     ASSIGN = TokenDefinition(
-        'assign', _named_compound_filter,
-        40, r'=\??',
+        "assign",
+        _named_compound_filter,
+        40,
+        r"=\??",
         _assign_filters,
-        _assign_filters)
+        _assign_filters,
+    )
 
     IPPLUS = TokenDefinition(
-        'ipplus', _named_compound_filter, 100, r'\+=',
+        "ipplus",
+        _named_compound_filter,
+        100,
+        r"\+=",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
     IPMINUS = TokenDefinition(
-        'ipminus', _named_compound_filter, 100, r'-=',
+        "ipminus",
+        _named_compound_filter,
+        100,
+        r"-=",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
     IPMULTIPLY = TokenDefinition(
-        'ipmultiply', _named_compound_filter, 100, r'\*=',
+        "ipmultiply",
+        _named_compound_filter,
+        100,
+        r"\*=",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
     IPDIVIDE = TokenDefinition(
-        'ipdivide', _named_compound_filter, 100, r'/=',
+        "ipdivide",
+        _named_compound_filter,
+        100,
+        r"/=",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
     IPMODULUS = TokenDefinition(
-        'ipmodulus', _named_compound_filter, 100, r'%=',
+        "ipmodulus",
+        _named_compound_filter,
+        100,
+        r"%=",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
 
     # The '|', '&', '~', and '#' filters.
 
     # The lhs and rhs of | must both be set filters.
     UNION = TokenDefinition(
-        'union', _named_compound_filter, 150, r'\|',
-        _set_filter,
-        _set_filter)
+        "union", _named_compound_filter, 150, r"\|", _set_filter, _set_filter
+    )
 
     # The lhs and rhs of & must both be either set filters or position filters.
     # In both cases the result is a set filter.
     # Replaced by position or set filter version before looking for rhs.
     INTERSECTION = TokenDefinition(
-        'intersection', _named_compound_filter, 160, r'&',
+        "intersection",
+        _named_compound_filter,
+        160,
+        r"&",
         _set_filter,
-        _position_filter.union(_set_filter))
+        _position_filter.union(_set_filter),
+    )
 
     TILDE = TokenDefinition(
-        'tilde', _no_flags, 170, r'~',
-        _set_filter,
-        _set_filter)
+        "tilde", _no_flags, 170, r"~", _set_filter, _set_filter
+    )
     HASH = TokenDefinition(
-        'hash', _allowed_unary_minus, 140, r'#',
-        _numeric_filter,
-        _set_filter)
+        "hash", _allowed_unary_minus, 140, r"#", _numeric_filter, _set_filter
+    )
 
     # The '(', ')', '{', and '}' filters.
     LEFTBRACE = TokenDefinition(
-        'leftbrace',
-        _halt_pop_chained_filters.union(
-            _parenthesized_arguments).union(
-                _incomplete_if_on_stack).union(_allowed_unary_minus), 0, r'{',
+        "leftbrace",
+        _halt_pop_chained_filters.union(_parenthesized_arguments)
+        .union(_incomplete_if_on_stack)
+        .union(_allowed_unary_minus),
+        0,
+        r"{",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     RIGHTBRACE = TokenDefinition(
-        'rightbrace', _close_brace_or_parenthesis, 0, r'}',
+        "rightbrace",
+        _close_brace_or_parenthesis,
+        0,
+        r"}",
         _empty_set,
-        _empty_set)
+        _empty_set,
+    )
 
     # Both returntype and arguments are set to _any_filter because '(' can be
     # used anywhere, although the restrictions on the filters within '()' vary
     # across the cases where parentheses are allowed.
     LEFTPARENTHESIS = TokenDefinition(
-        'leftparenthesis',
-        _halt_pop_chained_filters.union(
-            _parenthesized_arguments).union(_allowed_unary_minus), 0, r'\(',
+        "leftparenthesis",
+        _halt_pop_chained_filters.union(_parenthesized_arguments).union(
+            _allowed_unary_minus
+        ),
+        0,
+        r"\(",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     RIGHTPARENTHESIS = TokenDefinition(
-        'rightparenthesis', _close_brace_or_parenthesis, 0, r'\)',
+        "rightparenthesis",
+        _close_brace_or_parenthesis,
+        0,
+        r"\)",
         _empty_set,
-        _empty_set)
+        _empty_set,
+    )
 
     # The filters whose arguments are wrapped by parentheses.  The keyword cql
     # is included in this section.
     # ancestor through xray.
     ANCESTOR = TokenDefinition(
-        'ancestor',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 40,
-        r'ancestor\s*\(',
+        "ancestor",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        40,
+        r"ancestor\s*\(",
         _numeric_filter,
-        _position_filter)
+        _position_filter,
+    )
     BETWEEN = TokenDefinition(
-        'between',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 140,
-        r'between\s*\(',
+        "between",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        140,
+        r"between\s*\(",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
 
     # The argument is optional: 'child' and 'child(3)' are acceptable forms.
     CHILD = TokenDefinition(
-        'child', _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-        r'child(?:\s*\()?',
+        "child",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"child(?:\s*\()?",
         _position_filter,
-        _numeric)
+        _numeric,
+    )
 
     # If there is only one argument, the enclosing parentheses can be omitted.
     # Comment is listed as a parameter of move too, but the description of move
@@ -625,21 +795,25 @@ class Token:
     # 'move from k to Q comment "a"' being accepted by CQL version 6.0.4.
     # Not sure if this needs _allowed_top_stack_at_end flag?
     COMMENT = TokenDefinition(
-        'comment',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-        r'comment(?:\s*\()?',
+        "comment",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"comment(?:\s*\()?",
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     # _halt_pop_chained_filters is not correct any more, '(' is not consumed
     # by this token, but _parameter_takes_argument is not correct either as
     # multiple keywords ending with '(' are taken.
     CONSECUTIVEMOVES = TokenDefinition(
-        'consecutivemoves',
-        _incomplete_if_on_stack.union(_accept_range), 0,
-        r'consecutivemoves\b',
+        "consecutivemoves",
+        _incomplete_if_on_stack.union(_accept_range),
+        0,
+        r"consecutivemoves\b",
         _numeric_filter,
-        _consecutivemoves_parameter)
+        _consecutivemoves_parameter,
+    )
 
     # Always the first token, always 'cql ( ... )' then arbitrary filters.
     # CQL.type is the query's answer.  (Meant something once: nonsense now.)
@@ -669,34 +843,45 @@ class Token:
     # being taken as a variable name.  Processing for the 'cql' token insists
     # on '( ... )' being present.
     CQL = TokenDefinition(
-        'cql', _halt_pop_chained_filters.union(_statement_frame), 0,
-        r'|'.join(
-            (r'(?:output|input)\s+\S+\.pgn',
-             r'(?:sort\s+)?matchcount(?:\s+[0-9]+){,2}',
-             r'gamenumber(?:\s+[0-9]+){,2}',
-             r'result\s+(?:1-0|1/2-1/2|0-1)',
-             r'silent',
-             r'quiet',
-             r'variations',
-             r'matchstring\s+"(?:[^\\"]|\\.)*"',
-             )).join(
-                 (r'(?:(?:', r')\s+)*')).join((r'cql(?:\s*\(\s*', r'\)\s*)?')),
+        "cql",
+        _halt_pop_chained_filters.union(_statement_frame),
+        0,
+        r"|".join(
+            (
+                r"(?:output|input)\s+\S+\.pgn",
+                r"(?:sort\s+)?matchcount(?:\s+[0-9]+){,2}",
+                r"gamenumber(?:\s+[0-9]+){,2}",
+                r"result\s+(?:1-0|1/2-1/2|0-1)",
+                r"silent",
+                r"quiet",
+                r"variations",
+                r'matchstring\s+"(?:[^\\"]|\\.)*"',
+            )
+        )
+        .join((r"(?:(?:", r")\s+)*"))
+        .join((r"cql(?:\s*\(\s*", r"\)\s*)?")),
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     DESCENDANT = TokenDefinition(
-        'descendant',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 40,
-        r'descendant\s*\(',
+        "descendant",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        40,
+        r"descendant\s*\(",
         _numeric_filter,
-        _position_filter)
+        _position_filter,
+    )
     DISTANCE = TokenDefinition(
-        'distance',
-        _halt_pop_chained_filters.union(
-            _parenthesized_arguments).union(_allowed_unary_minus), 40,
-        r'distance\s*\(',
+        "distance",
+        _halt_pop_chained_filters.union(_parenthesized_arguments).union(
+            _allowed_unary_minus
+        ),
+        40,
+        r"distance\s*\(",
         _numeric_filter,
-        _position_filter)
+        _position_filter,
+    )
 
     # 'in all' is described as a parameter to echo but unlike consecutivemoves
     # and ray, the other filters with parameters and parenthesised arguments,
@@ -706,100 +891,134 @@ class Token:
     # are no parameters ('in all') and the parameter is a compound filter, not
     # (variable, variable), and pick up the variables in pattern.
     ECHO = TokenDefinition(
-        'echo', _incomplete_if_on_stack.union(_halt_pop_no_body_filter), 0,
-        r''.join(
-            (r'echo\s+\(\s*[$A-Z_a-z][$0-9A-Z_a-z]*',
-             r'\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s*\)\s*(?:in\s+all\b)?')),
+        "echo",
+        _incomplete_if_on_stack.union(_halt_pop_no_body_filter),
+        0,
+        r"".join(
+            (
+                r"echo\s+\(\s*[$A-Z_a-z][$0-9A-Z_a-z]*",
+                r"\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s*\)\s*(?:in\s+all\b)?",
+            )
+        ),
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     LCA = TokenDefinition(
-        'lca',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 40,
-        r'lca\s*\(',
+        "lca",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        40,
+        r"lca\s*\(",
         _position_filter,
-        _position_filter)
+        _position_filter,
+    )
     MAKESQUARE = TokenDefinition(
-        'makesquare',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 100,
-        r'makesquare\s*\(',
+        "makesquare",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        100,
+        r"makesquare\s*\(",
         _set_filter,
-        _numeric)
+        _numeric,
+    )
     MAX = TokenDefinition(
-        'max',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-        r'max\s*\(',
+        "max",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"max\s*\(",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
 
     # If there is only one argument, the enclosing parentheses can be omitted.
     MESSAGE = TokenDefinition(
-        'message',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-        r'message(?:\s*\()?',
+        "message",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"message(?:\s*\()?",
         _logical_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     MIN = TokenDefinition(
-        'min',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-        r'min\s*\(',
+        "min",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"min\s*\(",
         _numeric_filter,
-        _numeric)
+        _numeric,
+    )
 
     # Ray clauses like 'ray up left ( A a )' are allowed: 'anydirection' is a
     # shorthand for listing all of them, for example.
     RAY = TokenDefinition(
-        'ray',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-        r'|'.join(
-            (r'up', r'down', r'right', r'left',
-             r'northeast', r'northwest', r'southeast', r'southwest',
-             r'diagonal', r'orthogonal', r'vertical', r'horizontal',
-             r'anydirection')).join((r'ray(?:\s+(?:', r'))*\s*\(')),
+        "ray",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"|".join(
+            (
+                r"up",
+                r"down",
+                r"right",
+                r"left",
+                r"northeast",
+                r"northwest",
+                r"southeast",
+                r"southwest",
+                r"diagonal",
+                r"orthogonal",
+                r"vertical",
+                r"horizontal",
+                r"anydirection",
+            )
+        ).join((r"ray(?:\s+(?:", r"))*\s*\(")),
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
 
     XRAY = TokenDefinition(
-        'xray',
-        _halt_pop_chained_filters.union(_parenthesized_arguments), 140,
-        r'xray\s*\(',
+        "xray",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        140,
+        r"xray\s*\(",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
 
     # The filters which take a single filter as their argument.
     ABS = TokenDefinition(
-        'abs', _allowed_unary_minus, 100, r'abs\b',
-        _numeric_filter,
-        _numeric)
+        "abs", _allowed_unary_minus, 100, r"abs\b", _numeric_filter, _numeric
+    )
     COLORTYPE = TokenDefinition(
-        'colortype', _no_flags, 140, r'colortype\b',
+        "colortype",
+        _no_flags,
+        140,
+        r"colortype\b",
         _numeric_filter,
-        _set_filter)
-    DARK = TokenDefinition(
-        'dark', _no_flags, 200, r'dark\b',
         _set_filter,
-        _set_filter)
+    )
+    DARK = TokenDefinition(
+        "dark", _no_flags, 200, r"dark\b", _set_filter, _set_filter
+    )
     FILE = TokenDefinition(
-        'file', frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}), 140,
-        r'file\b',
+        "file",
+        frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}),
+        140,
+        r"file\b",
         _numeric_filter,
-        _set_filter)
+        _set_filter,
+    )
 
     # position filters: x = find check y = find <-- check
     # numeric filters: x = find all check y = find 1 check z = find <-- 2 check
     #                  w = find <-- all check
     # Replace FIND with FIND_NUMERIC if 'all' parameter is present.
     FIND = TokenDefinition(
-        'find', _no_flags, 40,
-        r'find\b',
-        _position_filter,
-        _any_filter)
+        "find", _no_flags, 40, r"find\b", _position_filter, _any_filter
+    )
 
     LIGHT = TokenDefinition(
-        'light', _no_flags, 200, r'light\b',
-        _set_filter,
-        _set_filter)
+        "light", _no_flags, 200, r"light\b", _set_filter, _set_filter
+    )
 
     # The first '-->' or '<--' converts LINE entry at top of stack to
     # LINE_RIGHTARROW or LINE_LEFTARROW, after which the 'line' filter
@@ -814,33 +1033,40 @@ class Token:
     # consistent with CQL version 6 documentation on the default value of the
     # 'line' filter; but no description of non-default values is given.
     LINE = TokenDefinition(
-        'line', _accept_range.union(_halt_pop_chained_filters
-                                    ).union(_line_frame), 0, r'line\b',
+        "line",
+        _accept_range.union(_halt_pop_chained_filters).union(_line_frame),
+        0,
+        r"line\b",
         _numeric_filter,
-        _line_parameter)
+        _line_parameter,
+    )
 
     LOOP = TokenDefinition(
-        'loop', _no_flags, 40, r'loop\b',
-        _logical_filter,
-        _any_filter)
+        "loop", _no_flags, 40, r"loop\b", _logical_filter, _any_filter
+    )
 
     # If 'capture', 'from', or 'to', is first parameter of 'move' filter then
     # the node's TokenDefinition must be change to a MOVE_SET.
     MOVE = TokenDefinition(
-        'move', _end_filter_non_parameter.union(_allowed_top_stack_at_end), 0,
-        r'move\b',
+        "move",
+        _end_filter_non_parameter.union(_allowed_top_stack_at_end),
+        0,
+        r"move\b",
         _logical_filter,
-        _move_parameter)
+        _move_parameter,
+    )
 
     NOTRANSFORM = TokenDefinition(
-        'notransform', frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}),
-        200, r'notransform\b',
+        "notransform",
+        frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}),
+        200,
+        r"notransform\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
     NOT = TokenDefinition(
-        'not_', _no_flags, 70, r'not\b',
-        _logical_filter,
-        _any_filter)
+        "not_", _no_flags, 70, r"not\b", _logical_filter, _any_filter
+    )
 
     # Two distinct filters with the same keyword, guaranteed different in their
     # last element, 'in' or '='.  Treated as three distinct filters because the
@@ -849,93 +1075,139 @@ class Token:
     # any filter type: not noted as part of the definition of PIECE_IN or
     # PIECE_ALL_IN.
     PIECE_IN = TokenDefinition(
-        'piecein', _incomplete_if_on_stack.union(_halt_pop_no_body_filter), 0,
-        r'piece\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b',
+        "piecein",
+        _incomplete_if_on_stack.union(_halt_pop_no_body_filter),
+        0,
+        r"piece\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     PIECE_ALL_IN = TokenDefinition(
-        'pieceallin',
-        _incomplete_if_on_stack.union(_halt_pop_no_body_filter), 0,
-        r'piece\s+all\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b',
+        "pieceallin",
+        _incomplete_if_on_stack.union(_halt_pop_no_body_filter),
+        0,
+        r"piece\s+all\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b",
         _logical_filter,
-        _set_filter)
-    PIECE_ASSIGNMENT = TokenDefinition(
-        'pieceassignment', _no_flags, 0,
-        r'piece\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+=',
-        _logical_filter,
-        _set_filter)
-    PIECEID = TokenDefinition(
-        'pieceid', _no_flags, 140, r'pieceid\b',
-        _numeric_filter,
-        _set_filter)
-    PIN = TokenDefinition(
-        'pin', _end_filter_non_parameter.union(_allowed_top_stack_at_end), 0,
-        r'pin\b',
         _set_filter,
-        _pin_parameter)
+    )
+    PIECE_ASSIGNMENT = TokenDefinition(
+        "pieceassignment",
+        _no_flags,
+        0,
+        r"piece\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+=",
+        _logical_filter,
+        _set_filter,
+    )
+    PIECEID = TokenDefinition(
+        "pieceid", _no_flags, 140, r"pieceid\b", _numeric_filter, _set_filter
+    )
+    PIN = TokenDefinition(
+        "pin",
+        _end_filter_non_parameter.union(_allowed_top_stack_at_end),
+        0,
+        r"pin\b",
+        _set_filter,
+        _pin_parameter,
+    )
     POSITION = TokenDefinition(
-        'position', _no_flags, 100, r'position\b',
-        _position_filter,
-        _numeric)
+        "position", _no_flags, 100, r"position\b", _position_filter, _numeric
+    )
     POWER = TokenDefinition(
-        'power', _allowed_unary_minus, 140, r'power\b',
+        "power",
+        _allowed_unary_minus,
+        140,
+        r"power\b",
         _numeric_filter,
-        _set_filter)
+        _set_filter,
+    )
     RANK = TokenDefinition(
-        'rank', frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}), 140,
-        r'rank\b',
+        "rank",
+        frozenset({Flags.INHIBIT_ENCLOSING_TRANSFORMS}),
+        140,
+        r"rank\b",
         _numeric_filter,
-        _set_filter)
+        _set_filter,
+    )
     SORT = TokenDefinition(
-        'sort', _no_flags, 0,
+        "sort",
+        _no_flags,
+        0,
         r'sort(?:\s+min)?(?:\s+"((?:[^\\"]|\\.)*)")?',
         _numeric_filter,
-        _numeric_filter)
+        _numeric_filter,
+    )
     SQRT = TokenDefinition(
-        'sqrt', _no_flags, 100, r'sqrt\b',
-        _numeric_filter,
-        _numeric)
+        "sqrt", _no_flags, 100, r"sqrt\b", _numeric_filter, _numeric
+    )
     SQUARE_IN = TokenDefinition(
-        'squarein', _incomplete_if_on_stack.union(_halt_pop_no_body_filter), 0,
-        r'square\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b',
+        "squarein",
+        _incomplete_if_on_stack.union(_halt_pop_no_body_filter),
+        0,
+        r"square\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b",
         _set_filter,
-        _set_filter)
+        _set_filter,
+    )
     SQUARE_ALL_IN = TokenDefinition(
-        'squareallin',
-        _incomplete_if_on_stack.union(_halt_pop_no_body_filter), 0,
-        r'square\s+all\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b',
+        "squareallin",
+        _incomplete_if_on_stack.union(_halt_pop_no_body_filter),
+        0,
+        r"square\s+all\s+[$A-Z_a-z][$0-9A-Z_a-z]*\s+in\b",
         _logical_filter,
-        _set_filter)
+        _set_filter,
+    )
     TYPE = TokenDefinition(
-        'type', _no_flags, 140, r'type\b',
-        _numeric_filter,
-        _set_filter)
+        "type", _no_flags, 140, r"type\b", _numeric_filter, _set_filter
+    )
 
     # The filters which take no arguments.
     BLACK = TokenDefinition(
-        'black', _allowed_top_stack_at_end, 0, r'black\b',
+        "black",
+        _allowed_top_stack_at_end,
+        0,
+        r"black\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     BTM = TokenDefinition(
-        'btm', _allowed_top_stack_at_end, 0, r'btm\b',
+        "btm",
+        _allowed_top_stack_at_end,
+        0,
+        r"btm\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     CHECK = TokenDefinition(
-        'check', _allowed_top_stack_at_end, 0, r'check\b',
+        "check",
+        _allowed_top_stack_at_end,
+        0,
+        r"check\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     CONNECTEDPAWNS = TokenDefinition(
-        'connectedpawns', _allowed_top_stack_at_end, 0, r'connectedpawns\b',
+        "connectedpawns",
+        _allowed_top_stack_at_end,
+        0,
+        r"connectedpawns\b",
         _set_filter,
-        _empty_set)
+        _empty_set,
+    )
     CURRENTPOSITION = TokenDefinition(
-        'currentposition', _allowed_top_stack_at_end, 0, r'currentposition\b',
+        "currentposition",
+        _allowed_top_stack_at_end,
+        0,
+        r"currentposition\b",
         _position_filter,
-        _empty_set)
+        _empty_set,
+    )
     DEPTH = TokenDefinition(
-        'depth', _allowed_top_stack_at_end, 0, r'depth\b',
+        "depth",
+        _allowed_top_stack_at_end,
+        0,
+        r"depth\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # I have taken the statement 'Directions are also used as a parameter to
     # the ray filter' to imply all direction filters are set filters, but I
@@ -943,9 +1215,13 @@ class Token:
     # a direction filter stops it being a set filter.
 
     DOUBLEDPAWNS = TokenDefinition(
-        'doubledpawns', _allowed_top_stack_at_end, 0, r'doubledpawns\b',
+        "doubledpawns",
+        _allowed_top_stack_at_end,
+        0,
+        r"doubledpawns\b",
         _set_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # The optional parameters of elo, black and white, are also the names of
     # filters.  It might work to pretend there are no parameters ('black'  or
@@ -962,29 +1238,43 @@ class Token:
     # treatment of other filters which have parameters, but could be done
     # without because elo is a leaf node.
     ELO = TokenDefinition(
-        'elo', _allowed_top_stack_at_end, 0,
-        r'elo(?:\s+(?:black|white))?\b',
+        "elo",
+        _allowed_top_stack_at_end,
+        0,
+        r"elo(?:\s+(?:black|white))?\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     EVENT = TokenDefinition(
-        'event', _allowed_top_stack_at_end, 0,
+        "event",
+        _allowed_top_stack_at_end,
+        0,
         r'event\s+(?:"((?:[^\\"]|\\.)*)")',
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     FALSE = TokenDefinition(
-        'false', _allowed_top_stack_at_end, 0, r'false\b',
+        "false",
+        _allowed_top_stack_at_end,
+        0,
+        r"false\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # Fen seems to be a set filter because in CQL version 6.0.4 the following
     # is accepted with -parse option:
     # 'up fen "k7/8/8/8/8/8/8/7K"'
     # 'x = fen "..." supports this assumption.
     FEN = TokenDefinition(
-        'fen', _allowed_top_stack_at_end, 0, r'fen\s+"[^"]*"',
+        "fen",
+        _allowed_top_stack_at_end,
+        0,
+        r'fen\s+"[^"]*"',
         _set_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # TokenTypes and arguments set to _any_filter because not sure what to do.
     # Function name must not be already defined 'x=1 function x(){}'.
@@ -993,197 +1283,305 @@ class Token:
     # 'function x(x){}'. 'function x(x){up x} x(g6)' runs successfully at CQL
     # version 6.0.4, and so does 'function x(x){up x} x(x(g6))'.
     FUNCTION = TokenDefinition(
-        'function', _halt_pop_chained_filters.union(
-            _parenthesized_arguments), 0,
-        r''.join((
-            r'function\s+([$A-Z_a-z][$0-9A-Z_a-z]*)\s*',
-            r'\(\s*([$A-Z_a-z][$0-9A-Z_a-z]*',
-            r'(?:\s[$A-Z_a-z][$0-9A-Z_a-z]*)*)\s*\)',
-            r'\s*{')),
+        "function",
+        _halt_pop_chained_filters.union(_parenthesized_arguments),
+        0,
+        r"".join(
+            (
+                r"function\s+([$A-Z_a-z][$0-9A-Z_a-z]*)\s*",
+                r"\(\s*([$A-Z_a-z][$0-9A-Z_a-z]*",
+                r"(?:\s[$A-Z_a-z][$0-9A-Z_a-z]*)*)\s*\)",
+                r"\s*{",
+            )
+        ),
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     GAMENUMBER = TokenDefinition(
-        'gamenumber',
-        _allowed_top_stack_at_end.union(_allowed_unary_minus), 0,
-        r'gamenumber\b',
+        "gamenumber",
+        _allowed_top_stack_at_end.union(_allowed_unary_minus),
+        0,
+        r"gamenumber\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     HASCOMMENT = TokenDefinition(
-        'hascomment', _allowed_top_stack_at_end, 0,
+        "hascomment",
+        _allowed_top_stack_at_end,
+        0,
         r'hascomment\s+(?:"((?:[^\\"]|\\.)*)")',
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     INITIAL = TokenDefinition(
-        'initial', _allowed_top_stack_at_end, 0, r'initial\b',
+        "initial",
+        _allowed_top_stack_at_end,
+        0,
+        r"initial\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     ISOLATEDPAWNS = TokenDefinition(
-        'isolatedpawns', _allowed_top_stack_at_end, 0, r'isolatedpawns\b',
+        "isolatedpawns",
+        _allowed_top_stack_at_end,
+        0,
+        r"isolatedpawns\b",
         _set_filter,
-        _empty_set)
+        _empty_set,
+    )
     MAINLINE = TokenDefinition(
-        'mainline', _allowed_top_stack_at_end, 0, r'mainline\b',
+        "mainline",
+        _allowed_top_stack_at_end,
+        0,
+        r"mainline\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     MATE = TokenDefinition(
-        'mate', _allowed_top_stack_at_end, 0, r'mate\b',
+        "mate",
+        _allowed_top_stack_at_end,
+        0,
+        r"mate\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     MOVENUMBER = TokenDefinition(
-        'movenumber',
-        _allowed_top_stack_at_end.union(_allowed_unary_minus), 0,
-        r'movenumber\b',
+        "movenumber",
+        _allowed_top_stack_at_end.union(_allowed_unary_minus),
+        0,
+        r"movenumber\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     PARENT = TokenDefinition(
-        'parent', _allowed_top_stack_at_end, 0, r'parent\b',
+        "parent",
+        _allowed_top_stack_at_end,
+        0,
+        r"parent\b",
         _position_filter,
-        _empty_set)
+        _empty_set,
+    )
     PASSEDPAWNS = TokenDefinition(
-        'passedpawns', _allowed_top_stack_at_end, 0, r'passedpawns\b',
+        "passedpawns",
+        _allowed_top_stack_at_end,
+        0,
+        r"passedpawns\b",
         _set_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # The table of filters gives persistent an argument 'variable = <value>',
     # but the argument could be just 'variable' implying the initial value 0.
     # Try treating persistent as an optional keyword preceding the variable
     # name. 'persistent' cannot be a variable name.
-    #PERSISTENT = TokenDefinition(
+    # PERSISTENT = TokenDefinition(
     #    'persistent', _no_flags, 100, r'persistent', _empty_set,
     #    TokenTypes.NUMERIC_VARIABLE)
     PERSISTENT = TokenDefinition(
-        'persistent', _allowed_top_stack_at_end, 100, r'persistent\b',
+        "persistent",
+        _allowed_top_stack_at_end,
+        100,
+        r"persistent\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # This was ok without _allowed_top_stack_at_end flag, so may be broken now.
     PIECE_DESIGNATOR = TokenDefinition(
-        'piecedesignator', _allowed_top_stack_at_end, 0,
+        "piecedesignator",
+        _allowed_top_stack_at_end,
+        0,
         constants.PIECE_DESIGNATOR,
         _set_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     PLAYER = TokenDefinition(
-        'player', _allowed_top_stack_at_end, 0,
+        "player",
+        _allowed_top_stack_at_end,
+        0,
         r'player\s+(?:(?:black|white)\s+)?(?:"((?:[^\\"]|\\.)*)")',
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     PLY = TokenDefinition(
-        'ply', _allowed_top_stack_at_end.union(_allowed_unary_minus), 0,
-        r'ply\b',
+        "ply",
+        _allowed_top_stack_at_end.union(_allowed_unary_minus),
+        0,
+        r"ply\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     POSITIONID = TokenDefinition(
-        'positionid',
-        _allowed_top_stack_at_end.union(_allowed_unary_minus), 0,
-        r'positionid\b',
+        "positionid",
+        _allowed_top_stack_at_end.union(_allowed_unary_minus),
+        0,
+        r"positionid\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     RESULT = TokenDefinition(
-        'result', _allowed_top_stack_at_end, 0,
+        "result",
+        _allowed_top_stack_at_end,
+        0,
         r'result(?:\s+(?:(?:1-0|0-1|1/2-1/2)|"(?:1-0|0-1|1/2-1/2)"))',
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     SIDETOMOVE = TokenDefinition(
-        'sidetomove', _allowed_top_stack_at_end, 0, r'sidetomove\b',
+        "sidetomove",
+        _allowed_top_stack_at_end,
+        0,
+        r"sidetomove\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     SITE = TokenDefinition(
-        'site', _allowed_top_stack_at_end, 0,
+        "site",
+        _allowed_top_stack_at_end,
+        0,
         r'site\s+(?:"((?:[^\\"]|\\.)*)")',
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     STALEMATE = TokenDefinition(
-        'stalemate', _allowed_top_stack_at_end, 0, r'stalemate\b',
+        "stalemate",
+        _allowed_top_stack_at_end,
+        0,
+        r"stalemate\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     TERMINAL = TokenDefinition(
-        'terminal', _allowed_top_stack_at_end, 0, r'terminal\b',
+        "terminal",
+        _allowed_top_stack_at_end,
+        0,
+        r"terminal\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     TRUE = TokenDefinition(
-        'true', _allowed_top_stack_at_end, 0, r'true\b',
+        "true",
+        _allowed_top_stack_at_end,
+        0,
+        r"true\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     VARIATION = TokenDefinition(
-        'variation', _allowed_top_stack_at_end, 0, r'variation\b',
+        "variation",
+        _allowed_top_stack_at_end,
+        0,
+        r"variation\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     VIRTUALMAINLINE = TokenDefinition(
-        'virtualmainline', _allowed_top_stack_at_end, 0, r'virtualmainline\b',
+        "virtualmainline",
+        _allowed_top_stack_at_end,
+        0,
+        r"virtualmainline\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     WHITE = TokenDefinition(
-        'white', _allowed_top_stack_at_end, 0, r'white\b',
+        "white",
+        _allowed_top_stack_at_end,
+        0,
+        r"white\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     WTM = TokenDefinition(
-        'wtm', _allowed_top_stack_at_end, 0, r'wtm\b',
+        "wtm",
+        _allowed_top_stack_at_end,
+        0,
+        r"wtm\b",
         _logical_filter,
-        _empty_set)
+        _empty_set,
+    )
     YEAR = TokenDefinition(
-        'year', _allowed_top_stack_at_end, 0, r'year\b',
+        "year",
+        _allowed_top_stack_at_end,
+        0,
+        r"year\b",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
     DOT = TokenDefinition(
-        'dot', _allowed_top_stack_at_end, 0, r'\.',
-        _set_filter,
-        _empty_set)
+        "dot", _allowed_top_stack_at_end, 0, r"\.", _set_filter, _empty_set
+    )
 
     # The '//' and '/* ... */' tokens for comments in CQL statements.
 
     # Not put on stack so _allowed_top_stack_at_end flag not needed.
     EOLCOMMENT = TokenDefinition(
-        'eolcomment', _no_flags, 0, r'//.*(?:\n|\Z)',
-        _empty_set,
-        _empty_set)
+        "eolcomment", _no_flags, 0, r"//.*(?:\n|\Z)", _empty_set, _empty_set
+    )
     BLOCKCOMMENT = TokenDefinition(
-        'blockcomment', _no_flags, 0, r'/\*[\S|\s]*\*/',
-        _empty_set,
-        _empty_set)
+        "blockcomment", _no_flags, 0, r"/\*[\S|\s]*\*/", _empty_set, _empty_set
+    )
 
     # The parameter tokens for the 'find' filter.
 
     ALL = TokenDefinition(
-        'all', _no_flags, 0, r'all\b',
-        _find_parameter,
-        _empty_set)
+        "all", _no_flags, 0, r"all\b", _find_parameter, _empty_set
+    )
 
     # The parameter tokens for the 'line' filter.
 
     # Tokens for parameters similar to those used with other filters.  In other
     # words not those for regular expressions.
     FIRSTMATCH = TokenDefinition(
-        'firstmatch', _no_flags, 0, r'firstmatch\b',
+        "firstmatch",
+        _no_flags,
+        0,
+        r"firstmatch\b",
         _line_parameter,
-        _empty_set)
+        _empty_set,
+    )
     LASTPOSITION = TokenDefinition(
-        'lastposition', _no_flags, 0, r'lastposition\b',
+        "lastposition",
+        _no_flags,
+        0,
+        r"lastposition\b",
         _line_parameter,
-        _empty_set)
+        _empty_set,
+    )
     SINGLECOLOR = TokenDefinition(
-        'singlecolor', _no_flags, 0, r'singlecolor\b',
+        "singlecolor",
+        _no_flags,
+        0,
+        r"singlecolor\b",
         _line_parameter,
-        _empty_set)
+        _empty_set,
+    )
     NESTBAN = TokenDefinition(
-        'nestban', _no_flags, 0, r'nestban\b',
-        _line_parameter,
-        _empty_set)
+        "nestban", _no_flags, 0, r"nestban\b", _line_parameter, _empty_set
+    )
 
     # '*' has two meanings, multiply, and repeat in regular expressions.
     # To force repeat meaning use '{*}'.
     REPEATSTAR = TokenDefinition(
-        'repeatstar', _allowed_top_stack_at_end, 20, r'{\*}',
+        "repeatstar",
+        _allowed_top_stack_at_end,
+        20,
+        r"{\*}",
         _line_re_symbols,
-        _empty_set)
+        _empty_set,
+    )
 
     # '+' has two meanings, plus, and repeat in regular expressions.
     # To force repeat meaning use '{+}'.
     REPEATPLUS = TokenDefinition(
-        'repeatplus', _allowed_top_stack_at_end, 20, r'{\+}',
+        "repeatplus",
+        _allowed_top_stack_at_end,
+        20,
+        r"{\+}",
         _line_re_symbols,
-        _empty_set)
+        _empty_set,
+    )
 
     # This is safe because a compound filter cannot have a literal number, or
     # a numeric variable, as a constituent filter.  The CQL version 6 runtime
@@ -1193,20 +1591,30 @@ class Token:
     # expression if it is allowed at all.
     # Numeric variables are not allowed in repeat ranges.
     REPEATRANGE = TokenDefinition(
-        'repeatrange', _allowed_top_stack_at_end, 20,
-        r'\s*{\s*[1-9][0-9]*(?:\s+[1-9][0-9]*)?\s*}',
+        "repeatrange",
+        _allowed_top_stack_at_end,
+        20,
+        r"\s*{\s*[1-9][0-9]*(?:\s+[1-9][0-9]*)?\s*}",
         _line_re_symbols,
-        _empty_set)
+        _empty_set,
+    )
 
     QUERY = TokenDefinition(
-        'query', _allowed_top_stack_at_end, 20, r'\?',
+        "query",
+        _allowed_top_stack_at_end,
+        20,
+        r"\?",
         _line_re_symbols,
-        _empty_set)
+        _empty_set,
+    )
     RIGHTARROW = TokenDefinition(
-        'rightarrow',
-        _no_arithmetic_filters, 10, r'-->',
+        "rightarrow",
+        _no_arithmetic_filters,
+        10,
+        r"-->",
         _line_parameter,
-        _line_constituents)
+        _line_constituents,
+    )
 
     # The parameter tokens for the 'find' or 'line' filters.
 
@@ -1217,134 +1625,203 @@ class Token:
     # item, replacing _empty_set, if that is sufficient to control the 'line'
     # filter.
     LEFTARROW = TokenDefinition(
-        'leftarrow',
-        _no_arithmetic_filters, 10, r'<--',
+        "leftarrow",
+        _no_arithmetic_filters,
+        10,
+        r"<--",
         _line_parameter,
-        _line_constituents)
+        _line_constituents,
+    )
 
     # Tokens which are parameters of the consecutivemoves filter.
     QUIET = TokenDefinition(
-        'quiet', _no_flags, 0, r'quiet\b',
+        "quiet",
+        _no_flags,
+        0,
+        r"quiet\b",
         _consecutivemoves_parameter,
-        _empty_set)
+        _empty_set,
+    )
 
     # Tokens which are parameters of the move or pin filters.
     # count is also a parameter of transform filters where it is consumed as
     # part of the filter name.
     CAPTURE = TokenDefinition(
-        'capture', _parameter_takes_argument, 190, r'capture\b',
+        "capture",
+        _parameter_takes_argument,
+        190,
+        r"capture\b",
         _move_parameter,
-        _set_filter)
+        _set_filter,
+    )
     CASTLE = TokenDefinition(
-        'castle', _allowed_top_stack_at_end, 0, r'castle\b',
+        "castle",
+        _allowed_top_stack_at_end,
+        0,
+        r"castle\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     COUNT = TokenDefinition(
-        'count', _allowed_top_stack_at_end, 0, r'count\b',
+        "count",
+        _allowed_top_stack_at_end,
+        0,
+        r"count\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     ENPASSANT = TokenDefinition(
-        'enpassant', _allowed_top_stack_at_end, 0, r'enpassant\b',
+        "enpassant",
+        _allowed_top_stack_at_end,
+        0,
+        r"enpassant\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     ENPASSANT_SQUARE = TokenDefinition(
-        'enpassantsquare', _parameter_takes_argument, 190,
-        r'enpassantsquare\b',
+        "enpassantsquare",
+        _parameter_takes_argument,
+        190,
+        r"enpassantsquare\b",
         _move_parameter,
-        _set_filter)
+        _set_filter,
+    )
     FROM = TokenDefinition(
-        'from_', _parameter_takes_argument, 190, r'from\b',
+        "from_",
+        _parameter_takes_argument,
+        190,
+        r"from\b",
         _move_or_pin_parameter,
-        _set_filter)
+        _set_filter,
+    )
     LEGAL = TokenDefinition(
-        'legal', _allowed_top_stack_at_end, 0, r'legal\b',
+        "legal",
+        _allowed_top_stack_at_end,
+        0,
+        r"legal\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     NULL = TokenDefinition(
-        'null', _allowed_top_stack_at_end, 0, r'null\b',
+        "null",
+        _allowed_top_stack_at_end,
+        0,
+        r"null\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     OO = TokenDefinition(
-        'oo', _allowed_top_stack_at_end, 0, r'o-o\b',
+        "oo",
+        _allowed_top_stack_at_end,
+        0,
+        r"o-o\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     OOO = TokenDefinition(
-        'ooo', _allowed_top_stack_at_end, 0, r'o-o-o\b',
+        "ooo",
+        _allowed_top_stack_at_end,
+        0,
+        r"o-o-o\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     PREVIOUS = TokenDefinition(
-        'previous', _allowed_top_stack_at_end, 0, r'previous\b',
+        "previous",
+        _allowed_top_stack_at_end,
+        0,
+        r"previous\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     PRIMARY = TokenDefinition(
-        'primary', _allowed_top_stack_at_end, 0, r'primary\b',
+        "primary",
+        _allowed_top_stack_at_end,
+        0,
+        r"primary\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     PROMOTE = TokenDefinition(
-        'promote', _parameter_takes_argument, 0, r'promote\b',
+        "promote",
+        _parameter_takes_argument,
+        0,
+        r"promote\b",
         _move_parameter,
-        _set_filter)
+        _set_filter,
+    )
     PSEUDOLEGAL = TokenDefinition(
-        'pseudolegal', _allowed_top_stack_at_end, 0, r'pseudolegal\b',
+        "pseudolegal",
+        _allowed_top_stack_at_end,
+        0,
+        r"pseudolegal\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     SECONDARY = TokenDefinition(
-        'secondary', _allowed_top_stack_at_end, 0, r'secondary\b',
+        "secondary",
+        _allowed_top_stack_at_end,
+        0,
+        r"secondary\b",
         _move_parameter,
-        _empty_set)
+        _empty_set,
+    )
     THROUGH = TokenDefinition(
-        'through', _parameter_takes_argument, 190, r'through\b',
+        "through",
+        _parameter_takes_argument,
+        190,
+        r"through\b",
         _pin_parameter,
-        _set_filter)
+        _set_filter,
+    )
     TO = TokenDefinition(
-        'to', _parameter_takes_argument, 190, r'to\b',
+        "to",
+        _parameter_takes_argument,
+        190,
+        r"to\b",
         _move_or_pin_parameter,
-        _set_filter)
+        _set_filter,
+    )
 
     # Tokens for parameters consumed with the filter token, or filters which
     # consume at least one mandatory parameter.
     PIECE = TokenDefinition(
-        'piece', _no_flags, 0, r'piece\b',
-        _empty_set,
-        _empty_set)
+        "piece", _no_flags, 0, r"piece\b", _empty_set, _empty_set
+    )
     SQUARE = TokenDefinition(
-        'square', _no_flags, 0, r'square\b',
-        _empty_set,
-        _empty_set)
+        "square", _no_flags, 0, r"square\b", _empty_set, _empty_set
+    )
     OUTPUT = TokenDefinition(
-        'output', _no_flags, 0, r'output\b',
-        _empty_set,
-        _empty_set)
+        "output", _no_flags, 0, r"output\b", _empty_set, _empty_set
+    )
     INPUT = TokenDefinition(
-        'input_', _no_flags, 0, r'input\b',
-        _empty_set,
-        _empty_set)
+        "input_", _no_flags, 0, r"input\b", _empty_set, _empty_set
+    )
     MATCHCOUNT = TokenDefinition(
-        'matchcount', _no_flags, 0, r'matchcount\b',
-        _empty_set,
-        _empty_set)
+        "matchcount", _no_flags, 0, r"matchcount\b", _empty_set, _empty_set
+    )
     SILENT = TokenDefinition(
-        'silent', _no_flags, 0, r'silent\b',
-        _empty_set,
-        _empty_set)
+        "silent", _no_flags, 0, r"silent\b", _empty_set, _empty_set
+    )
     VARIATIONS = TokenDefinition(
-        'variations', _no_flags, 0, r'variations\b',
-        _empty_set,
-        _empty_set)
+        "variations", _no_flags, 0, r"variations\b", _empty_set, _empty_set
+    )
     MATCHSTRING = TokenDefinition(
-        'matchstring', _no_flags, 0, r'matchstring\b',
-        _empty_set,
-        _empty_set)
+        "matchstring", _no_flags, 0, r"matchstring\b", _empty_set, _empty_set
+    )
 
     # Named so they sort high as choices in the regular expression.
     # Variables documentation for CQL version 6.0.4 does not ban a digit as the
     # first character in the name: but a syntax error is raised (which is what
     # I would expect normally).
     NUMBER = TokenDefinition(
-        'x', _allowed_top_stack_at_end.union(_allowed_unary_minus), 0,
-        r'[0-9]+',
+        "x",
+        _allowed_top_stack_at_end.union(_allowed_unary_minus),
+        0,
+        r"[0-9]+",
         _numeric_filter,
-        _empty_set)
+        _empty_set,
+    )
 
     # Nodes for variables have this TokenDefinition when the variable is first
     # mentioned in a '<variable> = <something>' clause.  The '=' filter forces
@@ -1353,17 +1830,19 @@ class Token:
     # infix operators but <variable> should get this flag only when converted
     # during assignment: 'x = 1' say.
     VARIABLE = TokenDefinition(
-        'y',
-        _allowed_top_stack_at_end.union(
-            _assign_to_variable).union(_allowed_unary_minus), 0,
-        r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+        "y",
+        _allowed_top_stack_at_end.union(_assign_to_variable).union(
+            _allowed_unary_minus
+        ),
+        0,
+        r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
         _unset_variable,
-        _empty_set)
+        _empty_set,
+    )
 
     BADTOKEN = TokenDefinition(
-        'z', _no_flags, 0, r'\S+',
-        _empty_set,
-        _empty_set)
+        "z", _no_flags, 0, r"\S+", _empty_set, _empty_set
+    )
 
     # 'if' filter with 'then' and 'else' parameters.
 
@@ -1384,38 +1863,55 @@ class Token:
     # found.  The final name is one of IF_LOGICAL and the
     # three similar for numeric, position, and set, filters.
     IF = TokenDefinition(
-        'if_', _incomplete_if_on_stack.union(_if_frame), 40, r'if\b',
+        "if_",
+        _incomplete_if_on_stack.union(_if_frame),
+        40,
+        r"if\b",
         _any_filter,
-        _any_filter)
+        _any_filter,
+    )
 
     # _no_flags compared with LEFTARROW and RIGHTARROW because there is no
     # arithmetic ambiguity arising from the repeat operators.
     THEN = TokenDefinition(
-        'then', _no_flags, 40, r'then\b',
-        _then_parameter,
-        _any_filter)
+        "then", _no_flags, 40, r"then\b", _then_parameter, _any_filter
+    )
     ELSE = TokenDefinition(
-        'else_', _no_flags, 40, r'else\b',
-        _else_parameter,
-        _any_filter)
+        "else_", _no_flags, 40, r"else\b", _else_parameter, _any_filter
+    )
 
 
 # Map token names to definitions: name is in definition.
-CQL_TOKENS = {getattr(Token, a).name: getattr(Token, a)
-              for a in dir(Token) if not a.startswith('__')}
+CQL_TOKENS = {
+    getattr(Token, a).name: getattr(Token, a)
+    for a in dir(Token)
+    if not a.startswith("__")
+}
 
 # The pattern to parse CQL version 6.0.4 statements.
-CQL_PATTERN = r''.join(
-    (r'(?:',
-     r'|'.join([r''.join((r'(?P<', i[-1].name, '>', i[-1].pattern, r')'))
+CQL_PATTERN = r"".join(
+    (
+        r"(?:",
+        r"|".join(
+            [
+                r"".join((r"(?P<", i[-1].name, ">", i[-1].pattern, r")"))
                 for i in sorted(
-                    [(-len(getattr(Token, v)[0]),
-                      getattr(Token, v)[0],
-                      getattr(Token, v))
-                     for v in dir(Token) if not v.startswith('__')])]),
-     r')',
-     r'(?:\s*|\Z)',
-     ))
+                    [
+                        (
+                            -len(getattr(Token, v)[0]),
+                            getattr(Token, v)[0],
+                            getattr(Token, v),
+                        )
+                        for v in dir(Token)
+                        if not v.startswith("__")
+                    ]
+                )
+            ]
+        ),
+        r")",
+        r"(?:\s*|\Z)",
+    )
+)
 
 # Map direction TokenDefinitions to constituent basic directions.
 CQL_DIRECTIONS = {
@@ -1428,17 +1924,28 @@ CQL_DIRECTIONS = {
     Token.SOUTHEAST: {Token.SOUTHEAST},
     Token.SOUTHWEST: {Token.SOUTHWEST},
     Token.DIAGONAL: {
-        Token.NORTHEAST, Token.NORTHWEST, Token.SOUTHEAST, Token.SOUTHWEST},
+        Token.NORTHEAST,
+        Token.NORTHWEST,
+        Token.SOUTHEAST,
+        Token.SOUTHWEST,
+    },
     Token.ORTHOGONAL: {Token.UP, Token.DOWN, Token.RIGHT, Token.LEFT},
     Token.VERTICAL: {Token.UP, Token.DOWN},
     Token.HORIZONTAL: {Token.RIGHT, Token.LEFT},
     Token.ANYDIRECTION: {
-        Token.UP, Token.DOWN, Token.RIGHT, Token.LEFT,
-        Token.NORTHEAST, Token.NORTHWEST, Token.SOUTHEAST, Token.SOUTHWEST},
-    }
+        Token.UP,
+        Token.DOWN,
+        Token.RIGHT,
+        Token.LEFT,
+        Token.NORTHEAST,
+        Token.NORTHWEST,
+        Token.SOUTHEAST,
+        Token.SOUTHWEST,
+    },
+}
 
 # Variable names starting '__CQL' are reserved.
-CQL_RESERVED_VARIABLE_NAME_PREFIX = '__CQL'
+CQL_RESERVED_VARIABLE_NAME_PREFIX = "__CQL"
 
 # Variants of filters defined in CQL.
 # The Token.name must be unique amongst all Tokens.  (Maybe the definition of
@@ -1460,32 +1967,34 @@ CQL_RESERVED_VARIABLE_NAME_PREFIX = '__CQL'
 # constituent from binary arithmetic operation.  There is no ambiguous meaning
 # for '-', at least yet, but it is still rejected.
 LINE_LEFTARROW = TokenDefinition(
-    'line_leftarrow', _halt_pop_chained_filters.union(_line_frame), 0,
-    r'line\b',
+    "line_leftarrow",
+    _halt_pop_chained_filters.union(_line_frame),
+    0,
+    r"line\b",
     _numeric_filter,
-    _line_leftarrow_parameter)
+    _line_leftarrow_parameter,
+)
 LINE_RIGHTARROW = TokenDefinition(
-    'line_rightarrow', _halt_pop_chained_filters.union(_line_frame), 0,
-    r'line\b',
+    "line_rightarrow",
+    _halt_pop_chained_filters.union(_line_frame),
+    0,
+    r"line\b",
     _numeric_filter,
-    _line_rightarrow_parameter)
+    _line_rightarrow_parameter,
+)
 
 IF_LOGICAL = TokenDefinition(
-    'if_logical', _no_flags, 40, r'if\b',
-    _logical_filter,
-    _empty_set)
+    "if_logical", _no_flags, 40, r"if\b", _logical_filter, _empty_set
+)
 IF_NUMERIC = TokenDefinition(
-    'if_numeric', _no_flags, 40, r'if\b',
-    _numeric_filter,
-    _empty_set)
+    "if_numeric", _no_flags, 40, r"if\b", _numeric_filter, _empty_set
+)
 IF_POSITION = TokenDefinition(
-    'if_position', _no_flags, 40, r'if\b',
-    _position_filter,
-    _empty_set)
+    "if_position", _no_flags, 40, r"if\b", _position_filter, _empty_set
+)
 IF_SET = TokenDefinition(
-    'if_set', _no_flags, 40, r'if\b',
-    _set_filter,
-    _empty_set)
+    "if_set", _no_flags, 40, r"if\b", _set_filter, _empty_set
+)
 
 # Some filters take optional parameters that are ambiguous when lexing: numeric
 # variables as part of a range in particular.  These cannot consume the '(' as
@@ -1494,279 +2003,429 @@ IF_SET = TokenDefinition(
 # there is a case for treating all filters with arguments within '()' this way.
 # A list of filters is enclosed by '()' with this definition of '('.
 CONSECUTIVEMOVES_LEFTPARENTHESIS = TokenDefinition(
-    'consecutivemoves_leftparenthesis',
-    _halt_pop_chained_filters.union(_parenthesized_arguments), 0,
-    r'consecutivemoves\b',
+    "consecutivemoves_leftparenthesis",
+    _halt_pop_chained_filters.union(_parenthesized_arguments),
+    0,
+    r"consecutivemoves\b",
     _numeric_filter,
-    _position_variable)
+    _position_variable,
+)
 
 CHILD_NO_ARGUMENT = TokenDefinition(
-    'child_no_argument', _allowed_top_stack_at_end, 0, r'child(?:\s*\()?',
+    "child_no_argument",
+    _allowed_top_stack_at_end,
+    0,
+    r"child(?:\s*\()?",
     _position_filter,
-    _empty_set)
+    _empty_set,
+)
 FIND_NUMERIC = TokenDefinition(
-    'find_numeric', _no_flags, 40,
-    r'find\b',
-    _numeric_filter,
-    _any_filter)
+    "find_numeric", _no_flags, 40, r"find\b", _numeric_filter, _any_filter
+)
 SINGLE_COMMENT_ARGUMENT = TokenDefinition(
-    'single_comment_argument', _no_flags, 0, r'comment(?:\s*\()?',
+    "single_comment_argument",
+    _no_flags,
+    0,
+    r"comment(?:\s*\()?",
     _logical_filter,
-    _any_filter)
+    _any_filter,
+)
 SINGLE_MESSAGE_ARGUMENT = TokenDefinition(
-    'single_message_argument', _no_flags, 0, r'message(?:\s*\()?',
+    "single_message_argument",
+    _no_flags,
+    0,
+    r"message(?:\s*\()?",
     _logical_filter,
-    _any_filter)
+    _any_filter,
+)
 MOVE_SET = TokenDefinition(
-    'move_set', _end_filter_non_parameter.union(_allowed_top_stack_at_end), 0,
-    r'move\b',
+    "move_set",
+    _end_filter_non_parameter.union(_allowed_top_stack_at_end),
+    0,
+    r"move\b",
     _set_filter,
     _move_parameter,
-    )
+)
 ECHO_IN_ALL = TokenDefinition(
-    'echo_in_all', _incomplete_if_on_stack.union(_halt_pop_no_body_filter), 0,
-    r'in\s+all\b',
+    "echo_in_all",
+    _incomplete_if_on_stack.union(_halt_pop_no_body_filter),
+    0,
+    r"in\s+all\b",
     _logical_filter,
-    _any_filter)
+    _any_filter,
+)
 FLIP_COUNT = TokenDefinition(
-    'flip_count', _no_flags, 40, r'\s+count\b',
-    _numeric_filter,
-    _any_filter)
+    "flip_count", _no_flags, 40, r"\s+count\b", _numeric_filter, _any_filter
+)
 FLIPCOLOR_COUNT = TokenDefinition(
-    'flipcolor_count', _no_flags, 40, r'\s+count\b',
+    "flipcolor_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 FLIPHORIZONTAL_COUNT = TokenDefinition(
-    'fliphorizontal_count', _no_flags, 40, r'\s+count\b',
+    "fliphorizontal_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 FLIPVERTICAL_COUNT = TokenDefinition(
-    'flipvertical_count', _no_flags, 40, r'\s+count\b',
+    "flipvertical_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 ROTATE45_COUNT = TokenDefinition(
-    'rotate45_count', _no_flags, 40, r'\s+count\b',
+    "rotate45_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 ROTATE90_COUNT = TokenDefinition(
-    'rotate90_count', _no_flags, 40, r'\s+count\b',
+    "rotate90_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 SHIFT_COUNT = TokenDefinition(
-    'shift_count', _no_flags, 40, r'\s+count\b',
-    _numeric_filter,
-    _any_filter)
+    "shift_count", _no_flags, 40, r"\s+count\b", _numeric_filter, _any_filter
+)
 SHIFTHORIZONTAL_COUNT = TokenDefinition(
-    'shifthorizontal_count', _no_flags, 40, r'\s+count\b',
+    "shifthorizontal_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 SHIFTVERTICAL_COUNT = TokenDefinition(
-    'shiftvertical_count', _no_flags, 40, r'\s+count\b',
+    "shiftvertical_count",
+    _no_flags,
+    40,
+    r"\s+count\b",
     _numeric_filter,
-    _any_filter)
+    _any_filter,
+)
 RANGE = TokenDefinition(
-    'range_', _no_flags, 0, r'(?:\s+[0-9]+){,2}',
-    None,
-    _empty_set)
+    "range_", _no_flags, 0, r"(?:\s+[0-9]+){,2}", None, _empty_set
+)
 ELO_BLACK = TokenDefinition(
-    'elo_black', _no_flags, 0, r'black\b',
-    _numeric_filter,
-    _empty_set)
+    "elo_black", _no_flags, 0, r"black\b", _numeric_filter, _empty_set
+)
 ELO_WHITE = TokenDefinition(
-    'elo_white', _no_flags, 0, r'white\b',
-    _numeric_filter,
-    _empty_set)
+    "elo_white", _no_flags, 0, r"white\b", _numeric_filter, _empty_set
+)
 PLAYER_BLACK = TokenDefinition(
-    'player_black', _no_flags, 0, r'black\b',
-    _logical_filter,
-    _empty_set)
+    "player_black", _no_flags, 0, r"black\b", _logical_filter, _empty_set
+)
 PLAYER_WHITE = TokenDefinition(
-    'player_white', _no_flags, 0, r'white\b',
-    _logical_filter,
-    _empty_set)
+    "player_white", _no_flags, 0, r"white\b", _logical_filter, _empty_set
+)
 SORT_MIN = TokenDefinition(
-    'sort_min', _no_flags, 0, r'min\b',
-    _numeric_filter,
-    _numeric_filter)
+    "sort_min", _no_flags, 0, r"min\b", _numeric_filter, _numeric_filter
+)
 QUOTED_STRING = TokenDefinition(
-    'string', _no_flags, 0, r'(sort)(\s+min)?(\s+"(?:[^\\"]|\\.)*")?',
+    "string",
+    _no_flags,
+    0,
+    r'(sort)(\s+min)?(\s+"(?:[^\\"]|\\.)*")?',
     _empty_set,
-    _empty_set)
+    _empty_set,
+)
 LEFTPARENTHESIS_NUMBER = TokenDefinition(
-    'leftparenthesis_number',
-    _allowed_top_stack_at_end.union(_allowed_unary_minus), 0, r'\(',
+    "leftparenthesis_number",
+    _allowed_top_stack_at_end.union(_allowed_unary_minus),
+    0,
+    r"\(",
     _numeric_filter,
-    _empty_set)
+    _empty_set,
+)
 LEFTPARENTHESIS_POSITION = TokenDefinition(
-    'leftparenthesis_position',
-    _allowed_top_stack_at_end, 0, r'\(',
+    "leftparenthesis_position",
+    _allowed_top_stack_at_end,
+    0,
+    r"\(",
     _position_filter,
-    _empty_set)
+    _empty_set,
+)
 LEFTPARENTHESIS_SET = TokenDefinition(
-    'leftparenthesis_set',
-    _allowed_top_stack_at_end, 0, r'\(',
+    "leftparenthesis_set",
+    _allowed_top_stack_at_end,
+    0,
+    r"\(",
     _set_filter,
-    _empty_set)
+    _empty_set,
+)
 LEFTPARENTHESIS_LOGICAL = TokenDefinition(
-    'leftparenthesis_logical',
-    _allowed_top_stack_at_end, 0, r'\(',
+    "leftparenthesis_logical",
+    _allowed_top_stack_at_end,
+    0,
+    r"\(",
     _logical_filter,
-    _empty_set)
+    _empty_set,
+)
 INTERSECTION_POSITION = TokenDefinition(
-    'intersection_position', _named_compound_filter, 160, r'&',
+    "intersection_position",
+    _named_compound_filter,
+    160,
+    r"&",
     _set_filter,
-    _position_filter)
-INTERSECTION_SET = TokenDefinition(
-    'intersection_set', _named_compound_filter, 160, r'&',
-    _set_filter,
-    _set_filter)
-LEFTBRACE_NUMBER = TokenDefinition(
-    'leftbrace_number',
-    _allowed_top_stack_at_end.union(_allowed_unary_minus), 0, r'{',
-    _numeric_filter,
-    _empty_set)
-LEFTBRACE_POSITION = TokenDefinition(
-    'leftbrace_position', _allowed_top_stack_at_end, 0, r'{',
     _position_filter,
-    _empty_set)
-LEFTBRACE_SET = TokenDefinition(
-    'leftbrace_set', _allowed_top_stack_at_end, 0, r'{',
+)
+INTERSECTION_SET = TokenDefinition(
+    "intersection_set",
+    _named_compound_filter,
+    160,
+    r"&",
     _set_filter,
-    _empty_set)
+    _set_filter,
+)
+LEFTBRACE_NUMBER = TokenDefinition(
+    "leftbrace_number",
+    _allowed_top_stack_at_end.union(_allowed_unary_minus),
+    0,
+    r"{",
+    _numeric_filter,
+    _empty_set,
+)
+LEFTBRACE_POSITION = TokenDefinition(
+    "leftbrace_position",
+    _allowed_top_stack_at_end,
+    0,
+    r"{",
+    _position_filter,
+    _empty_set,
+)
+LEFTBRACE_SET = TokenDefinition(
+    "leftbrace_set",
+    _allowed_top_stack_at_end,
+    0,
+    r"{",
+    _set_filter,
+    _empty_set,
+)
 LEFTBRACE_LOGICAL = TokenDefinition(
-    'leftbrace_logical', _allowed_top_stack_at_end, 0, r'{',
+    "leftbrace_logical",
+    _allowed_top_stack_at_end,
+    0,
+    r"{",
     _logical_filter,
-    _empty_set)
+    _empty_set,
+)
 
 # The kinds of variable after assignment by '<variable> = <something>' or
 # 'function <variable> ( <argument list> ) { <body> }'.
 # Probably need two kinds for functions: definition and call.
 FUNCTION_CALL = TokenDefinition(
-    'function_call', _halt_pop_chained_filters.union(
-        _parenthesized_arguments), 0, r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+    "function_call",
+    _halt_pop_chained_filters.union(_parenthesized_arguments),
+    0,
+    r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
     _empty_set,
-    _any_filter)
+    _any_filter,
+)
 FUNCTION_NAME = TokenDefinition(
-    'function_name', _no_flags, 0, r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+    "function_name",
+    _no_flags,
+    0,
+    r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
     _empty_set,
-    _empty_set)
+    _empty_set,
+)
 NUMERIC_VARIABLE = TokenDefinition(
-    'y',
-    _allowed_top_stack_at_end.union(
-        _assign_to_variable).union(_allowed_unary_minus), 0,
-    r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+    "y",
+    _allowed_top_stack_at_end.union(_assign_to_variable).union(
+        _allowed_unary_minus
+    ),
+    0,
+    r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
     _numeric_filter,
     _empty_set,
-    'numeric_variable')
+    "numeric_variable",
+)
 PIECE_VARIABLE = TokenDefinition(
-    'y', _allowed_top_stack_at_end.union(_assign_to_variable), 0,
-    r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+    "y",
+    _allowed_top_stack_at_end.union(_assign_to_variable),
+    0,
+    r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
     _set_filter,
     _empty_set,
-    'piece_variable')
+    "piece_variable",
+)
 POSITION_VARIABLE = TokenDefinition(
-    'y',
-    _allowed_top_stack_at_end.union(_assign_to_variable), 0,
-    r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+    "y",
+    _allowed_top_stack_at_end.union(_assign_to_variable),
+    0,
+    r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
     _position_filter,
     _empty_set,
-    'position_variable')
+    "position_variable",
+)
 SET_VARIABLE = TokenDefinition(
-    'y', _allowed_top_stack_at_end.union(_assign_to_variable), 0,
-    r'[$A-Z_a-z][$0-9A-Z_a-z]*\b',
+    "y",
+    _allowed_top_stack_at_end.union(_assign_to_variable),
+    0,
+    r"[$A-Z_a-z][$0-9A-Z_a-z]*\b",
     _set_filter,
     _empty_set,
-    'set_variable')
+    "set_variable",
+)
 
 # Unary minus appears twice in the precedence table for CQL version 6: just
 # above, alongside others, and just below arithmetic plus and minus.  So 100
 # or 120 is the appropriate value for the precedence attribute.  The correct
 # choice is assumed to be 120: '-1+1' means '(-1)+1' not '-(1+1)'.
 UNARY_MINUS = TokenDefinition(
-    'minus', _no_flags, 120, r'-',
-    _numeric_filter,
-    _numeric,
-    'unary_minus')
+    "minus", _no_flags, 120, r"-", _numeric_filter, _numeric, "unary_minus"
+)
 
 # Comparison operator variants named for the kind of left operand when it is
 # not a numeric filter.
 # An EQ_SET is changed to an EQ_BOTH_SETS to indicate the correct returntype,
 # which depends on the right operand found for EQ_SET.
 LT_SET = TokenDefinition(
-    'lt', _named_compound_filter, 90, r'<',
+    "lt",
+    _named_compound_filter,
+    90,
+    r"<",
     _numeric_filter,
     _numeric_filter,
-    'lt_set')
+    "lt_set",
+)
 LE_SET = TokenDefinition(
-    'le', _named_compound_filter, 90, r'<=',
+    "le",
+    _named_compound_filter,
+    90,
+    r"<=",
     _numeric_filter,
     _numeric_filter,
-    'le_set')
+    "le_set",
+)
 GT_SET = TokenDefinition(
-    'gt', _named_compound_filter, 90, r'>',
+    "gt",
+    _named_compound_filter,
+    90,
+    r">",
     _numeric_filter,
     _numeric_filter,
-    'gt_set')
+    "gt_set",
+)
 GE_SET = TokenDefinition(
-    'ge', _named_compound_filter, 90, r'>=',
+    "ge",
+    _named_compound_filter,
+    90,
+    r">=",
     _numeric_filter,
     _numeric_filter,
-    'ge_set')
+    "ge_set",
+)
 EQ_SET = TokenDefinition(
-    'eq', _named_compound_filter, 90, r'==',
+    "eq",
+    _named_compound_filter,
+    90,
+    r"==",
     _numeric_filter,
     _relation_filters.difference(_position_filter),
-    'eq_set')
+    "eq_set",
+)
 EQ_BOTH_SETS = TokenDefinition(
-    'eq_both_sets', _named_compound_filter, 90, r'==',
+    "eq_both_sets",
+    _named_compound_filter,
+    90,
+    r"==",
     _logical_filter,
-    _empty_set)
+    _empty_set,
+)
 NE_SET = TokenDefinition(
-    'ne', _named_compound_filter, 90, r'!=',
+    "ne",
+    _named_compound_filter,
+    90,
+    r"!=",
     _logical_filter,
     _relation_filters.difference(_position_filter),
-    'ne_set')
+    "ne_set",
+)
 NE_BOTH_SETS = TokenDefinition(
-    'ne_both_sets', _named_compound_filter, 90, r'!=',
+    "ne_both_sets",
+    _named_compound_filter,
+    90,
+    r"!=",
     _logical_filter,
-    _empty_set)
+    _empty_set,
+)
 LT_POSITION = TokenDefinition(
-    'lt', _named_compound_filter, 90, r'<',
+    "lt",
+    _named_compound_filter,
+    90,
+    r"<",
     _numeric_filter,
     _position_filter,
-    'lt_position')
+    "lt_position",
+)
 LE_POSITION = TokenDefinition(
-    'le', _named_compound_filter, 90, r'<=',
+    "le",
+    _named_compound_filter,
+    90,
+    r"<=",
     _numeric_filter,
     _position_filter,
-    'le_position')
+    "le_position",
+)
 GT_POSITION = TokenDefinition(
-    'gt', _named_compound_filter, 90, r'>',
+    "gt",
+    _named_compound_filter,
+    90,
+    r">",
     _numeric_filter,
     _position_filter,
-    'gt_position')
+    "gt_position",
+)
 GE_POSITION = TokenDefinition(
-    'ge', _named_compound_filter, 90, r'>=',
+    "ge",
+    _named_compound_filter,
+    90,
+    r">=",
     _numeric_filter,
     _position_filter,
-    'ge_position')
+    "ge_position",
+)
 EQ_POSITION = TokenDefinition(
-    'eq', _named_compound_filter, 90, r'==',
+    "eq",
+    _named_compound_filter,
+    90,
+    r"==",
     _numeric_filter,
     _position_filter,
-    'eq_position')
+    "eq_position",
+)
 NE_POSITION = TokenDefinition(
-    'ne', _named_compound_filter, 90, r'!=',
+    "ne",
+    _named_compound_filter,
+    90,
+    r"!=",
     _logical_filter,
     _position_filter,
-    'ne_position')
+    "ne_position",
+)
 
-ASSIGNMENT_VARIABLE_TYPES = frozenset((
-    NUMERIC_VARIABLE,
-    POSITION_VARIABLE,
-    PIECE_VARIABLE,
-    SET_VARIABLE,
-    ))
+ASSIGNMENT_VARIABLE_TYPES = frozenset(
+    (
+        NUMERIC_VARIABLE,
+        POSITION_VARIABLE,
+        PIECE_VARIABLE,
+        SET_VARIABLE,
+    )
+)
 
 # A variable is the Token.VARIABLE TokenDefinition when first encountered.  On
 # first assignment, <variable> = <?> or piece <variable> in <?>, it becomes a
@@ -1779,7 +2438,7 @@ map_filter_assign_to_variable = {
     _numeric_filter: NUMERIC_VARIABLE,
     _position_filter: POSITION_VARIABLE,
     _set_filter: SET_VARIABLE,
-    }
+}
 
 # Many filters with parenthesized arguments do not have parameters preventing
 # consuming the '(' with the filter name.  Those which do are mapped to a
@@ -1787,7 +2446,7 @@ map_filter_assign_to_variable = {
 map_filter_to_leftparenthesis = {
     Token.CONSECUTIVEMOVES: CONSECUTIVEMOVES_LEFTPARENTHESIS,
     FUNCTION_CALL: FUNCTION_CALL,
-    }
+}
 
 # When a single filter is enclosed in parentheses the parentheses effectively
 # inherit the type of the enclosed filter.
@@ -1796,7 +2455,7 @@ map_filter_type_to_leftparenthesis_type = {
     _set_filter: LEFTPARENTHESIS_SET,
     _logical_filter: LEFTPARENTHESIS_LOGICAL,
     _position_filter: LEFTPARENTHESIS_POSITION,
-    }
+}
 
 # The compound filter is the same type as it's last filter.
 map_filter_type_to_leftbrace_type = {
@@ -1804,7 +2463,7 @@ map_filter_type_to_leftbrace_type = {
     _set_filter: LEFTBRACE_SET,
     _logical_filter: LEFTBRACE_LOGICAL,
     _position_filter: LEFTBRACE_POSITION,
-    }
+}
 
 del _empty_set
 del _numeric
