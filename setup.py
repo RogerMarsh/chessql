@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     setup(
         name="chessql",
-        version="2.0.1",
+        version="2.0.2",
         description="Chess Query Language (cql) parser",
         author="Roger Marsh",
         author_email="roger.marsh@solentware.co.uk",
