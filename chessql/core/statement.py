@@ -79,12 +79,12 @@ class Statement:
         self.cql_parameters = None
         self.cql_filters = None
 
-        # The scoping rules for piece and square variables at cql5.1 seem to be:
+        # Scoping rules for piece and square variables at cql5.1 seem to be:
         # $name is unique across piece and square use and cannot be redefined.
         # $name is visible in all enclosed scopes.
         # $name scope is bounded by '( ... )' and '{ ... }'.
         # This is not certain because:
-        # '{square $x in h1-8 attack (R $x)} attack (Q $x)' gives error unbound,
+        # '{square $x in h1-8 attack (R $x)} attack (Q $x)' gets error unbound,
         # 'square $x in h1-8 attack (R $x) attack (Q $x)' is ok,
         # '{shift 1 square $x in h1-8 attack (R $x)} attack (Q $x)' is ok.
         # However:
@@ -2039,7 +2039,7 @@ class Statement:
         self._insert_leaf_filter(match, tokendef)
 
     def star(self, match, tokendef):
-        """Add arithmetic multiply or regular expression repeat zero or more."""
+        """Add numeric multiply or regular expression repeat zero or more."""
         assert tokendef is cql.Token.STAR
         self._insert_infix_arithmetic(match, tokendef)
 
@@ -2178,7 +2178,8 @@ class Statement:
             if len(tns.parameters[cql.RANGE]) > 1:
                 self.cql_error = "".join(
                     (
-                        "Attempt to collect more than two items in range for '",
+                        "Attempt to collect more than two items in ",
+                        "range for '",
                         tns.name,
                         "' filter",
                     )

@@ -2,7 +2,7 @@
 # Copyright 2020 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
-"""piecedesignator tests for cql"""
+"""PieceDesignator tests for cql."""
 
 import unittest
 import re
@@ -23,11 +23,13 @@ class PieceDesignator(unittest.TestCase):
             piecedesignator.PieceDesignator.PIECE_DESIGNATOR,
             r"".join(
                 (
-                    r"(?:(?:\[([a-h][-a-h1-8]*[1-8](?:,[a-h][-a-h1-8]*[1-8])*)",
+                    r"(?:(?:\[([a-h][-a-h1-8]*[1-8]",
+                    r"(?:,[a-h][-a-h1-8]*[1-8])*)",
                     r"\])|(?:([a-h]-[a-h][1-8]-[1-8])|([a-h]-[a-h][1-8])|",
                     r"([a-h][1-8]-[1-8])|([a-h][1-8])))|",
                     r"(?:(?:(?:(?:\[([^\]]+)\])|([KQRBNPkqrbnpAa_]))",
-                    r"(?:(?:\[([a-h][-a-h1-8]*[1-8](?:,[a-h][-a-h1-8]*[1-8])*)",
+                    r"(?:(?:\[([a-h][-a-h1-8]*[1-8]",
+                    r"(?:,[a-h][-a-h1-8]*[1-8])*)",
                     r"\])|(?:([a-h]-[a-h][1-8]-[1-8])|([a-h]-[a-h][1-8])|",
                     r"([a-h][1-8]-[1-8])|([a-h][1-8]))))|(?:(?:\[([^\]]+)\])|",
                     r"([KQRBNPkqrbnpAa_])))",
