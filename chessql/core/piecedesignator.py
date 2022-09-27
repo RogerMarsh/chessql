@@ -185,7 +185,8 @@ class PieceDesignator:
         return self._designator_set
 
     @staticmethod
-    def _expand_composite_square(startfile, endfile, startrank, endrank):
+    def expand_composite_square(startfile, endfile, startrank, endrank):
+        """Return the set of squares implied by a square designator."""
         files = FILE_NAMES[
             FILE_NAMES.index(startfile) : FILE_NAMES.index(endfile)
         ]
@@ -211,7 +212,7 @@ class PieceDesignator:
         for sqr in self.get_squares_list():
             if len(sqr) == 2:
                 squareset.update(
-                    self._expand_composite_square(
+                    self.expand_composite_square(
                         sqr[0], sqr[0], sqr[1], sqr[1]
                     )
                 )
@@ -219,7 +220,7 @@ class PieceDesignator:
                 if sqr[0] > sqr[2] or sqr[3] > sqr[5]:
                     self._square_ranges_valid = False
                 squareset.update(
-                    self._expand_composite_square(
+                    self.expand_composite_square(
                         sqr[0], sqr[2], sqr[3], sqr[5]
                     )
                 )
@@ -228,7 +229,7 @@ class PieceDesignator:
                     if sqr[0] > sqr[2]:
                         self._square_ranges_valid = False
                     squareset.update(
-                        self._expand_composite_square(
+                        self.expand_composite_square(
                             sqr[0], sqr[2], sqr[3], sqr[3]
                         )
                     )
@@ -236,7 +237,7 @@ class PieceDesignator:
                     if sqr[1] > sqr[3]:
                         self._square_ranges_valid = False
                     squareset.update(
-                        self._expand_composite_square(
+                        self.expand_composite_square(
                             sqr[0], sqr[0], sqr[1], sqr[3]
                         )
                     )

@@ -113,7 +113,7 @@ class PieceDesignator(unittest.TestCase):
     def test_07__expand_composite_square(self):
         ae = self.assertEqual
         ae(
-            piecedesignator.PieceDesignator._expand_composite_square(
+            piecedesignator.PieceDesignator.expand_composite_square(
                 "c", "g", "3", "5"
             ),
             {
