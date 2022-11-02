@@ -7,10 +7,6 @@
 import unittest
 import re
 
-try:
-    import pgn_read.core.constants as pgn_read_constants
-except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
-    pgn_read_constants = None
 from .. import constants
 
 
@@ -23,27 +19,9 @@ class CQLConstants(unittest.TestCase):
 
     def test____assumptions(self):
         ae = self.assertEqual
-        ae(constants.FNR, "a-h")
-        ae(constants.RNR, "1-8")
-        ae(constants.WKING, "K")
-        ae(constants.WQUEEN, "Q")
-        ae(constants.WROOK, "R")
-        ae(constants.WBISHOP, "B")
-        ae(constants.WKNIGHT, "N")
-        ae(constants.WPAWN, "P")
-        ae(constants.BKING, "k")
-        ae(constants.BQUEEN, "q")
-        ae(constants.BROOK, "r")
-        ae(constants.BBISHOP, "b")
-        ae(constants.BKNIGHT, "n")
-        ae(constants.BPAWN, "p")
-        if pgn_read_constants is None:
-            ae(constants.WHITE_WIN, "1-0")
-            ae(constants.BLACK_WIN, "0-1")
-            ae(constants.DRAW, "1/2-1/2")
         ae(constants.EMPTY_SQUARE_NAME, r"_")
         ae(constants.FILE_NAMES, "abcdefgh")
-        ae(constants.RANK_NAMES, "12345678")
+        ae(constants.CQL_RANK_NAMES, "12345678")
         ae(constants.ANY_WHITE_PIECE_NAME, r"A")
         ae(constants.ANY_BLACK_PIECE_NAME, r"a")
         ae(
@@ -64,6 +42,9 @@ class CQLConstants(unittest.TestCase):
         ae(constants.ALL_GAMES_MATCH_PIECE_DESIGNATORS, r"AaKk_")
         ae(constants.ALL_PIECES, r"KQRBNPkqrbnp_")
         ae(constants.PIECE_NAMES, r"KQRBNPkqrbnpAa_")
+        ae(constants.WHITE_WIN, "1-0")
+        ae(constants.BLACK_WIN, "0-1")
+        ae(constants.DRAW, "1/2-1/2")
         ae(constants.RANGE_SEPARATOR, r"-")
         ae(constants.COMPOUND_DESIGNATOR_START, r"\[")
         ae(constants.COMPOUND_DESIGNATOR_END, r"\]")
@@ -87,10 +68,7 @@ class CQLConstants(unittest.TestCase):
                 )
             ),
         )
-        if pgn_read_constants is None:
-            ae(len([c for c in dir(constants) if not c.startswith("__")]), 39)
-        else:
-            ae(len([c for c in dir(constants) if not c.startswith("__")]), 35)
+        ae(len([c for c in dir(constants) if not c.startswith("__")]), 24)
 
 
 if __name__ == "__main__":

@@ -30,16 +30,7 @@ get a docstring.
 """
 import re
 
-# It may not be possible to sustain this attempt to break the dependency on
-# pgn_read if it proves necessary to retain the 'RAYS' attribute from the
-# previous version of constants.
-# The 'RAYS' attribute is probably needed in ChessTab's CQL code, not here,
-# now remaining evaluation code has been moved to ChessTab.
-try:
-    from pgn_read.core.constants import WHITE_WIN, BLACK_WIN, DRAW
-except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
-    from .constants import WHITE_WIN, BLACK_WIN, DRAW
-
+from .constants import WHITE_WIN, BLACK_WIN, DRAW
 from .node import Node
 from . import cql
 

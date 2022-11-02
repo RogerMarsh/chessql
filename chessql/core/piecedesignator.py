@@ -19,7 +19,7 @@ from .constants import (
     RANK_DESIGNATOR,
     SQUARE_DESIGNATOR_SEPARATOR,
     FILE_NAMES,
-    RANK_NAMES,
+    CQL_RANK_NAMES,
 )
 
 
@@ -191,8 +191,8 @@ class PieceDesignator:
             FILE_NAMES.index(startfile) : FILE_NAMES.index(endfile)
         ]
         files += endfile
-        ranks = RANK_NAMES[
-            RANK_NAMES.index(startrank) : RANK_NAMES.index(endrank)
+        ranks = CQL_RANK_NAMES[
+            CQL_RANK_NAMES.index(startrank) : CQL_RANK_NAMES.index(endrank)
         ]
         ranks += endrank
         return {f + r for f in files for r in ranks}
@@ -289,8 +289,8 @@ class PieceDesignator:
         """
         lowfile = FILE_NAMES[-1]
         highfile = FILE_NAMES[0]
-        lowrank = RANK_NAMES[-1]
-        highrank = RANK_NAMES[0]
+        lowrank = CQL_RANK_NAMES[-1]
+        highrank = CQL_RANK_NAMES[0]
         for sqr in self.get_squares_list():
             if len(sqr) == 2:
                 lowfile = min(lowfile, sqr[0])
@@ -303,7 +303,7 @@ class PieceDesignator:
                 if sqr[0] != FILE_NAMES[0] or sqr[2] != FILE_NAMES[-1]:
                     lowfile = min(lowfile, sqr[0])
                     highfile = max(highfile, sqr[2])
-                if sqr[3] != RANK_NAMES[0] or sqr[5] != RANK_NAMES[-1]:
+                if sqr[3] != CQL_RANK_NAMES[0] or sqr[5] != CQL_RANK_NAMES[-1]:
                     lowrank = min(lowrank, sqr[3])
                     highrank = max(highrank, sqr[5])
             elif len(sqr) == 4:
@@ -320,7 +320,10 @@ class PieceDesignator:
                         self._square_ranges_valid = False
                     lowfile = min(lowfile, sqr[0])
                     highfile = max(highfile, sqr[0])
-                    if sqr[1] != RANK_NAMES[0] or sqr[3] != RANK_NAMES[-1]:
+                    if (
+                        sqr[1] != CQL_RANK_NAMES[0]
+                        or sqr[3] != CQL_RANK_NAMES[-1]
+                    ):
                         lowrank = min(lowrank, sqr[1])
                         highrank = max(highrank, sqr[3])
         if ranklimits:

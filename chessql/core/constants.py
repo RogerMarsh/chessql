@@ -3,53 +3,35 @@
 # Licence: See LICENCE (BSD licence)
 
 """Constants used when parsing Chess Query Language statements."""
-# It may not be possible to sustain this attempt to break the dependency on
-# pgn_read if it proves necessary to retain the 'RAYS' attribute from the
-# previous version of constants.
-try:
-    from pgn_read.core.constants import (
-        FNR,
-        RNR,
-        WKING,
-        WQUEEN,
-        WROOK,
-        WBISHOP,
-        WKNIGHT,
-        WPAWN,
-        BKING,
-        BQUEEN,
-        BROOK,
-        BBISHOP,
-        BKNIGHT,
-        BPAWN,
-    )
-except ImportError:  # Not ModuleNotFoundError for Pythons earlier than 3.6
-    FNR = "a-h"
-    RNR = "1-8"
-    WKING = "K"
-    WQUEEN = "Q"
-    WROOK = "R"
-    WBISHOP = "B"
-    WKNIGHT = "N"
-    WPAWN = "P"
-    BKING = "k"
-    BQUEEN = "q"
-    BROOK = "r"
-    BBISHOP = "b"
-    BKNIGHT = "n"
-    BPAWN = "p"
+from pgn_read.core.constants import (
+    FILE_NAMES,
+    RANK_NAMES,
+    FEN_WHITE_KING,
+    FEN_WHITE_QUEEN,
+    FEN_WHITE_ROOK,
+    FEN_WHITE_BISHOP,
+    FEN_WHITE_KNIGHT,
+    FEN_WHITE_PAWN,
+    FEN_BLACK_KING,
+    FEN_BLACK_QUEEN,
+    FEN_BLACK_ROOK,
+    FEN_BLACK_BISHOP,
+    FEN_BLACK_KNIGHT,
+    FEN_BLACK_PAWN,
+)
 
-    # .statement imports these from pgn_read.core.constants if it can, so
-    # provide them here in case pgn_read is not available.
-    # CQL 5.1 does not allow '*' as a result (CQL 6.0.4 not tried yet).
-    WHITE_WIN = "1-0"
-    BLACK_WIN = "0-1"
-    DRAW = "1/2-1/2"
+# PGN results.  pgn_read.core.constants has '*' as DEFAULT_TAG_RESULT_VALUE
+# but does not have constants for the other three results.
+WHITE_WIN = "1-0"
+BLACK_WIN = "0-1"
+DRAW = "1/2-1/2"
 
-# Derive FILE_NAMES and RANK_NAMES from FNR and RNR rather than MAPFILE and
-# MAPRANK.
-FILE_NAMES = "".join([chr(i) for i in range(ord(FNR[0]), ord(FNR[-1]) + 1)])
-RANK_NAMES = "".join([chr(i) for i in range(ord(RNR[0]), ord(RNR[-1]) + 1)])
+FNR = "-".join((FILE_NAMES[0], FILE_NAMES[-1]))
+RNR = "-".join((RANK_NAMES[-1], RANK_NAMES[0]))
+
+# pgn_read.constants.RANK_NAMES is in reverse order to that used in chessql.
+# pgn_read.constants.FILE_NAMES is in order used in chessql.
+CQL_RANK_NAMES = "".join(reversed(RANK_NAMES))
 
 # The pgn_read package uses "NOPIECE = ''" for empty squares but CQL has to use
 # a non-null character to represent empty squares in statements.
@@ -67,14 +49,28 @@ EMPTY_SQUARE_NAME = r"_"
 ANY_WHITE_PIECE_NAME = r"A"
 ANY_BLACK_PIECE_NAME = r"a"
 
-WHITE_PIECE_NAMES = WKING + WQUEEN + WROOK + WBISHOP + WKNIGHT + WPAWN
-BLACK_PIECE_NAMES = BKING + BQUEEN + BROOK + BBISHOP + BKNIGHT + BPAWN
+WHITE_PIECE_NAMES = (
+    FEN_WHITE_KING
+    + FEN_WHITE_QUEEN
+    + FEN_WHITE_ROOK
+    + FEN_WHITE_BISHOP
+    + FEN_WHITE_KNIGHT
+    + FEN_WHITE_PAWN
+)
+BLACK_PIECE_NAMES = (
+    FEN_BLACK_KING
+    + FEN_BLACK_QUEEN
+    + FEN_BLACK_ROOK
+    + FEN_BLACK_BISHOP
+    + FEN_BLACK_KNIGHT
+    + FEN_BLACK_PAWN
+)
 
 ALL_GAMES_MATCH_PIECE_DESIGNATORS = (
     ANY_WHITE_PIECE_NAME
     + ANY_BLACK_PIECE_NAME
-    + WKING
-    + BKING
+    + FEN_WHITE_KING
+    + FEN_BLACK_KING
     + EMPTY_SQUARE_NAME
 )
 ALL_PIECES = WHITE_PIECE_NAMES + BLACK_PIECE_NAMES + EMPTY_SQUARE_NAME
@@ -137,3 +133,18 @@ PIECE_DESIGNATOR = r"".join(
         PIECE_NAMES.join((r"[", r"]\b")),
     )
 )
+
+del FEN_WHITE_KING
+del FEN_WHITE_QUEEN
+del FEN_WHITE_ROOK
+del FEN_WHITE_BISHOP
+del FEN_WHITE_KNIGHT
+del FEN_WHITE_PAWN
+del FEN_BLACK_KING
+del FEN_BLACK_QUEEN
+del FEN_BLACK_ROOK
+del FEN_BLACK_BISHOP
+del FEN_BLACK_KNIGHT
+del FEN_BLACK_PAWN
+del RANK_NAMES
+del FNR, RNR
