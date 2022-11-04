@@ -7,6 +7,7 @@
 import copy
 
 from .cql import Token, RANGE, QUOTED_STRING, FUNCTION_NAME
+from . import empty_copy
 
 
 class NodeError(Exception):
@@ -88,15 +89,12 @@ class Node:
         """Adjust self to be same kind of token as tokendef."""
         if same_flags:
             assert tokendef[1] == self.tokendef[1]
-            pass
         assert tokendef[2] == self.tokendef[2]
         # assert tokendef[3] in self.tokendef[3]
         if same_returntype:
             assert tokendef[4] == self.tokendef[4]
-            pass
         if same_arguments:
             assert tokendef[5] == self.tokendef[5]
-            pass
         self.tokendef = tokendef
 
     def __deepcopy__(self, memo):
@@ -179,15 +177,3 @@ class Node:
                 return node
         self.children.append(node_factory(tokendef))
         return self.children[-1]
-
-
-def empty_copy(obj):
-    """Return an empty instance of obj's class."""
-
-    class Empty(obj.__class__):
-        def __init__(self):
-            pass
-
-    newcopy = Empty()
-    newcopy.__class__ = obj.__class__
-    return newcopy

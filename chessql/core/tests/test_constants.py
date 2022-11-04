@@ -68,7 +68,36 @@ class CQLConstants(unittest.TestCase):
                 )
             ),
         )
-        ae(len([c for c in dir(constants) if not c.startswith("__")]), 24)
+        ae(constants.UP, "up")
+        ae(constants.DOWN, "down")
+        ae(constants.RIGHT, "right")
+        ae(constants.LEFT, "left")
+        ae(constants.NORTHEAST, "northeast")
+        ae(constants.NORTHWEST, "northwest")
+        ae(constants.SOUTHEAST, "southeast")
+        ae(constants.SOUTHWEST, "southwest")
+        ae(constants.DIAGONAL, "diagonal")
+        ae(constants.ORTHOGONAL, "orthogonal")
+        ae(constants.VERTICAL, "vertical")
+        ae(constants.HORIZONTAL, "horizontal")
+        ae(constants.ANYDIRECTION, "anydirection")
+        ae(constants.ANY_WHITE_PIECE_NAME, r"A")
+        ae(constants.ANY_BLACK_PIECE_NAME, r"a")
+        ae(
+            constants.SIMPLE_SQUARE_DESIGNATOR,
+            r"[a-h](?:-[a-h])?[1-8](?:-[1-8])?",
+        )
+        ae(
+            constants.COMPOUND_SQUARE_DESIGNATOR,
+            "".join(
+                (
+                    r"\[[a-h](?:-[a-h])?[1-8](?:-[1-8])?",
+                    r"(?:,[a-h](?:-[a-h])?[1-8](?:-[1-8])?)*]",
+                )
+            ),
+        )
+        ae(constants.CQL_RANK_NAMES, "12345678")
+        ae(len([c for c in dir(constants) if not c.startswith("__")]), 37)
 
 
 if __name__ == "__main__":

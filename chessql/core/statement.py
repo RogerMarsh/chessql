@@ -50,6 +50,16 @@ class Statement:
 
     create_node = Node
 
+    # Otherwise pylint makes attribute-defined-outside-init reports for all
+    # _range, tokens, and cql_filters, references except the ones in
+    # _reset_state() called by __init__().
+    # However putting tokens here causes a report for the query.tokens[0]
+    # reference in the code after 'if __name__ == "__main__":', which does
+    # not occur when tokens is not here..
+    _range = None
+    tokens = None
+    cql_filters = None
+
     def __init__(self):
         """Initialise as a valid empty statement."""
         super().__init__()
@@ -390,6 +400,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.ALL
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_find_parameter(tokendef, tns):
             return
@@ -414,6 +425,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses()
 
     def and_(self, match, tokendef):
@@ -487,6 +499,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses()
 
     def black(self, match, tokendef):
@@ -501,6 +514,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.BLOCKCOMMENT
+        del match
         self._discard_token()
 
     def btm(self, match, tokendef):
@@ -546,6 +560,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.CASTLE
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -582,6 +597,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses(argument_count=1)
 
     def colon(self, match, tokendef):
@@ -629,6 +645,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses(argument_count=None, minimum_arguments=1)
 
     def connectedpawns(self, match, tokendef):
@@ -661,6 +678,7 @@ class Statement:
         'consecutivemoves' filter.
 
         """
+        del args
         self._close_parentheses()
 
     def count(self, match, tokendef):
@@ -674,6 +692,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.COUNT
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -736,6 +755,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses()
 
     def diagonal(self, match, tokendef):
@@ -760,6 +780,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses()
 
     def divide(self, match, tokendef):
@@ -975,6 +996,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.RIGHTBRACE
+        del match
         stacked_arguments = []
         node_stack = self.node_stack
         while True:
@@ -1023,6 +1045,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         clpns = self.node_stack[-1]
         self._consume_token(cql.Token.RIGHTPARENTHESIS)
         self._pop_top_stack(self.node_stack)
@@ -1082,6 +1105,7 @@ class Statement:
     def rightparenthesis(self, match, tokendef):
         """Add ')' to complete a comound filter started with '('."""
         assert tokendef is cql.Token.RIGHTPARENTHESIS
+        del match
         stacked_arguments = []
         node_stack = self.node_stack
         while True:
@@ -1107,6 +1131,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.ENPASSANT
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -1151,6 +1176,7 @@ class Statement:
     def eolcomment(self, match, tokendef):
         """Add the CQL 'eolcomment' filter."""
         assert tokendef is cql.Token.EOLCOMMENT
+        del match
         self._discard_token()
 
     def eq(self, match, tokendef):
@@ -1192,6 +1218,7 @@ class Statement:
         Multiple 'firstmatch' parameters are not allowed.
 
         """
+        del match
         assert tokendef is cql.Token.FIRSTMATCH
         tns = self.node_stack[-1]
         if not self._accept_as_line_parameter(tokendef, tns):
@@ -1423,6 +1450,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._consume_token(cql.Token.RIGHTPARENTHESIS)
         top = self._pop_top_stack(self.node_stack)
         child = top.children
@@ -1682,6 +1710,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.LASTPOSITION
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_line_parameter(tokendef, tns):
             return
@@ -1702,6 +1731,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses()
 
     def left(self, match, tokendef):
@@ -1805,6 +1835,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses()
 
     def matchcount(self, match, tokendef):
@@ -1837,6 +1868,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses(argument_count=None, minimum_arguments=2)
 
     def message(self, match, tokendef):
@@ -1859,6 +1891,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses(argument_count=None, minimum_arguments=1)
 
     def min(self, match, tokendef):
@@ -1876,6 +1909,7 @@ class Statement:
         Called by self.rightparenthesis for the relevant ')' token.
 
         """
+        del args
         self._close_parentheses(argument_count=None, minimum_arguments=2)
 
     # Right now the only idea I have to implement unary minus is to define a
@@ -1953,6 +1987,7 @@ class Statement:
         Called when token is not a 'move' parameter after 'move' filter.
 
         """
+        del args
         top = self.node_stack[-1]
         if top.tokendef is cql.Token.MOVE:
             if (
@@ -1981,6 +2016,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.LEGAL
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -1998,6 +2034,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.PREVIOUS
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -2015,6 +2052,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.PSEUDOLEGAL
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -2047,6 +2085,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.NESTBAN
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_line_parameter(tokendef, tns):
             return
@@ -2101,6 +2140,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.NULL
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -2195,6 +2235,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.OO
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -2212,6 +2253,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.OOO
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_move_parameter(tokendef, tns):
             return
@@ -2475,6 +2517,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.PRIMARY
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_line_or_move_parameter(tokendef, tns):
             return
@@ -2528,6 +2571,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.QUIET
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_consecutivemoves_parameter(tokendef, tns):
             return
@@ -2565,6 +2609,7 @@ class Statement:
 
     def collapse_ray(self, *args):
         """Add the CQL ')' keyword for a 'ray' filter."""
+        del args
         self._close_parentheses(argument_count=None, minimum_arguments=2)
 
     def query(self, match, tokendef):
@@ -2666,6 +2711,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.SECONDARY
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_line_or_move_parameter(tokendef, tns):
             return
@@ -2721,6 +2767,7 @@ class Statement:
 
         """
         assert tokendef is cql.Token.SINGLECOLOR
+        del match
         tns = self.node_stack[-1]
         if not self._accept_as_line_parameter(tokendef, tns):
             return
@@ -3045,6 +3092,7 @@ class Statement:
 
     def collapse_xray(self, *args):
         """Add the CQL ')' keyword for an 'xray' clause."""
+        del args
         self._close_parentheses(argument_count=None, minimum_arguments=2)
 
     def year(self, match, tokendef):
@@ -3066,6 +3114,7 @@ class Statement:
     def then(self, match, tokendef):
         """Add the CQL 'then' filter."""
         assert tokendef is cql.Token.THEN
+        del match
         self._collapse_stack_frame(cql.Flags.IF_FRAME)
         if self.cql_error:
             return
@@ -3114,6 +3163,7 @@ class Statement:
 
     def else_(self, match, tokendef):
         """Add the CQL 'else' filter."""
+        del match
         assert tokendef is cql.Token.ELSE
         self._collapse_stack_frame(cql.Flags.IF_FRAME)
         if self.cql_error:
@@ -3224,6 +3274,7 @@ class Statement:
     #    attacks must be set filters; implying the pop after all the 'if's
     #    cannot be reached.
     def _insert_filter(self, match, tokendef):
+        del match
         node_stack = self.node_stack
 
         # Same as collapse_leftparenthesis version except tokendef for
@@ -3382,6 +3433,7 @@ class Statement:
             node_stack[-1].parameters[cql.UNARY_MINUS] = True
 
     def _insert_infix_arithmetic(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3466,6 +3518,7 @@ class Statement:
             node_stack[-1].children.append(child)
 
     def _insert_infix_arithmetic_inplace(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3533,6 +3586,7 @@ class Statement:
             tns.set_tokendef_to_variant(position, same_arguments=False)
 
     def _insert_infix_relational(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3592,6 +3646,7 @@ class Statement:
             node_stack[-1].children.append(child)
 
     def _insert_infix_binary(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3643,6 +3698,7 @@ class Statement:
             node_stack[-1].children.append(child)
 
     def _insert_infix_boolean(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3684,6 +3740,7 @@ class Statement:
             node_stack[-1].children.append(child)
 
     def _insert_infix_colon(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3728,6 +3785,7 @@ class Statement:
             node_stack[-1].children.append(child)
 
     def _insert_infix_assign(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3761,6 +3819,7 @@ class Statement:
             return
 
     def _insert_infix(self, match, tokendef):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -3803,6 +3862,7 @@ class Statement:
             return
 
     def _insert_repeat_regular_expression(self, match, tokendef, value=True):
+        del match
         if not self.tokens_consumed:
             self.cql_error = tokendef.name.strip("_").join(
                 ("'", "' operator at start of statement")
@@ -4529,6 +4589,8 @@ if __name__ == "__main__":
             query = StatementTest()
             query.process_statement(s)
             print()
+            # See Statement class attribute declarations for comment on the
+            # unsubscriptable-object report generated for this statement.
             for stmatch in query.tokens[0]:
                 print(
                     *[(k, v) for k, v in stmatch.groupdict().items() if v],

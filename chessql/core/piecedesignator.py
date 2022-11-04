@@ -21,6 +21,7 @@ from .constants import (
     FILE_NAMES,
     CQL_RANK_NAMES,
 )
+from . import empty_copy
 
 
 # Originally written to the cql1.0 definition.
@@ -115,8 +116,12 @@ class PieceDesignator:
 
     piece_designator = re.compile(PIECE_DESIGNATOR)
 
-    PieceDesignator = collections.namedtuple(
-        "PieceDesignator",
+    # Renamed from PieceDesignator to avoid confusion with class name.
+    # Prompted by pylint no-member reports for the item names: such as
+    # "compoundpiece_s".
+    # It does not stop the no-member messages.
+    PieceDesignatorNT = collections.namedtuple(
+        "PieceDesignatorNT",
         " ".join(
             (
                 "compoundsquare",
@@ -158,7 +163,7 @@ class PieceDesignator:
         """
         self._match = self.piece_designator.match(self._token)
         if self._match:
-            self._groups = self.PieceDesignator(
+            self._groups = self.PieceDesignatorNT(
                 *self._match.groups(default="")
             )
 
@@ -341,6 +346,7 @@ class PieceDesignator:
 
         """
         groups = self._groups
+        # False positive no-member reports by pylint are ignored.
         pieces = "".join(
             (
                 groups.compoundpiece_s,
@@ -356,6 +362,7 @@ class PieceDesignator:
     def get_squares(self):
         """Return the square designator component of the piece designator."""
         groups = self._groups
+        # False positive no-member reports by pylint are ignored.
         return "".join(
             (
                 groups.compoundsquare,
@@ -378,21 +385,11 @@ class PieceDesignator:
     def is_compound_squares(self):
         """Return True if a compound square is given, otherwise False."""
         groups = self._groups
+        # False positive no-member reports by pylint are ignored.
         return bool(groups.compoundsquare or groups.p_compoundsquare)
 
     def is_compound_pieces(self):
         """Return True if a compound piece is given, otherwise False."""
         groups = self._groups
+        # False positive no-member reports by pylint are ignored.
         return bool(groups.compoundpiece_s or groups.compoundpiece)
-
-
-def empty_copy(obj):
-    """Return an empty instance of obj's class."""
-
-    class Empty(obj.__class__):
-        def __init__(self):
-            pass
-
-    newcopy = Empty()
-    newcopy.__class__ = obj.__class__
-    return newcopy

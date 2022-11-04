@@ -22,6 +22,7 @@ from pgn_read.core.constants import (
 
 # PGN results.  pgn_read.core.constants has '*' as DEFAULT_TAG_RESULT_VALUE
 # but does not have constants for the other three results.
+# CQL does not support the notion of unknown result ('*').
 WHITE_WIN = "1-0"
 BLACK_WIN = "0-1"
 DRAW = "1/2-1/2"
@@ -133,6 +134,25 @@ PIECE_DESIGNATOR = r"".join(
         PIECE_NAMES.join((r"[", r"]\b")),
     )
 )
+
+# The eight basic direction names.
+# These refer to the natural directions on the chessboard from the white
+# perspective.
+UP = "up"
+DOWN = "down"
+RIGHT = "right"
+LEFT = "left"
+NORTHEAST = "northeast"
+NORTHWEST = "northwest"
+SOUTHEAST = "southeast"
+SOUTHWEST = "southwest"
+
+# The five compound directions.
+DIAGONAL = "diagonal"  # NORTHEAST, NORTHWEST, SOUTHEAST, SOUTHWEST
+ORTHOGONAL = "orthogonal"  # UP, DOWN, LEFT, RIGHT
+VERTICAL = "vertical"  # UP, DOWN
+HORIZONTAL = "horizontal"  # LEFT, RIGHT
+ANYDIRECTION = "anydirection"  # ORTHOGONAL, DIAGONAL
 
 del FEN_WHITE_KING
 del FEN_WHITE_QUEEN
