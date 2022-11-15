@@ -52,7 +52,9 @@ class PieceDesignator(unittest.TestCase):
 
     def test_04_PieceDesignator(self):
         ae = self.assertEqual
-        pd = piecedesignator.PieceDesignator.PieceDesignator(*"abcdefghijklmn")
+        pd = piecedesignator.PieceDesignator.PieceDesignatorNT(
+            *"abcdefghijklmn"
+        )
         ae(pd.compoundsquare, pd[0])
         ae(pd.filerankrange, pd[1])
         ae(pd.filerange, pd[2])
@@ -75,7 +77,7 @@ class PieceDesignator(unittest.TestCase):
                 [
                     a
                     for a in dir(
-                        piecedesignator.PieceDesignator.PieceDesignator
+                        piecedesignator.PieceDesignator.PieceDesignatorNT
                     )
                     if not a.startswith("_")
                 ]
@@ -105,7 +107,7 @@ class PieceDesignator(unittest.TestCase):
         ae(isinstance(pd._match, re.Match), True)
         ae(
             isinstance(
-                pd._groups, piecedesignator.PieceDesignator.PieceDesignator
+                pd._groups, piecedesignator.PieceDesignator.PieceDesignatorNT
             ),
             True,
         )
