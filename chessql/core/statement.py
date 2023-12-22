@@ -4413,7 +4413,6 @@ class ErrorInformation:
 
 
 if __name__ == "__main__":
-
     # To try out CQL version 6.0.4 statements run:
     # "python -m chessql.core.statement".
     # To additionally include a trace of the parsing run:
@@ -4429,7 +4428,6 @@ if __name__ == "__main__":
         _options = set(s.lower() for s in sys.argv[1:])
 
         if "trace" in _options:
-
             if "append" in _options or "pop" in _options:
 
                 def _process_token(self, match, groupkey):
@@ -4452,7 +4450,6 @@ if __name__ == "__main__":
                 return super()._pop_top_stack(stack)
 
         if "insert" in _options:
-
             # The 'end', 'precedence', 'skip', and 'default', annotations give
             # the condition in which a node is added to stack for tracing
             # purposes.
@@ -4653,7 +4650,6 @@ if __name__ == "__main__":
                     )
                 )
             else:
-
                 # Should not need this: it means stack has not collapsed in
                 # the correct way.
                 if not query.cql_filters and query.node_stack:
