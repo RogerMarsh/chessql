@@ -28,7 +28,7 @@ class GetRay(unittest.TestCase):
     def test_001_get_ray_003(self):
         self.assertRaisesRegex(
             KeyError,
-            "None",
+            "None$",
             rays.get_ray,
             *(None, None, None),
             **dict(direction_name=None),
