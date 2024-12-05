@@ -10,7 +10,7 @@ line-length = 79
 
 [project]
 name = "chessql"
-version = "2.1.3"
+version = "3.0.dev0"
 authors = [
   { name="Roger Marsh", email="roger.marsh@solentware.co.uk" },
 ]
@@ -29,9 +29,6 @@ classifiers = [
 ]
 license = {file = "LICENCE"}
 readme = "README"
-dependencies = [
-    "pgn-read==2.4",
-]
 
 [project.urls]
 Homepage = "http://www.solentware.co.uk"

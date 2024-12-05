@@ -10,9 +10,11 @@ Description
 
 This package provides a parser for Chess Query Language ('CQL'_).
 
-The 'documentation'_ for CQL version 6.0.4 as found in first half of 2020 was used as a reference. 
+The documentation for 'CQL version 6.0.4'_ as found in first half of 2020, plus 'CQL version 6.1'_ and 'CQL version 6.2'_ as found in mid-2024, was used as a reference.
 
-This package does not implement an evaluator to find games in a 'PGN'_ file which match a query.  An evaluator is implemented in `ChessTab`_.
+'CQLi'_ provides an alternative implementation of CQL-6.1 and a '-parse' option which gives output more easily compared with ChessQL output.
+
+This package does not implement an evaluator to find games in a 'PGN'_ file which match a query.
 
 
 Installation Instructions
@@ -27,9 +29,28 @@ at the command prompt.
 See `Python`_ and `pip`_ documentation for alternatives and platform-specific points.
 
 
+Use
+===
+
+Function core.parser.parse(<string>) returns a QueryContainer instance with the result of parsing a string usually read from a *.cql file.
+
+Function core.parser.parse_command_line_query() returns a QueryContainer instance with the result of parsing a command line usually passed to the CQL executable.
+
+
+Notes
+=====
+
+Version 3.0 of Chessql is incompatible with earlier versions.
+
+An evaluator for some CQL constructs is implemented in `ChessTab`_.
+
+
 .. _Python: https://python.org
 .. _pip: https://packaging.python.org/installing
 .. _CQL: http://www.gadycosteff.com
 .. _PGN: http://www6.chessclub/help/PGN-spec
-.. _documentation: http://www.gadycosteff.com/cql/doc/allindex.html
+.. _CQL version 6.0.4: http://www.gadycosteff.com/cql-0-4
+.. _CQL version 6.1: http://www.gadycosteff.com/cql-6.1
+.. _CQL version 6.2: http://www.gadycosteff.com/cql
+.. _CQLi: https://cql64.com
 .. _ChessTab: http://www.solentware.co.uk/downloads.html

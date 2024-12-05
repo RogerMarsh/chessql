@@ -1,0 +1,411 @@
+# structure.py
+# Copyright 2020, 2024 Roger Marsh
+# Licence: See LICENCE (BSD licence)
+
+"""Chess Query Language (CQL) object class definitions.
+
+This module defines the classes and functions needed by objects referred
+to by the object which are values in the cql.class_from_token_name dict
+which are not such values themselves.  Classes for whom instances are
+returned by those values which are functions are kept in filters even
+if not values in cql.class_from_token_name dict.
+
+"""
+from . import constants
+from . import cqltypes
+
+
+def debug(tag, node):
+    """Print details of node prefixed by tag."""
+    print(
+        tag,
+        node.__class__.__name__,
+        node.complete(),
+        node.full(),
+        [c.__class__.__name__ for c in node.children],
+        node.precedence,
+    )
+
+
+class NodeError(Exception):
+    """Exception raised for problems in BaseNode and subclasses."""
+
+
+class BaseNode:
+    """Record the parent, child, and sibling, relationships of nodes.
+
+    The children property contains a list of the class instances which
+    represent the parameters and arguments of a filter represented by a
+    BaseNode instance.  Parameters are not usually filters themselves
+    but arguments usually are filters too.
+    """
+
+    # Filters do not have a type by default.
+    # Some subclasses may be one several types of filter.
+    # The subclass should override _filter_type to the appropriate subset
+    # of cqltypes.FilterType.ANY, and each instance should set the instance
+    # attribute _filter_type to one of these if the correct one can be
+    # deduced.
+    # In many cases the subclass _filter_type will be one of the options.
+    # See gadycosteff.com/cql/filter.html for derivation of attribute names
+    # for the filter type.
+    _filter_type = ~cqltypes.FilterType.ANY
+
+    # In BaseNode not CQLObject because the value is tested in a place where
+    # node being an instance of QueryContainer cannot be avoided except
+    # by an additional 'if not isinstance(<obj>, QueryContainer)' clause
+    # protecting the test.  See NoArgumentsFilter.__init__().
+    _is_parameter = False
+
+    # Most nodes take zero or one child nodes.  The infix nodes take two
+    # child nodes.  The 'If' node takes two or three child nodes, the
+    # third being the 'Else' node if present.  The nodes which represent
+    # '{}' and '()' sequences can have any number of nodes, but in some
+    # contexts the number itself will not be variable.  Nodes which
+    # represent filters with an implicit search parameter can have zero
+    # or one child node; and None is the appropriate _child_count value.
+    # Default is None.  Override with 0 or 1 or 2.
+    # Where the default is not overridden the subclass must override the
+    # complete() method as needed.
+    _child_count = None
+
+    # Operation precedence.
+    # Default is set to None but subclasses which accept child filters
+    # should set precedence to the appropriate cqltypes.Precedence value
+    # to implement the table of precedence in the CQL documentation.
+    _precedence = None
+
+    # A filter is not complete until it's completion condition is met.
+    # Then the <instance>.completed attribute is set True, done by the
+    # complete() method.
+    completed = False
+
+    # BaseNode instances do not have a name, except those which are also
+    # Name instances.
+    _name = None
+
+    def __init__(self, match_=None, container=None):
+        """Initialise node parent and children attributes."""
+        self._children = []
+        self.match_ = match_
+        self._container = container
+        container.cursor.children.append(self)
+        self._parent = container.cursor
+        if not container.is_cursor_moveinfix_instance():
+            container.target_move_interrupt = True
+        if container.function_body_cursor is not None:
+            container.definitions[
+                container.function_body_cursor.name
+            ].body.append(match_)
+
+    @property
+    def filter_type(self):
+        """Return self._filter_type."""
+        return self._filter_type
+
+    @filter_type.setter
+    def filter_type(self, value):
+        """Set self._filter_type."""
+        self._filter_type = value
+
+    @property
+    def children(self):
+        """Return self._children."""
+        return self._children
+
+    @property
+    def container(self):
+        """Return self._container."""
+        return self._container
+
+    @property
+    def parent(self):
+        """Return self._parent."""
+        return self._parent
+
+    @property
+    def name(self):
+        """Return self._name.
+
+        The Name class provides a setter for thie property.
+
+        """
+        return self._name
+
+    @property
+    def is_parameter(self):
+        """Return True if BaseNode instance is a Parameter."""
+        return bool(self._is_parameter)
+
+    @property
+    def child_count(self):
+        """Return self._child_count."""
+        return self._child_count
+
+    @property
+    def precedence(self):
+        """Return self._precedence."""
+        return self._precedence
+
+    def is_parameter_accepted_by_filter(self):
+        """Return False because parameters are not accepted by default.
+
+        Subclasses should override as needed.
+
+        When counting children to test if a filter is complete or full,
+        parameters which are not accepted by the filter are included in
+        the count but those which are accepted are excluded.
+
+        """
+        return False
+
+    def complete(self):
+        """Return True if node has more than it's complement of children.
+
+        The next token after the node gets it's complement of children is
+        appended to it's children and signals the node stack should be
+        collapsed to the nearest ancestor without it's complement of
+        children.
+
+        In most cases comparing len(children) with _child_count will do.
+
+        """
+        return (
+            len(self.children)
+            - len(
+                [
+                    c
+                    for c in self.children
+                    if c.is_parameter and c.is_parameter_accepted_by_filter()
+                ]
+            )
+            > self._child_count
+        )
+
+    def full(self):
+        """Return True if node has it's complement of children or more.
+
+        This method differs from complete() in the test on _child_count.
+
+        The method is used when collapsing the ancestor stack to the
+        nearest ancestor which could accept the token.
+
+        In most cases comparing len(children) with _child_count will do.
+
+        """
+        return (
+            len(self.children)
+            - len(
+                [
+                    c
+                    for c in self.children
+                    if c.is_parameter and c.is_parameter_accepted_by_filter()
+                ]
+            )
+            >= self._child_count
+        )
+
+    def verify_children_and_set_filter_type(self, set_node_completed=False):
+        """Verify children and adjust filter type if complete or full.
+
+        This method should be called only from a place_node_in_tree method.
+
+        Not adjusting filter type is correct for most filters: subclasses
+        should override if appropriate.
+        """
+        verified = self.container.verified
+        assert self not in verified
+        verified.add(self)
+        if set_node_completed:
+            self.completed = True
+
+    # An isinstance solution is preferred.
+    def is_left_brace_or_parenthesis(self):
+        """Return True if token is one of '({' in a '()' or '{}' construct.
+
+        Subclasses should override and return True if appropriate.
+
+        """
+        return False
+
+    # An isinstance solution is preferred.
+    def is_variable(self):
+        """Return True if token is a Variable instance.
+
+        Subclasses should override and return True if appropriate.
+
+        """
+        return False
+
+    def place_node_in_tree(self):
+        """Move self to correct container location if initial place is wrong.
+
+        The default action is to do nothing and leave this node where it is.
+
+        This method should be overridden where necessary.
+
+        Nodes are appended to the children of the container.cursor node when
+        created.
+
+        Many node types take no children so if this node was created as a
+        child of a node of such types it has to be moved.
+
+        Many node types take exactly one child so if this node is the
+        second child of a node of such types it has to be moved.
+
+        The remaining node types take different numbers of children so if
+        this node is a child of a node of such types it has to be moved
+        if conditions dictate.
+
+        When this node is moved container.cursor is adjusted to be the node
+        of which this node became a child.
+
+        """
+        node = self.parent
+        while node and node.complete():
+            node.children[-1].parent = node.parent
+            node.parent.children.append(node.children.pop())
+            node.verify_children_and_set_filter_type(set_node_completed=True)
+            node = node.parent
+
+    def parent_match_trace(self):
+        """Return match trace for node through parents to root node."""
+        node = self
+        stack = []
+        while node:
+            stack.append(node)
+            node = node.parent
+        stack = [s.match_[0] if s.parent else None for s in stack]
+        return (self.__class__.__name__, len(stack), stack)
+
+    def parent_class_trace(self):
+        """Return class trace for node through parents to root node."""
+        node = self
+        stack = []
+        while node:
+            stack.append(node)
+            node = node.parent
+        stack = [s.__class__.__name__ if s.parent else None for s in stack]
+        return (self.__class__.__name__, len(stack), stack)
+
+    def _str_filter_type(self):
+        """Return str of filter type or an error report."""
+        try:
+            return str(self.filter_type)
+        except NodeError as exc:
+            return str(exc)
+
+    def parse_tree_trace(self, trace=None):
+        """Populate trace with parse tree for node in a print format.
+
+        Trace should be a list.  On exit it will contain a str for each node
+        indicating the number od ancestors, node type, and source string in
+        CQL statement represented by the node.
+
+        """
+        if trace is None:
+            trace = []
+        depth = 0
+        node = self
+        while node:
+            depth += 1
+            node = node.parent
+        if self.is_variable() and self._name.startswith(
+            constants.LOWER_CASE_CQL_PREFIX
+        ):
+            node = self
+            while True:
+                if node is None:
+                    node = " unknown function"
+                    break
+                if node.is_node_functioncall_instance():
+                    node = node.match_[0][:-1].join((" of function '", "'"))
+                    break
+                node = node.parent
+            name = self.match_[0]
+            if name.startswith(constants.LOWER_CASE_CQL_PREFIX):
+                # pycodestyle E203 whitespace before ':'.
+                # black insists on " : " format.
+                name = name[len(constants.LOWER_CASE_CQL_PREFIX) :]
+                index = name.index("_")
+                # pycodestyle E203 whitespace before ':'.
+                # black insists on " : " format.
+                name = name[index + 1 :]
+            match_ = " ".join(
+                (
+                    str(self.match_.span()),
+                    repr(self._name),
+                    "".join(
+                        (
+                            "for parameter '",
+                            name,
+                            "'",
+                            node,
+                        )
+                    ),
+                )
+            )
+        else:
+            match_ = self._match_string()
+        # pylint C0209 consider-using-f-string.  f"{depth:>3}" not used
+        # because 'depth' gets coloured as a "string" (typically green)
+        # rather than as a local attribute (typically black).
+        # The f-string documentation colours it 'right':
+        # docs.python.org/3.10/reference/lexical_analysis.html#f-strings
+        # but the Idle I have colours everything within the quotes green.
+        # Ah! See github.com/python/cpython/issues/73473.
+        trace.append(
+            " ".join(
+                (
+                    "{:>3}".format(depth),
+                    " " * depth,
+                    self.__class__.__name__,
+                    match_,
+                    self._str_filter_type(),
+                )
+            )
+        )
+        for node in self._children:
+            node.parse_tree_trace(trace=trace)
+
+    def parse_tree_node(self, trace=None):
+        """Return trace with parse tree for node.
+
+        Trace should be a list.  On exit it will contain a tuple:
+            (<depth>, <subclass of BaseNode>)
+        for each node where depth indicates the number of ancestors.
+
+        """
+        if trace is None:
+            trace = []
+        depth = 0
+        node = self
+        while node:
+            depth += 1
+            node = node.parent
+        trace.append((depth, self))
+        for node in self._children:
+            node.parse_tree_node(trace=trace)
+
+    # This method exists to allow BaseNode and CQLObject classes to be in
+    # separate modules.
+    def _match_string(self):
+        """Return class name.
+
+        Subclasses should override to return the span of the match where
+        available.
+
+        """
+        return self.__class__.__name__
+
+    # This method exists to allow BaseNode and FunctionCall classes to be in
+    # separate modules.
+    # Reimplement parse_tree_trace() to do this? or
+    # Map reserved variable names to function call names?
+    def is_node_functioncall_instance(self):
+        """Return False.
+
+        The FunctionCall subclass overrides to return True.
+
+        """
+        return False
