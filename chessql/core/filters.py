@@ -5410,7 +5410,5 @@ class EndOfStream(structure.Complete):
         if not isinstance(
             self.parent, (querycontainer.QueryContainer, cql.CQL)
         ):
-            raise basenode.NodeError(
-                "Unexpected end of statement found"
-            )
+            raise basenode.NodeError("Unexpected end of statement found")
         self.parent = None
