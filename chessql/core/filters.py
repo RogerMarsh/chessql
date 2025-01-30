@@ -26,6 +26,7 @@ from . import constants
 from . import cqltypes
 from . import hhdb
 from . import querycontainer
+from . import cql
 from . import structure
 
 # Type designator string is limited to "QBRNKPAqbrnkpa_" characters.
@@ -44,7 +45,7 @@ _echo_filter_re = re.compile(
 _echo_variable_re = re.compile(r"(?P<variable>.*)")
 
 # Split a match on 'consecutivemoves' filter pattern into components.
-# The pattern.CONSECUTIVEMOVES pattern ensures at most one 'quiet' matches.
+# The elements.CONSECUTIVEMOVES pattern ensures at most one 'quiet' matches.
 _consecutivemoves_filter_re = re.compile(
     r"consecutivemoves(?:\s+(quiet))?"
     + r"(?:\s+(\d+|[a-zA-Z0-9_$]+))?(?:\s+(\d+|[a-zA-Z0-9_$]+))?"
@@ -449,8 +450,19 @@ def brace_right(match_=None, container=None):
     while node:
         if not node.full():
             if isinstance(node, BraceLeft):
+                if not node.children:
+                    raise basenode.NodeError(
+                        node.__class__.__name__
+                        + ": '{' block must contain at least one filter"
+                    )
                 return BraceRight(match_=match_, container=container)
             if isinstance(node, ConstituentBraceLeft):
+                if not node.children:
+                    raise basenode.NodeError(
+                        node.__class__.__name__
+                        + ": '{' constituent block must contain"
+                        + " at least one filter"
+                    )
                 return ConstituentBraceRight(
                     match_=match_, container=container
                 )
@@ -4445,8 +4457,15 @@ class While(structure.ParenthesizedArguments):
     """Represent 'while' logical filter."""
 
     _filter_type = cqltypes.FilterType.LOGICAL
-    # Not sure what to do with the stuff under parameters in the 'filter'
-    # table.  Looks more like what is put under arguments elsewhere.
+    _child_count = 2
+
+    def complete(self):
+        """Override to use basenode.BaseNode version of complete method."""
+        return super(structure.CQLObject, self).complete()
+
+    def full(self):
+        """Override to use basenode.BaseNode version of full method."""
+        return super(structure.CQLObject, self).full()
 
 
 # 'white' is defined as a numeric filter with value 1 on the 'white.html'
@@ -4490,7 +4509,15 @@ class Year(structure.NoArgumentsFilter):
 
 
 class PieceDesignator(structure.NoArgumentsFilter):
-    """Represent piece designator with one piece and one square."""
+    """Represent piece designator.
+
+    The simplest piece designator has one piece and one square, such as
+    'Ba4'.  'R' is more complex since it means 'Ra1' or 'Ra2' or ... or
+    'Rh7' or 'Rh8'; a white rook on one or more squares.  'qc-e4-6' is
+    more complex since it means 'qc4' or 'qd4' or ... or 'qe5' or 'qe6';
+    a black queen on one or more squares in the rectangle bounded by
+    opposite corners 'c4' and 'e6'.  There are other ecceptable forms.
+    """
 
     _filter_type = cqltypes.FilterType.SET
 
@@ -5360,7 +5387,7 @@ class AnythingElse(structure.CQLObject):
         """Delegate then raise NodeError for unexpected token."""
         super().place_node_in_tree()
         raise basenode.NodeError(
-            r"Unexpected '" + self.match_.group() + "' found"
+            "Unexpected '" + self.match_.group() + "' found"
         )
 
 
@@ -5370,6 +5397,8 @@ class EndOfStream(structure.Complete):
     The 'end of stream' construct also appears in the parameter module.
     """
 
+    _is_allowed_first_object_in_container = True
+
     def place_node_in_tree(self):
         """Delegate then move to container whitespace.
 
@@ -5378,4 +5407,10 @@ class EndOfStream(structure.Complete):
         """
         super().place_node_in_tree()
         self.container.whitespace.append(self.parent.children.pop())
+        if not isinstance(
+            self.parent, (querycontainer.QueryContainer, cql.CQL)
+        ):
+            raise basenode.NodeError(
+                "Unexpected end of statement found"
+            )
         self.parent = None

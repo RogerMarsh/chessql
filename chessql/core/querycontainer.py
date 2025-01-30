@@ -105,6 +105,10 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
         # The count is needed because function definitions can be nested.
         self._function_body_count = 0
 
+        # The match for the token currently being processed.
+        # Kept for reporting parsing errors.
+        self.current_token = None
+
     @property
     def function_body_count(self):
         """Return self._function_body_count."""

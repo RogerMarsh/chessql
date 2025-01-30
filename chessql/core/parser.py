@@ -84,10 +84,11 @@ _comment_re = re.compile(
 )
 
 
-def _parse(container, string):
-    """Populate container instance for query in string."""
+def populate_container(container, string, *args):
+    """Populate container instance from parsed query in string."""
     container.place_node_in_tree()
-    for token in _cql_re.finditer(_remove_comments(string, container)):
+    for token in _cql_re.finditer(_remove_comments(string, container), *args):
+        container.current_token = token
         classes = {
             key: tokenmap.class_from_token_name[key]
             for key, value in token.groupdict().items()
@@ -113,7 +114,7 @@ def parse(string):
 
     """
     container = querycontainer.QueryContainer()
-    _parse(container, string)
+    populate_container(container, string)
     return container
 
 
@@ -142,7 +143,7 @@ def parse_command_line_query():
     if not ext:
         query = name + ".cql"
     with open(query, mode="r", encoding="utf-8") as queryfile:
-        _parse(container, queryfile.read())
+        populate_container(container, queryfile.read())
     return container
 
 
