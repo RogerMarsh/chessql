@@ -40,6 +40,9 @@ _echo_filter_re = re.compile(
     r"echo(\s+quiet)?\s*\(\s*(\w+)\s+(\w+)\s*\)\s*(in\s+all)?\s*"
 )
 
+# Whitespace which terminates a 'path' filter.
+_blank_line_re = re.compile(r"\n\s*\n$")
+
 # This gives misleading information about variable name derivation but
 # fits the pattern to detect 'echo' filters.
 _echo_variable_re = re.compile(r"(?P<variable>.*)")
@@ -109,28 +112,56 @@ class IgnoreToEOL(structure.Complete):
     """
 
     def place_node_in_tree(self):
-        r"""Override, move to whitespace, finish 'path', and adjust cursor.
+        r"""Override, move to whitespace, finish 'path' and '///' filters.
 
         'path' filter is completed if pattern match ends '\n\n' and a
         Path instance is first non-full filter in ancestor chain.
+
+        '///' filter is completed if a CommentSymbol instance is first
+        non-full filter in ancestor chain.
 
         The cursor becomes the first non-full node encountered in self's
         ancestor chain.
 
         The test is full, not complete, because an IgnoreToEOL instance
-        will not complete any filters except a Path instance.
+        will not complete any filters except a Path or CommentSymbol
+        instance.
 
         """
+        # The code involving cs_in_tree is added to cope with difference
+        # between pins.cql example for CQL 6.2 and earlier versions.  It
+        # is almost certainly not general enough.
+        # The earlier versions use the 'comment' filter while 6.2 uses
+        # the '///' filter.
         container = self.container
         container.whitespace.append(self.parent.children.pop())
         container.cursor = self.parent
-        if not self.match_.group().endswith("\n\n"):
-            self.parent = None
-            return
+        cs_in_tree = False
+        node = self
+        while node:
+            if isinstance(node, CommentSymbol):
+                cs_in_tree = True
+                break
+            node = node.parent
         node = self.parent
         while node and node.full():
             node = node.parent
-        if not isinstance(node, Path):
+        if not isinstance(node, (Path, CommentSymbol)):
+            if cs_in_tree and isinstance(node, Pin):
+                node = node.parent
+            while node:
+                node = node.parent
+                if isinstance(node, CommentSymbol):
+                    raise basenode.NodeError(
+                        container.cursor.__class__.__name__
+                        + ": cannot complete earlier '///' filter"
+                    )
+            self.parent = None
+            return
+        if (
+            isinstance(node, Path)
+            and _blank_line_re.match(self.match_.group()) is None
+        ):
             self.parent = None
             return
         # Do the loop again, calling verify_children_and_set_filter_type()
@@ -139,7 +170,7 @@ class IgnoreToEOL(structure.Complete):
         while node and node.full():
             node.verify_children_and_set_filter_type()
             node = node.parent
-        assert isinstance(node, Path)
+        assert isinstance(node, (Path, CommentSymbol))
         container.cursor = node.parent
         self.parent = None
 
@@ -1011,12 +1042,15 @@ class Captures(structure.MoveInfix):
         container.target_move_interrupt = False
 
 
-class CommentSymbol(structure.Argument):
+class CommentSymbol(structure.BlockLeft):
     """Represent '///' logical filter.
 
     CommentSymbol does not follow Comment and CommentParentheses in having
     a parameter version for interaction with Move because the '///' filter
     is introduced at CQL-6.2 and 'move' filter is deprecated at CQL-6.2.
+
+    The '///' filter is terminated by a newline.  This is similar to the
+    'path' filter which is terminated by a blank line.
     """
 
     _filter_type = cqltypes.FilterType.LOGICAL
@@ -3464,6 +3498,11 @@ class Path(structure.BlockLeft):
     CQL-6.2 is for '... path -- secondary secondary'.  But '... path a'
     causes generation of a "HolderCon" node rather than giving a syntax
     error.
+
+    The 'path' filter is terminated by a blank line (CQL documentation says
+    'may be terminated by' but it is not clear what other sequence, except
+    end of file, acts as a terminator).  This is similar to the '///'
+    filter which is terminated by a newline.
     """
 
     _filter_type = cqltypes.FilterType.NUMERIC
@@ -5400,15 +5439,49 @@ class EndOfStream(structure.Complete):
     _is_allowed_first_object_in_container = True
 
     def place_node_in_tree(self):
-        """Delegate then move to container whitespace.
+        r"""Override, move to whitespace, finish final filter.
 
-        All nodes should be complete now.
+        'path' filter is completed if a Path instance is first non-full
+        filter in ancestor chain.
+
+        '///' filter is completed if a CommentSymbol instance is first
+        non-full filter in ancestor chain.
+
+        Raise NodeError exception if the node stack has not collapsed to
+        the QueryContainer or CQL instance.
 
         """
-        super().place_node_in_tree()
-        self.container.whitespace.append(self.parent.children.pop())
+        container = self.container
+        container.whitespace.append(self.parent.children.pop())
+        node = self.parent
+        while node and node.full():
+            node = node.parent
+        if not isinstance(node, (Path, CommentSymbol)):
+            pc_node = node
+            while pc_node:
+                pc_node = pc_node.parent
+                if isinstance(pc_node, CommentSymbol):
+                    raise basenode.NodeError(
+                        container.cursor.__class__.__name__
+                        + ": cannot complete earlier '///' filter"
+                    )
+
+        else:
+            # EndOfStream completes 'path' and '///' filters.
+            node.completed = True
+
+        # EndOfStream completes 'line', 'move', and 'pin', filters.
+        # The 'line' and 'move' filters are deprecated at CQL 6.2.
+        if isinstance(node, (Line, Move, Pin)):
+            node = node.parent
+        else:
+            node = self.parent
+
+        while node and node.full():
+            node.verify_children_and_set_filter_type()
+            node = node.parent
         if not isinstance(
-            self.parent, (querycontainer.QueryContainer, cql.CQL)
+            node.parent, (querycontainer.QueryContainer, cql.CQL)
         ):
             raise basenode.NodeError("Unexpected end of statement found")
         self.parent = None
