@@ -876,16 +876,16 @@ class LineArrow(structure.CQLObject):
 class ArrowBackward(LineArrow, structure.Argument):
     """Represent '<--' keyword for 'line' filter.  Deprecated at 6.2.
 
-    '<--' is not called a parameter in CQL documentation at 6.1 but is
-    processed here as a parameter which takes one mandatory argument called
-    a constituent.
+    '<--' is not called a filter or a parameter in CQL documentation at
+    6.1 and is processed here as a filter which has one mandatory child
+    filter called a constituent.  The '<--' is validated like a parameter
+    since it is allowed only in the 'line' filter.
     """
 
-    _is_parameter = True
     _precedence = cqltypes.Precedence.P10
 
     def place_node_in_tree(self):
-        """Delegate then verify '<--' parameter and set cursor to self."""
+        """Delegate then verify '<--' keyword and set cursor to self."""
         super().place_node_in_tree()
         self.raise_if_name_parameter_not_for_filters()
         if len(self.parent.children) > 1:
@@ -893,8 +893,8 @@ class ArrowBackward(LineArrow, structure.Argument):
                 raise basenode.NodeError(
                     "'<--'"
                     + ": cannot be mixed with existing "
-                    + "'-->'"
-                    + " parameters"
+                    + "'-->'s"
+                    + " in 'line' filter"
                 )
         self.container.cursor = self
 
@@ -913,16 +913,16 @@ def arrow_backward(match_=None, container=None):
 class ArrowForward(LineArrow, structure.Argument):
     """Represent '-->' keyword for 'line' filter.  Deprecated at 6.2.
 
-    '-->' is not called a parameter in CQL documentation at 6.1 but is
-    processed here as a parameter which takes one mandatory argument called
-    a constituent.
+    '-->' is not called a filter or a parameter in CQL documentation at
+    6.1 and is processed here as a filter which has one mandatory child
+    filter called a constituent.  The '-->' is validated like a parameter
+    since it is allowed only in the 'line' filter.
     """
 
-    _is_parameter = True
     _precedence = cqltypes.Precedence.P10
 
     def place_node_in_tree(self):
-        """Delegate then verify '-->' parameter and set cursor to self."""
+        """Delegate then verify '-->' keyword and set cursor to self."""
         super().place_node_in_tree()
         self.raise_if_name_parameter_not_for_filters()
         if len(self.parent.children) > 1:
@@ -930,8 +930,8 @@ class ArrowForward(LineArrow, structure.Argument):
                 raise basenode.NodeError(
                     "'-->'"
                     + ": cannot be mixed with existing "
-                    + "'<--'"
-                    + " parameters"
+                    + "'<--'s"
+                    + " in 'line' filter"
                 )
         self.container.cursor = self
 
