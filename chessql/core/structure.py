@@ -291,15 +291,17 @@ class CompleteParameterArguments(CQLObject):
         return True
 
     def full(self):
-        """Return True if node representing filter is complete.
+        """Return True if node representing filter is full.
 
-        The full condition is the same as the complete condition.
+        The node must have one or more of the allowed parameters but no
+        filters.  Each of the allowed parameters takes one filter as it's
+        argument.
 
         """
         if len(self.children) == 0:
-            return False
+            return True
         if self.children[-1].is_parameter:
-            if self.children[-1].is_parameter_accepted_by_filter():
+            if not self.children[-1].completed:
                 return False
         return True
 

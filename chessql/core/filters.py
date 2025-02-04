@@ -104,77 +104,6 @@ class MoveParameterImpliesNumeric(structure.NoArgumentsParameter):
                 return
 
 
-class IgnoreToEOL(structure.Complete):
-    r"""Behaviour shared by tokens which ignore text to end of line.
-
-    This class is not a value in the cql.class_from_token_name dict but
-    is refernced by classes and functions that are mentioned.
-    """
-
-    def place_node_in_tree(self):
-        r"""Override, move to whitespace, finish 'path' and '///' filters.
-
-        'path' filter is completed if pattern match ends '\n\n' and a
-        Path instance is first non-full filter in ancestor chain.
-
-        '///' filter is completed if a CommentSymbol instance is first
-        non-full filter in ancestor chain.
-
-        The cursor becomes the first non-full node encountered in self's
-        ancestor chain.
-
-        The test is full, not complete, because an IgnoreToEOL instance
-        will not complete any filters except a Path or CommentSymbol
-        instance.
-
-        """
-        # The code involving cs_in_tree is added to cope with difference
-        # between pins.cql example for CQL 6.2 and earlier versions.  It
-        # is almost certainly not general enough.
-        # The earlier versions use the 'comment' filter while 6.2 uses
-        # the '///' filter.
-        container = self.container
-        container.whitespace.append(self.parent.children.pop())
-        container.cursor = self.parent
-        cs_in_tree = False
-        node = self
-        while node:
-            if isinstance(node, CommentSymbol):
-                cs_in_tree = True
-                break
-            node = node.parent
-        node = self.parent
-        while node and node.full():
-            node = node.parent
-        if not isinstance(node, (Path, CommentSymbol)):
-            if cs_in_tree and isinstance(node, Pin):
-                node = node.parent
-            while node:
-                node = node.parent
-                if isinstance(node, CommentSymbol):
-                    raise basenode.NodeError(
-                        container.cursor.__class__.__name__
-                        + ": cannot complete earlier '///' filter"
-                    )
-            self.parent = None
-            return
-        if (
-            isinstance(node, Path)
-            and _blank_line_re.match(self.match_.group()) is None
-        ):
-            self.parent = None
-            return
-        # Do the loop again, calling verify_children_and_set_filter_type()
-        # this time, because the cursor will be moved.
-        node = self.parent
-        while node and node.full():
-            node.verify_children_and_set_filter_type()
-            node = node.parent
-        assert isinstance(node, (Path, CommentSymbol))
-        container.cursor = node.parent
-        self.parent = None
-
-
 class RightCompoundPlace(structure.CQLObject):
     """Place node for '{}' or '()' and similar and record as whitespace.
 
@@ -308,29 +237,6 @@ class TypeDesignator(structure.NoArgumentsFilter):
         self.container.target_move_interrupt = False
 
 
-class BlockComment(structure.CQLObject):
-    """Represent a '/*....*/' comment in a *.cql file."""
-
-    _is_allowed_first_object_in_container = True
-
-    def place_node_in_tree(self):
-        """Override, move to whitespace and set cursor to parent."""
-        container = self.container
-        container.whitespace.append(self.parent.children.pop())
-        container.cursor = self.parent
-        self.parent = None
-
-
-class LineComment(IgnoreToEOL):
-    r"""Represent a '//.....\n' comment in a *.cql file.
-
-    Note that '////....\n', and more leading '/' characters, is a LineComment
-    but '///....\n' is a CommentSymbol (one of two CQL comment filters).
-    """
-
-    _is_allowed_first_object_in_container = True
-
-
 class String(structure.NoArgumentsFilter):
     """Represent 'string' string filter."""
 
@@ -397,10 +303,103 @@ def string(match_=None, container=None):
     return String(match_=match_, container=container)
 
 
-class EndOfLine(IgnoreToEOL):
-    """Terminate '///' and 'path' filters, and record as whitespace."""
+class EndCommentSymbol(structure.CQLObject):
+    """Terminate '///' filter and following 'path' filters."""
 
-    _is_allowed_first_object_in_container = True
+    def __init__(self, match_=None, container=None):
+        """Verify no open compound filters after '///' in then delegate."""
+        node = container.cursor
+        while node:
+            if isinstance(node, CommentSymbol):
+                break
+            if isinstance(node, structure.CompleteBlock):
+                if not node.full():
+                    raise basenode.NodeError(
+                        self.__class__.__name__
+                        + ": cannot end '///' filter in open block filter"
+                    )
+            node = node.parent
+        super().__init__(match_=match_, container=container)
+
+    def place_node_in_tree(self):
+        r"""Override, terminate all 'path' filters and remove from stack.
+
+        The sequence '\n' and similar completes the '///' filter and any
+        following 'path' filters.
+
+        """
+        container = self.container
+        container.whitespace.append(self)
+        node = self.parent
+        while True:
+            while node and node.full():
+                node.verify_children_and_set_filter_type(
+                    set_node_completed=True
+                )
+                node = node.parent
+            if not isinstance(node, (Path, CommentSymbol)):
+                raise basenode.NodeError(
+                    node.__class__.__name__
+                    + ": not complete while handing "
+                    + self.__class__.__name__
+                )
+            node.verify_children_and_set_filter_type()
+            node.completed = True
+            if isinstance(node, CommentSymbol):
+                break
+            p_node = node.parent
+            while p_node:
+                if isinstance(p_node, (Path, CommentSymbol)):
+                    break
+                p_node = p_node.parent
+            if p_node is None:
+                break
+            node = node.parent
+        container.cursor = node.parent
+        # Class instances for tokens treated as whitespace have no parent.
+        del self.parent.children[-1]
+        self.parent = None
+
+
+class EndPaths(structure.CQLObject):
+    """Terminate all 'path' filters and the '///' filter if present."""
+
+    def place_node_in_tree(self):
+        r"""Override, terminate all 'path' filters and remove from stack.
+
+        The sequence '\n\n' and similar completes multiple 'path' filters,
+        and a '///' filter if present.
+
+        """
+        container = self.container
+        container.whitespace.append(self)
+        node = self.parent
+        while True:
+            while node and node.full():
+                node.verify_children_and_set_filter_type(
+                    set_node_completed=True
+                )
+                node = node.parent
+            if not isinstance(node, (Path, CommentSymbol)):
+                raise basenode.NodeError(
+                    node.__class__.__name__
+                    + ": not complete while handing "
+                    + self.__class__.__name__
+                )
+            node.verify_children_and_set_filter_type()
+            node.completed = True
+            p_node = node.parent
+            while p_node:
+                if isinstance(p_node, (Path, CommentSymbol)):
+                    break
+                p_node = p_node.parent
+            if p_node is None:
+                break
+            node = node.parent
+        container.cursor = node.parent
+        # Class instances for tokens treated as whitespace have no parent.
+        del self.parent.children[-1]
+        self.parent = None
 
 
 class WhiteSpace(structure.Complete):
@@ -414,6 +413,55 @@ class WhiteSpace(structure.Complete):
         container.whitespace.append(self.parent.children.pop())
         container.cursor = self.parent
         self.parent = None
+
+
+class BlockComment(WhiteSpace):
+    """Represent a '/*....*/' comment in a *.cql file."""
+
+
+class LineComment(WhiteSpace):
+    r"""Represent a '//.....\n' comment in a *.cql file.
+
+    Note that '////....\n', and more leading '/' characters, is a LineComment
+    but '///....\n' is a CommentSymbol (one of two CQL comment filters).
+    """
+
+
+def _path_or_comment_symbols_found(match_, container):
+    """Return set of Path and CommentSymbol classes in ancestors."""
+    if _blank_line_re.search(match_.group()):
+        search_for = (CommentSymbol, Path)
+    else:
+        search_for = CommentSymbol
+    found = set()
+    node = container.cursor
+    while node:
+        if isinstance(node, search_for):
+            found.add(node.__class__)
+            if not isinstance(search_for, tuple):
+                break
+        node = node.parent
+    return found
+
+
+def end_of_line(match_=None, container=None):
+    """Return a WhiteSpace, EndCommentSymbol, or EndPaths, instance."""
+    found = _path_or_comment_symbols_found(match_, container)
+    if found:
+        if Path in found:
+            return EndPaths(match_=match_, container=container)
+        return EndCommentSymbol(match_=match_, container=container)
+    return WhiteSpace(match_=match_, container=container)
+
+
+def line_comment(match_=None, container=None):
+    """Return a WhiteSpace, EndCommentSymbol, or EndPaths, instance."""
+    found = _path_or_comment_symbols_found(match_, container)
+    if found:
+        if Path in found:
+            return EndPaths(match_=match_, container=container)
+        return EndCommentSymbol(match_=match_, container=container)
+    return WhiteSpace(match_=match_, container=container)
 
 
 class ConstituentBraceRight(RightCompoundPlace):
@@ -1054,6 +1102,18 @@ class CommentSymbol(structure.BlockLeft):
     """
 
     _filter_type = cqltypes.FilterType.LOGICAL
+
+    def __init__(self, match_=None, container=None):
+        """Verify no '///' filter in ancestors then delegate."""
+        node = container.cursor
+        while node:
+            if isinstance(node, CommentSymbol):
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + ": cannot have more than one '///' filter on a line"
+                )
+            node = node.parent
+        super().__init__(match_=match_, container=container)
 
 
 class AttackArrow(structure.MoveInfix):
@@ -2745,6 +2805,7 @@ class If(structure.Argument):
         """Return True if If node is complete."""
         if len(self.children) > 3:
             return True
+        # Maybe this should be like in full() for Infix.
         if len(self.children) > 2:
             return not isinstance(self.children[2], (Else, structure.Infix))
         return False
@@ -2757,7 +2818,9 @@ class If(structure.Argument):
         if len(self.children) > 2:
             return True
         if len(self.children) > 1:
-            return not isinstance(self.children[1], (Else, structure.Infix))
+            if isinstance(self.children[1], structure.Infix):
+                return self.children[1].completed
+            return not isinstance(self.children[1], Else)
         return False
 
 
@@ -4288,7 +4351,7 @@ class Then(structure.Complete):
         container = self.container
         start = self.match_.start()
         for item in reversed(container.whitespace):
-            if not isinstance(item, (WhiteSpace, EndOfLine, Then)):
+            if not isinstance(item, (WhiteSpace, EndCommentSymbol, Then)):
                 break
             if start != item.match_.end():
                 break
@@ -5439,49 +5502,25 @@ class EndOfStream(structure.Complete):
     _is_allowed_first_object_in_container = True
 
     def place_node_in_tree(self):
-        r"""Override, move to whitespace, finish final filter.
+        """Delegate then move to container whitespace.
 
-        'path' filter is completed if a Path instance is first non-full
-        filter in ancestor chain.
-
-        '///' filter is completed if a CommentSymbol instance is first
-        non-full filter in ancestor chain.
-
-        Raise NodeError exception if the node stack has not collapsed to
-        the QueryContainer or CQL instance.
+        All nodes should be complete now.
 
         """
-        container = self.container
-        container.whitespace.append(self.parent.children.pop())
-        node = self.parent
-        while node and node.full():
-            node = node.parent
-        if not isinstance(node, (Path, CommentSymbol)):
-            pc_node = node
-            while pc_node:
-                pc_node = pc_node.parent
-                if isinstance(pc_node, CommentSymbol):
-                    raise basenode.NodeError(
-                        container.cursor.__class__.__name__
-                        + ": cannot complete earlier '///' filter"
-                    )
-
-        else:
-            # EndOfStream completes 'path' and '///' filters.
-            node.completed = True
-
-        # EndOfStream completes 'line', 'move', and 'pin', filters.
-        # The 'line' and 'move' filters are deprecated at CQL 6.2.
-        if isinstance(node, (Line, Move, Pin)):
-            node = node.parent
-        else:
-            node = self.parent
-
-        while node and node.full():
-            node.verify_children_and_set_filter_type()
-            node = node.parent
+        super().place_node_in_tree()
+        self.container.whitespace.append(self.parent.children.pop())
         if not isinstance(
-            node.parent, (querycontainer.QueryContainer, cql.CQL)
+            self.parent, (querycontainer.QueryContainer, cql.CQL)
         ):
             raise basenode.NodeError("Unexpected end of statement found")
         self.parent = None
+
+
+def end_of_stream(match_=None, container=None):
+    """Return a EndOfStream or EndPaths instance."""
+    node = container.cursor
+    while node:
+        if isinstance(node, (CommentSymbol, Path)):
+            return EndPaths(match_=match_, container=container)
+        node = node.parent
+    return EndOfStream(match_=match_, container=container)
