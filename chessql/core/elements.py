@@ -114,14 +114,14 @@ BEFORE_NE = r"(?P<before_ne>)(?:\[<\]|\u227a)"  # 6.2 unicode symbols, '[<]'.
 # Why is '=' not at end of '(?=\)\*\+)' at end of *_PE constants like the
 # SINGLE_MOVE equivalents?  And '?' and '{' too?
 CAPTURES = r"(?P<captures>)(?:\[x\]|\u00d7)"
-CAPTURES_PB = r"(?P<captures_pb>)(?:(?<=\()\[x\]|\u00d7)"
+CAPTURES_PB = r"(?P<captures_pb>)(?<=\()(?:\[x\]|\u00d7)"
 CAPTURES_PE = r"(?P<captures_pe>)(?:\[x\]|\u00d7)(?=\))"
-CAPTURES_PBPE = r"(?P<captures_pbpe>)(?:(?<=\()\[x\]|\u00d7)(?=\))"
-CAPTURES_L = r"(?P<captures_l>)(?:(?<=\S)\[x\]|\u00d7)"
+CAPTURES_PBPE = r"(?P<captures_pbpe>)(?<=\()(?:\[x\]|\u00d7)(?=\))"
+CAPTURES_L = r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)"
 CAPTURES_R = r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=[^\s(=])"
-CAPTURES_PBR = r"(?P<captures_pbr>)(?:(?<=\()\[x\]|\u00d7)(?=[^\s(=])"
-CAPTURES_LPE = r"(?P<captures_lpe>)(?:(?<=\S)\[x\]|\u00d7)(?=\))"
-CAPTURES_LR = r"(?P<captures_lr>)(?:(?<=\S)\[x\]|\u00d7)(?=[^\s(=])"
+CAPTURES_PBR = r"(?P<captures_pbr>)(?<=\()(?:\[x\]|\u00d7)(?=[^\s(=])"
+CAPTURES_LPE = r"(?P<captures_lpe>)(?<=\S)(?:\[x\]|\u00d7)(?=\))"
+CAPTURES_LR = r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=[^\s(=])"
 
 # 6.2 table of filters, '///' described with comment filter.
 COMMENT_SYMBOL = r"(?P<comment_symbol>)///(?!/)"
@@ -165,18 +165,18 @@ ATTACKED_ARROW = r"(?P<attacked_arrow>)(?:<-|\u2190)"
 # Similare for a ')' at end of '--'.
 # Why are '?' and '{' not in the '(?=[\)\*\+=])' at end of *_PE constants?
 SINGLE_MOVE = r"(?P<single_move>)(?:--|\u2015\u2015)"
-SINGLE_MOVE_PB = r"(?P<single_move_pb>)(?:(?<=\()--|\u2015\u2015)"
+SINGLE_MOVE_PB = r"(?P<single_move_pb>)(?<=\()(?:--|\u2015\u2015)"
 SINGLE_MOVE_PE = r"(?P<single_move_pe>)(?:--|\u2015\u2015)(?=[\)\*\+=])"
 SINGLE_MOVE_PBPE = (
-    r"(?P<single_move_pbpe>)(?:(?<=\()--|\u2015\u2015)(?=[\)\*\+=])"
+    r"(?P<single_move_pbpe>)(?<=\()(?:--|\u2015\u2015)(?=[\)\*\+=])"
 )
-SINGLE_MOVE_L = r"(?P<single_move_l>)(?:(?<=\S)--|\u2015\u2015)"
+SINGLE_MOVE_L = r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)"
 SINGLE_MOVE_R = r"(?P<single_move_r>)(?:--|\u2015\u2015)(?=\S)"
-SINGLE_MOVE_PBR = r"(?P<single_move_pbr>)(?:(?<=\()--|\u2015\u2015)(?=\S)"
+SINGLE_MOVE_PBR = r"(?P<single_move_pbr>)(?<=\()(?:--|\u2015\u2015)(?=\S)"
 SINGLE_MOVE_LPE = (
-    r"(?P<single_move_lpe>)(?:(?<=\S)--|\u2015\u2015)(?=[\)\*\+=])"
+    r"(?P<single_move_lpe>)(?<=\S)(?:--|\u2015\u2015)(?=[\)\*\+=])"
 )
-SINGLE_MOVE_LR = r"(?P<single_move_lr>)(?:(?<=\S)--|\u2015\u2015)(?=\S)"
+SINGLE_MOVE_LR = r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)"
 
 ANY_SQUARE = r"(?P<any_square>)\."  # 6.0.4 index of symbols, '.'.
 

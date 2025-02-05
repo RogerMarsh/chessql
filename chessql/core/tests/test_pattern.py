@@ -71,23 +71,23 @@ class Pattern(unittest.TestCase):
                     r"(?P<before_ne>)(?:\[<\]|\u227a)",  # BEFORE_NE
                     r")|(",
                     # CAPTURES_PBPE
-                    r"(?P<captures_pbpe>)(?:(?<=\()\[x\]|\u00d7)(?=\))",
+                    r"(?P<captures_pbpe>)(?<=\()(?:\[x\]|\u00d7)(?=\))",
                     r")|(",
                     # CAPTURES_PBR
-                    r"(?P<captures_pbr>)(?:(?<=\()\[x\]|\u00d7)(?=[^\s(=])",
+                    r"(?P<captures_pbr>)(?<=\()(?:\[x\]|\u00d7)(?=[^\s(=])",
                     r")|(",
-                    r"(?P<captures_pb>)(?:(?<=\()\[x\]|\u00d7)",  # CAPTURES_PB
+                    r"(?P<captures_pb>)(?<=\()(?:\[x\]|\u00d7)",  # CAPTURES_PB
                     r")|(",
                     # CAPTURES_PE
                     r"(?P<captures_pe>)(?:\[x\]|\u00d7)(?=\))",
                     r")|(",
                     # CAPTURES_LPE
-                    r"(?P<captures_lpe>)(?:(?<=\S)\[x\]|\u00d7)(?=\))",
+                    r"(?P<captures_lpe>)(?<=\S)(?:\[x\]|\u00d7)(?=\))",
                     r")|(",
                     # CAPTURES_LR
-                    r"(?P<captures_lr>)(?:(?<=\S)\[x\]|\u00d7)(?=[^\s(=])",
+                    r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=[^\s(=])",
                     r")|(",
-                    r"(?P<captures_l>)(?:(?<=\S)\[x\]|\u00d7)",  # CAPTURES_L
+                    r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)",  # CAPTURES_L
                     r")|(",
                     # CAPTURES_R
                     r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=[^\s(=])",
@@ -101,29 +101,29 @@ class Pattern(unittest.TestCase):
                     r"(?P<attacked_arrow>)(?:<-|\u2190)",  # ATTACKED_ARROW
                     r")|(",
                     # SINGLE_MOVE_PBPE
-                    r"(?P<single_move_pbpe>)(?:(?<=\()--|\u2015\u2015)",
+                    r"(?P<single_move_pbpe>)(?<=\()(?:--|\u2015\u2015)",
                     r"(?=[\)\*\+=])",
                     r")|(",
                     # SINGLE_MOVE_PBR
-                    r"(?P<single_move_pbr>)(?:(?<=\()--|\u2015\u2015)",
+                    r"(?P<single_move_pbr>)(?<=\()(?:--|\u2015\u2015)",
                     r"(?=\S)",
                     r")|(",
                     # SINGLE_MOVE_PB
-                    r"(?P<single_move_pb>)(?:(?<=\()--|\u2015\u2015)",
+                    r"(?P<single_move_pb>)(?<=\()(?:--|\u2015\u2015)",
                     r")|(",
                     # SINGLE_MOVE_PE
                     r"(?P<single_move_pe>)(?:--|\u2015\u2015)(?=[\)\*\+=])",
                     r")|(",
                     # SINGLE_MOVE_LPE
-                    r"(?P<single_move_lpe>)(?:(?<=\S)--|\u2015\u2015)",
+                    r"(?P<single_move_lpe>)(?<=\S)(?:--|\u2015\u2015)",
                     r"(?=[\)\*\+=])",
                     r")|(",
                     # SINGLE_MOVE_LR
-                    r"(?P<single_move_lr>)(?:(?<=\S)--|\u2015\u2015)",
+                    r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)",
                     r"(?=\S)",
                     r")|(",
                     # SINGLE_MOVE_L
-                    r"(?P<single_move_l>)(?:(?<=\S)--|\u2015\u2015)",
+                    r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)",
                     r")|(",
                     # SINGLE_MOVE_R
                     r"(?P<single_move_r>)(?:--|\u2015\u2015)(?=\S)",

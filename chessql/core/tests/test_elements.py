@@ -429,7 +429,7 @@ class PatternElement(unittest.TestCase):
 
     def test_captures_l(self):
         self.assertEqual(
-            elements.CAPTURES_L, r"(?P<captures_l>)(?:(?<=\S)\[x\]|\u00d7)"
+            elements.CAPTURES_L, r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)"
         )
 
     def test_captures_pe(self):
@@ -439,13 +439,13 @@ class PatternElement(unittest.TestCase):
 
     def test_captures_pb(self):
         self.assertEqual(
-            elements.CAPTURES_PB, r"(?P<captures_pb>)(?:(?<=\()\[x\]|\u00d7)"
+            elements.CAPTURES_PB, r"(?P<captures_pb>)(?<=\()(?:\[x\]|\u00d7)"
         )
 
     def test_captures_pbpe(self):
         self.assertEqual(
             elements.CAPTURES_PBPE,
-            r"(?P<captures_pbpe>)(?:(?<=\()\[x\]|\u00d7)(?=\))",
+            r"(?P<captures_pbpe>)(?<=\()(?:\[x\]|\u00d7)(?=\))",
         )
 
     def test_captures_r(self):
@@ -456,19 +456,19 @@ class PatternElement(unittest.TestCase):
     def test_captures_lr(self):
         self.assertEqual(
             elements.CAPTURES_LR,
-            r"(?P<captures_lr>)(?:(?<=\S)\[x\]|\u00d7)(?=[^\s(=])",
+            r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=[^\s(=])",
         )
 
     def test_captures_lpe(self):
         self.assertEqual(
             elements.CAPTURES_LPE,
-            r"(?P<captures_lpe>)(?:(?<=\S)\[x\]|\u00d7)(?=\))",
+            r"(?P<captures_lpe>)(?<=\S)(?:\[x\]|\u00d7)(?=\))",
         )
 
     def test_captures_pbr(self):
         self.assertEqual(
             elements.CAPTURES_PBR,
-            r"(?P<captures_pbr>)(?:(?<=\()\[x\]|\u00d7)(?=[^\s(=])",
+            r"(?P<captures_pbr>)(?<=\()(?:\[x\]|\u00d7)(?=[^\s(=])",
         )
 
     def test_comment_symbol(self):
@@ -544,19 +544,19 @@ class PatternElement(unittest.TestCase):
     def test_single_move_l(self):
         self.assertEqual(
             elements.SINGLE_MOVE_L,
-            r"(?P<single_move_l>)(?:(?<=\S)--|\u2015\u2015)",
+            r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)",
         )
 
     def test_single_move_pb(self):
         self.assertEqual(
             elements.SINGLE_MOVE_PB,
-            r"(?P<single_move_pb>)(?:(?<=\()--|\u2015\u2015)",
+            r"(?P<single_move_pb>)(?<=\()(?:--|\u2015\u2015)",
         )
 
     def test_single_move_pbpe(self):
         self.assertEqual(
             elements.SINGLE_MOVE_PBPE,
-            r"(?P<single_move_pbpe>)(?:(?<=\()--|\u2015\u2015)(?=[\)\*\+=])",
+            r"(?P<single_move_pbpe>)(?<=\()(?:--|\u2015\u2015)(?=[\)\*\+=])",
         )
 
     def test_single_move_pe(self):
@@ -574,19 +574,19 @@ class PatternElement(unittest.TestCase):
     def test_single_move_lpe(self):
         self.assertEqual(
             elements.SINGLE_MOVE_LPE,
-            r"(?P<single_move_lpe>)(?:(?<=\S)--|\u2015\u2015)(?=[\)\*\+=])",
+            r"(?P<single_move_lpe>)(?<=\S)(?:--|\u2015\u2015)(?=[\)\*\+=])",
         )
 
     def test_single_move_lr(self):
         self.assertEqual(
             elements.SINGLE_MOVE_LR,
-            r"(?P<single_move_lr>)(?:(?<=\S)--|\u2015\u2015)(?=\S)",
+            r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)",
         )
 
     def test_single_move_pr(self):
         self.assertEqual(
             elements.SINGLE_MOVE_PBR,
-            r"(?P<single_move_pbr>)(?:(?<=\()--|\u2015\u2015)(?=\S)",
+            r"(?P<single_move_pbr>)(?<=\()(?:--|\u2015\u2015)(?=\S)",
         )
 
     def test_any_square(self):

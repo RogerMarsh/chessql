@@ -5451,7 +5451,7 @@ class AssignPromotion(structure.Argument):
         """Verify and apply node to tree then set cursor to self."""
         # This tests the situation if the following parent relationships
         # are applied.
-        self._raise_if_node_not_child_of_filters("(", AnySquare)
+        self._raise_if_node_not_child_of_filters("=", AnySquare)
         node = self.parent
         node.children[-1].parent = node.parent
         node.parent.children.append(node.children.pop())
