@@ -36,13 +36,19 @@ CQL_TOKENS = r")|(".join(
         elements.AFTER_NE,  # 6.2
         elements.BEFORE_EQ,  # 6.2
         elements.BEFORE_NE,  # 6.2
-        elements.CAPTURES_PBPE,  # 6.2
-        elements.CAPTURES_PBR,  # 6.2
-        elements.CAPTURES_PB,  # 6.2
-        elements.CAPTURES_PE,  # 6.2
-        elements.CAPTURES_LPE,  # 6.2
+        elements.CAPTURES_BLBR,  # 6.2
+        elements.CAPTURES_BL_P,  # 6.2
+        elements.CAPTURES_BL_R_P,  # 6.2
+        elements.CAPTURES_BL_R,  # 6.2
+        elements.CAPTURES_BL,  # 6.2
+        elements.CAPTURES_L_BR,  # 6.2
+        elements.CAPTURES_BR,  # 6.2
+        elements.CAPTURES_LR_P,  # 6.2
+        elements.CAPTURES_L_P,  # 6.2
         elements.CAPTURES_LR,  # 6.2
         elements.CAPTURES_L,  # 6.2
+        elements.CAPTURES_P,  # 6.2
+        elements.CAPTURES_R_P,  # 6.2
         elements.CAPTURES_R,  # 6.2
         elements.CAPTURES,  # 6.2
         elements.COMMENT_SYMBOL,  # 6.2
@@ -50,13 +56,19 @@ CQL_TOKENS = r")|(".join(
         # Before one character tokens.
         elements.ATTACK_ARROW,  # 6.2
         elements.ATTACKED_ARROW,  # 6.2
-        elements.SINGLE_MOVE_PBPE,  # 6.2
-        elements.SINGLE_MOVE_PBR,  # 6.2
-        elements.SINGLE_MOVE_PB,  # 6.2
-        elements.SINGLE_MOVE_PE,  # 6.2
-        elements.SINGLE_MOVE_LPE,  # 6.2
+        elements.SINGLE_MOVE_BLBR,  # 6.2
+        elements.SINGLE_MOVE_BL_P,  # 6.2
+        elements.SINGLE_MOVE_BL_R_P,  # 6.2
+        elements.SINGLE_MOVE_BL_R,  # 6.2
+        elements.SINGLE_MOVE_BL,  # 6.2
+        elements.SINGLE_MOVE_L_BR,  # 6.2
+        elements.SINGLE_MOVE_BR,  # 6.2
+        elements.SINGLE_MOVE_LR_P,  # 6.2
+        elements.SINGLE_MOVE_L_P,  # 6.2
         elements.SINGLE_MOVE_LR,  # 6.2
         elements.SINGLE_MOVE_L,  # 6.2
+        elements.SINGLE_MOVE_P,  # 6.2
+        elements.SINGLE_MOVE_R_P,  # 6.2
         elements.SINGLE_MOVE_R,  # 6.2
         elements.SINGLE_MOVE,  # 6.2
         elements.REGEX_MATCH,  # 6.1

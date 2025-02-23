@@ -103,26 +103,6 @@ WILDCARD_STAR = r"(?P<wildcard_star>){\*}"  # line parameter, '{*}'.
 AFTER_NE = r"(?P<after_ne>)(?:\[>\]|\u227b)"  # 6.2 unicode symbols, '[>]'.
 BEFORE_NE = r"(?P<before_ne>)(?:\[<\]|\u227a)"  # 6.2 unicode symbols, '[<]'.
 
-# 6.2 unicode symbols, '[x]'.
-# Single move captures filters.  (unicode given as U+D7)
-# F[x]G, F [x]G, F[x] G, and F [x] G, are different: a ' ' attached to '[x]'
-# means the left or right filter, as appropriate, is 'a-h1-8' (all squares).
-# CAPTURES_PB and CAPTURES_PBR catch cases where the character adjacent on the
-# left is not an F, in particular a '(' marking the start of a chain
-# constituent in a 'path' filter.
-# CAPTURES because CAPTURE is already taken as a MOVE parameter.
-# Why is '=' not at end of '(?=\)\*\+)' at end of *_PE constants like the
-# SINGLE_MOVE equivalents?  And '?' and '{' too?
-CAPTURES = r"(?P<captures>)(?:\[x\]|\u00d7)"
-CAPTURES_PB = r"(?P<captures_pb>)(?<=\()(?:\[x\]|\u00d7)"
-CAPTURES_PE = r"(?P<captures_pe>)(?:\[x\]|\u00d7)(?=\))"
-CAPTURES_PBPE = r"(?P<captures_pbpe>)(?<=\()(?:\[x\]|\u00d7)(?=\))"
-CAPTURES_L = r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)"
-CAPTURES_R = r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=[^\s(=])"
-CAPTURES_PBR = r"(?P<captures_pbr>)(?<=\()(?:\[x\]|\u00d7)(?=[^\s(=])"
-CAPTURES_LPE = r"(?P<captures_lpe>)(?<=\S)(?:\[x\]|\u00d7)(?=\))"
-CAPTURES_LR = r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=[^\s(=])"
-
 # 6.2 table of filters, '///' described with comment filter.
 COMMENT_SYMBOL = r"(?P<comment_symbol>)///(?!/)"
 
@@ -156,27 +136,61 @@ ATTACK_ARROW = r"(?P<attack_arrow>)(?:->|\u2192)"  # 6.2 unicode symbols, '->'.
 ATTACKED_ARROW = r"(?P<attacked_arrow>)(?:<-|\u2190)"
 
 # 6.2 unicode symbols, '--'.
-# Single move filters.
+# Single move filters. F and G must be set filters when attached to '--'.
 # F--G, F --G, F-- G, and F -- G, are different: a ' ' attached to '--'
 # means the left or right filter, as appropriate, is 'a-h1-8' (all squares).
-# SINGLE_MOVE_PB and SINGLE_MOVE_PBR catch cases where the character adjacent
-# on the left is not an F, in particular a '(' marking the start of a chain
-# constituent in a 'path' filter.
-# Similare for a ')' at end of '--'.
-# Why are '?' and '{' not in the '(?=[\)\*\+=])' at end of *_PE constants?
+# '--r=b' is like 'F --G=Q' and is accepted.
+# '(--)' and '{--}' are like 'F -- G'.  Must be distinguished from 'F--G'.
+# 'V="d" V[--]' and 'V="d" V[ -- ]' are not accepted.
+# '--(r q B)' is like parenthesized arguments to the '--' filter,
+# but '-- (r q B)' is not accepted, unlike 'ray (r q B)'.
+# Also 'ray/* text */(r q B)' is accepted but not '--/* text */(r q B)'.
+# '{r b}--{N Q} is F--G with both being compound filters, and the
+# expression '{r b}--{N Q}=b(r q B)' is legal but will never match since
+# F is not asking for a black pawn move promoting to bishop.
 SINGLE_MOVE = r"(?P<single_move>)(?:--|\u2015\u2015)"
-SINGLE_MOVE_PB = r"(?P<single_move_pb>)(?<=\()(?:--|\u2015\u2015)"
-SINGLE_MOVE_PE = r"(?P<single_move_pe>)(?:--|\u2015\u2015)(?=[\)\*\+=])"
-SINGLE_MOVE_PBPE = (
-    r"(?P<single_move_pbpe>)(?<=\()(?:--|\u2015\u2015)(?=[\)\*\+=])"
+SINGLE_MOVE_P = r"(?P<single_move_p>)(?:--|\u2015\u2015)(?==)"
+SINGLE_MOVE_BL = r"(?P<single_move_bl>)(?<=[\(\{])(?:--|\u2015\u2015)"
+SINGLE_MOVE_BL_P = r"(?P<single_move_bl_p>)(?<=[\(\{])(?:--|\u2015\u2015)(?==)"
+SINGLE_MOVE_BR = r"(?P<single_move_br>)(?:--|\u2015\u2015)(?=[\)\}\*\+])"
+SINGLE_MOVE_BLBR = (
+    r"(?P<single_move_blbr>)(?<=[\(\{])(?:--|\u2015\u2015)(?=[\)\}\*\+])"
 )
 SINGLE_MOVE_L = r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)"
+SINGLE_MOVE_L_P = r"(?P<single_move_l_p>)(?<=\S)(?:--|\u2015\u2015)(?==)"
 SINGLE_MOVE_R = r"(?P<single_move_r>)(?:--|\u2015\u2015)(?=\S)"
-SINGLE_MOVE_PBR = r"(?P<single_move_pbr>)(?<=\()(?:--|\u2015\u2015)(?=\S)"
-SINGLE_MOVE_LPE = (
-    r"(?P<single_move_lpe>)(?<=\S)(?:--|\u2015\u2015)(?=[\)\*\+=])"
+SINGLE_MOVE_R_P = r"(?P<single_move_r_p>)(?:--|\u2015\u2015)(?=\S+=)"
+SINGLE_MOVE_BL_R = (
+    r"(?P<single_move_bl_r>)(?<=[\(\{])(?:--|\u2015\u2015)(?=\S)"
+)
+SINGLE_MOVE_BL_R_P = (
+    r"(?P<single_move_bl_r_p>)(?<=[\(\{])(?:--|\u2015\u2015)(?=\S+=)"
+)
+SINGLE_MOVE_L_BR = (
+    r"(?P<single_move_l_br>)(?<=\S)(?:--|\u2015\u2015)(?=[\)\}\*\+])"
 )
 SINGLE_MOVE_LR = r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)"
+SINGLE_MOVE_LR_P = r"(?P<single_move_lr_p>)(?<=\S)(?:--|\u2015\u2015)(?=\S+=)"
+
+# 6.2 unicode symbols, '[x]'.  Similar to the single move filters.
+# Single move captures filters.  (unicode given as U+D7)
+# F[x]G, F [x]G, F[x] G, and F [x] G, are different: a ' ' attached to '[x]'
+# means the left or right filter, as appropriate, is 'a-h1-8' (all squares).
+CAPTURES = r"(?P<captures>)(?:\[x\]|\u00d7)"
+CAPTURES_P = r"(?P<captures_p>)(?:\[x\]|\u00d7)(?==)"
+CAPTURES_BL = r"(?P<captures_bl>)(?<=[\(\{])(?:\[x\]|\u00d7)"
+CAPTURES_BL_P = r"(?P<captures_bl_p>)(?<=[\(\{])(?:\[x\]|\u00d7)(?==)"
+CAPTURES_BR = r"(?P<captures_br>)(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
+CAPTURES_BLBR = r"(?P<captures_blbr>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
+CAPTURES_L = r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)"
+CAPTURES_L_P = r"(?P<captures_l_p>)(?<=\S)(?:\[x\]|\u00d7)(?==)"
+CAPTURES_R = r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=\S)"
+CAPTURES_R_P = r"(?P<captures_r_p>)(?:\[x\]|\u00d7)(?=\S+=)"
+CAPTURES_BL_R = r"(?P<captures_bl_r>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=\S)"
+CAPTURES_BL_R_P = r"(?P<captures_bl_r_p>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=\S+=)"
+CAPTURES_L_BR = r"(?P<captures_l_br>)(?<=\S)(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
+CAPTURES_LR = r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=\S)"
+CAPTURES_LR_P = r"(?P<captures_lr_p>)(?<=\S)(?:\[x\]|\u00d7)(?=\S+=)"
 
 ANY_SQUARE = r"(?P<any_square>)\."  # 6.0.4 index of symbols, '.'.
 

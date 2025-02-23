@@ -9,6 +9,7 @@ Changes in ..pattern not done here too will be highlighted.
 """
 
 import unittest
+import re
 
 from .. import pattern
 
@@ -70,27 +71,54 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     r"(?P<before_ne>)(?:\[<\]|\u227a)",  # BEFORE_NE
                     r")|(",
-                    # CAPTURES_PBPE
-                    r"(?P<captures_pbpe>)(?<=\()(?:\[x\]|\u00d7)(?=\))",
+                    # CAPTURES_BLBR
+                    r"(?P<captures_blbr>)(?<=[\(\{])(?:\[x\]|\u00d7)",
+                    r"(?=[\)\}\*\+])",
                     r")|(",
-                    # CAPTURES_PBR
-                    r"(?P<captures_pbr>)(?<=\()(?:\[x\]|\u00d7)(?=[^\s(=])",
+                    # CAPTURES_BL_P
+                    r"(?P<captures_bl_p>)",
+                    r"(?<=[\(\{])(?:\[x\]|\u00d7)(?==)",
                     r")|(",
-                    r"(?P<captures_pb>)(?<=\()(?:\[x\]|\u00d7)",  # CAPTURES_PB
+                    # CAPTURES_BL_R_P
+                    r"(?P<captures_bl_r_p>)(?<=[\(\{])(?:\[x\]|\u00d7)",
+                    r"(?=\S+=)",
                     r")|(",
-                    # CAPTURES_PE
-                    r"(?P<captures_pe>)(?:\[x\]|\u00d7)(?=\))",
+                    # CAPTURES_BL_R
+                    r"(?P<captures_bl_r>)(?<=[\(\{])(?:\[x\]|\u00d7)",
+                    r"(?=\S)",
                     r")|(",
-                    # CAPTURES_LPE
-                    r"(?P<captures_lpe>)(?<=\S)(?:\[x\]|\u00d7)(?=\))",
+                    # CAPTURES_BL
+                    r"(?P<captures_bl>)(?<=[\(\{])(?:\[x\]|\u00d7)",
+                    r")|(",
+                    # CAPTURES_L_BR
+                    r"(?P<captures_l_br>)(?<=\S)(?:\[x\]|\u00d7)",
+                    r"(?=[\)\}\*\+])",
+                    r")|(",
+                    # CAPTURES_BR
+                    r"(?P<captures_br>)(?:\[x\]|\u00d7)(?=[\)\}\*\+])",
+                    r")|(",
+                    # CAPTURES_LR_P
+                    r"(?P<captures_lr_p>)(?<=\S)(?:\[x\]|\u00d7)",
+                    r"(?=\S+=)",
+                    r")|(",
+                    # CAPTURES_L_P
+                    r"(?P<captures_l_p>)(?<=\S)(?:\[x\]|\u00d7)(?==)",
                     r")|(",
                     # CAPTURES_LR
-                    r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=[^\s(=])",
+                    r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)",
+                    r"(?=\S)",
                     r")|(",
-                    r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)",  # CAPTURES_L
+                    # CAPTURES_L
+                    r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)",
+                    r")|(",
+                    # CAPTURES_P
+                    r"(?P<captures_p>)(?:\[x\]|\u00d7)(?==)",
+                    r")|(",
+                    # CAPTURES_R_P
+                    r"(?P<captures_r_p>)(?:\[x\]|\u00d7)(?=\S+=)",
                     r")|(",
                     # CAPTURES_R
-                    r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=[^\s(=])",
+                    r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=\S)",
                     r")|(",
                     r"(?P<captures>)(?:\[x\]|\u00d7)",  # CAPTURES
                     r")|(",
@@ -100,23 +128,38 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     r"(?P<attacked_arrow>)(?:<-|\u2190)",  # ATTACKED_ARROW
                     r")|(",
-                    # SINGLE_MOVE_PBPE
-                    r"(?P<single_move_pbpe>)(?<=\()(?:--|\u2015\u2015)",
-                    r"(?=[\)\*\+=])",
+                    # SINGLE_MOVE_BLBR
+                    r"(?P<single_move_blbr>)(?<=[\(\{])(?:--|\u2015\u2015)",
+                    r"(?=[\)\}\*\+])",
                     r")|(",
-                    # SINGLE_MOVE_PBR
-                    r"(?P<single_move_pbr>)(?<=\()(?:--|\u2015\u2015)",
+                    # SINGLE_MOVE_BL_P
+                    r"(?P<single_move_bl_p>)",
+                    r"(?<=[\(\{])(?:--|\u2015\u2015)(?==)",
+                    r")|(",
+                    # SINGLE_MOVE_BL_R_P
+                    r"(?P<single_move_bl_r_p>)(?<=[\(\{])(?:--|\u2015\u2015)",
+                    r"(?=\S+=)",
+                    r")|(",
+                    # SINGLE_MOVE_BL_R
+                    r"(?P<single_move_bl_r>)(?<=[\(\{])(?:--|\u2015\u2015)",
                     r"(?=\S)",
                     r")|(",
-                    # SINGLE_MOVE_PB
-                    r"(?P<single_move_pb>)(?<=\()(?:--|\u2015\u2015)",
+                    # SINGLE_MOVE_BL
+                    r"(?P<single_move_bl>)(?<=[\(\{])(?:--|\u2015\u2015)",
                     r")|(",
-                    # SINGLE_MOVE_PE
-                    r"(?P<single_move_pe>)(?:--|\u2015\u2015)(?=[\)\*\+=])",
+                    # SINGLE_MOVE_L_BR
+                    r"(?P<single_move_l_br>)(?<=\S)(?:--|\u2015\u2015)",
+                    r"(?=[\)\}\*\+])",
                     r")|(",
-                    # SINGLE_MOVE_LPE
-                    r"(?P<single_move_lpe>)(?<=\S)(?:--|\u2015\u2015)",
-                    r"(?=[\)\*\+=])",
+                    # SINGLE_MOVE_BR
+                    r"(?P<single_move_br>)(?:--|\u2015\u2015)(?=[\)\}\*\+])",
+                    r")|(",
+                    # SINGLE_MOVE_LR_P
+                    r"(?P<single_move_lr_p>)(?<=\S)(?:--|\u2015\u2015)",
+                    r"(?=\S+=)",
+                    r")|(",
+                    # SINGLE_MOVE_L_P
+                    r"(?P<single_move_l_p>)(?<=\S)(?:--|\u2015\u2015)(?==)",
                     r")|(",
                     # SINGLE_MOVE_LR
                     r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)",
@@ -124,6 +167,12 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     # SINGLE_MOVE_L
                     r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)",
+                    r")|(",
+                    # SINGLE_MOVE_P
+                    r"(?P<single_move_p>)(?:--|\u2015\u2015)(?==)",
+                    r")|(",
+                    # SINGLE_MOVE_R_P
+                    r"(?P<single_move_r_p>)(?:--|\u2015\u2015)(?=\S+=)",
                     r")|(",
                     # SINGLE_MOVE_R
                     r"(?P<single_move_r>)(?:--|\u2015\u2015)(?=\S)",
@@ -806,8 +855,15 @@ class Pattern(unittest.TestCase):
         )
 
 
+class PatternRe(unittest.TestCase):
+    def test_cql_tokens_re(self):
+        pattern_re = re.compile(pattern.CQL_TOKENS)
+        self.assertEqual(isinstance(pattern_re, re.Pattern), True)
+
+
 if __name__ == "__main__":
     runner = unittest.TextTestRunner
     loader = unittest.defaultTestLoader.loadTestsFromTestCase
     runner().run(loader(PatternAttributes))
     runner().run(loader(Pattern))
+    runner().run(loader(PatternRe))
