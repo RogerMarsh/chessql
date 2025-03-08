@@ -156,7 +156,7 @@ class FilterMove(verify.Verify):
             [(3, "Move"), (4, "ToParameter"), (5, "PieceDesignator")],
         )
 
-    def test_074_move_31(self):
+    def test_074_move_31(self):  # wrong after 'pin' changes.
         self.verify(
             "move capture a5 from r to Q",
             [

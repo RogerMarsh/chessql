@@ -2641,14 +2641,9 @@ def from_(match_=None, container=None):
     syntax error for some filters.
 
     """
-    node = container.cursor
-    while True:
-        if node is None:
-            break
-        if is_from_parameter_accepted_by(node):
-            return FromParameter(match_=match_, container=container)
-        node = node.parent
-    return From(match_=match_, container=container)
+    return _set_or_parameter(
+        match_, container, From, FromParameter, is_from_parameter_accepted_by
+    )
 
 
 class Function(structure.Name, structure.Argument):
@@ -4569,14 +4564,9 @@ def to(match_=None, container=None):
     syntax error for some filters.
 
     """
-    node = container.cursor
-    while True:
-        if node is None:
-            break
-        if is_to_parameter_accepted_by(node):
-            return ToParameter(match_=match_, container=container)
-        node = node.parent
-    return To(match_=match_, container=container)
+    return _set_or_parameter(
+        match_, container, To, ToParameter, is_to_parameter_accepted_by
+    )
 
 
 # pylint C0103 naming style.  'true' is a CQL keyword which is represented
@@ -5783,3 +5773,32 @@ def _is_dash(filter_):
     return isinstance(
         filter_, (SingleMoveLR, SingleMoveL, SingleMoveR, SingleMove)
     )
+
+
+def _set_or_parameter(
+    match_, container, set_, parameter, is_parameter_accepted_by
+):
+    """Return set_ or parameter instance for match_.
+
+    This function exists to handle 'to' and 'from' keywords depending on
+    the effect of 'pin' and 'move' keywords.
+
+    """
+    cursor = container.cursor
+    if is_parameter_accepted_by(cursor):
+        return parameter(match_=match_, container=container)
+    node = cursor
+    while True:
+        if node is None:
+            break
+        if is_parameter_accepted_by(node):
+            if (
+                cursor.filter_type in cqltypes.FilterType.SET
+                and isinstance(
+                    cursor.parent, (FromParameter, ToParameter, Through)
+                )
+                and is_parameter_accepted_by(cursor.parent.parent)
+            ):
+                return parameter(match_=match_, container=container)
+        node = node.parent
+    return set_(match_=match_, container=container)
