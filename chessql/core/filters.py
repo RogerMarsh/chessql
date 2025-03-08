@@ -982,7 +982,12 @@ class ArrowBackward(LineArrow, structure.Argument):
 
 def arrow_backward(match_=None, container=None):
     """Return FindBackward or ArrowBackward instance."""
-    if is_find_backward_parameter_accepted_by(container.cursor):
+    node = container.cursor
+    while True:
+        if not node.is_parameter:
+            break
+        node = node.parent
+    if is_find_backward_parameter_accepted_by(node):
         return FindBackward(match_=match_, container=container)
     return ArrowBackward(match_=match_, container=container)
 
@@ -1323,63 +1328,23 @@ class Eq(structure.CompareSet, structure.Compare, structure.InfixRight):
     """Represent '==' numeric filter or string filter."""
 
     _precedence = cqltypes.Precedence.P80
-
-    def _verify_children(self):
-        """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
-        if (
-            len(
-                set(
-                    c.filter_type
-                    for c in self.children
-                    if c.filter_type
-                    in (cqltypes.FilterType.NUMERIC, cqltypes.FilterType.SET)
-                )
-            )
-            == 2
-        ):
-            return
-        structure.raise_if_not_same_filter_type(
-            self,
-            "compare",
-            filter_type=(
-                cqltypes.FilterType.SET
-                | cqltypes.FilterType.NUMERIC
-                | cqltypes.FilterType.STRING
-                | cqltypes.FilterType.POSITION
-            ),
-        )
+    _comparable_filter_types = (
+        cqltypes.FilterType.SET
+        | cqltypes.FilterType.NUMERIC
+        | cqltypes.FilterType.STRING
+        | cqltypes.FilterType.POSITION
+    )
 
 
 class NE(structure.CompareSet, structure.Compare, structure.InfixRight):
     """Represent '!=' ('≠') numeric filter or string filter."""
 
     _precedence = cqltypes.Precedence.P80
-
-    def _verify_children(self):
-        """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
-        if (
-            len(
-                set(
-                    c.filter_type
-                    for c in self.children
-                    if c.filter_type
-                    in (cqltypes.FilterType.NUMERIC, cqltypes.FilterType.SET)
-                )
-            )
-            == 2
-        ):
-            return
-        structure.raise_if_not_same_filter_type(
-            self,
-            "compare",
-            filter_type=(
-                cqltypes.FilterType.SET
-                | cqltypes.FilterType.NUMERIC
-                | cqltypes.FilterType.STRING
-            ),
-        )
+    _comparable_filter_types = (
+        cqltypes.FilterType.SET
+        | cqltypes.FilterType.NUMERIC
+        | cqltypes.FilterType.STRING
+    )
 
 
 class AssignPlus(structure.InfixLeft):
@@ -2393,9 +2358,11 @@ class Find(structure.Argument):
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
         filters = set(
-            f for f in self.children if isinstance(f, (All, RangeInteger))
+            f.__class__
+            for f in self.children
+            if isinstance(f, (All, RangeInteger, RangeVariable))
         )
-        if len(filters) != 1:
+        if All in filters and len(filters) > 1:
             raise basenode.NodeError(
                 self.__class__.__name__
                 + ": specify either a range or 'all' parameter but not both"
@@ -5040,7 +5007,12 @@ def variable(match_=None, container=None):
         assert definition_type is cqltypes.DefinitionType.VARIABLE
         variable_type = definitions[name].variable_type
         if variable_type is cqltypes.VariableType.NUMERIC:
-            if is_range_parameter_accepted_by(container.cursor):
+            node = container.cursor
+            while True:
+                if not node.is_parameter:
+                    break
+                node = node.parent
+            if is_range_parameter_accepted_by(node):
                 if is_too_many_range_integers(container.cursor):
                     return Variable(match_=match_, container=container)
                 if is_range_start_or_continuation(container.cursor):

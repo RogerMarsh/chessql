@@ -854,7 +854,16 @@ class CompareSet(CQLObject):
 
 
 class Compare(CQLObject):
-    """Subclass of CQLObject for comparing String and Numeric filters."""
+    """Subclass of CQLObject for comparing filters."""
+
+    # For all relational filters except '=='.
+    _comparable_filter_types = (
+        cqltypes.FilterType.NUMERIC
+        | cqltypes.FilterType.STRING
+        | cqltypes.FilterType.POSITION
+    )
+
+    _coerce_to_numeric = cqltypes.FilterType.SET | cqltypes.FilterType.NUMERIC
 
     @property
     def filter_type(self):
@@ -895,25 +904,12 @@ class Compare(CQLObject):
         """Override, raise NodeError if children verification fails."""
         assert len(self.children) == 2
         if (
-            len(
-                set(
-                    c.filter_type
-                    for c in self.children
-                    if c.filter_type
-                    in (cqltypes.FilterType.NUMERIC, cqltypes.FilterType.SET)
-                )
-            )
-            == 2
+            self.children[0].filter_type | self.children[1].filter_type
+            == self._coerce_to_numeric
         ):
             return
         raise_if_not_same_filter_type(
-            self,
-            "compare",
-            filter_type=(
-                cqltypes.FilterType.NUMERIC
-                | cqltypes.FilterType.STRING
-                | cqltypes.FilterType.POSITION
-            ),
+            self, "compare", filter_type=self._comparable_filter_types
         )
 
 

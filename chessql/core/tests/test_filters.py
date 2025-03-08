@@ -588,6 +588,223 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_038_find_01(self):
+        self.verify("find", [], returncode=1)
+
+    def test_038_find_02(self):
+        self.verify("find check", [(3, "Find"), (4, "Check")])
+
+    def test_038_find_03(self):
+        self.verify("find all check", [(3, "Find"), (4, "All"), (4, "Check")])
+
+    def test_038_find_04(self):
+        self.verify(
+            "find quiet check",
+            [(3, "Find"), (4, "Quiet"), (4, "Check")],
+        )
+
+    def test_038_find_05(self):
+        self.verify(
+            "find 3 check", [(3, "Find"), (4, "RangeInteger"), (4, "Check")]
+        )
+
+    def test_038_find_06(self):
+        self.verify(
+            "find 3 10 check",
+            [
+                (3, "Find"),
+                (4, "RangeInteger"),
+                (4, "RangeInteger"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_07(self):
+        self.verify(
+            "find <-- check", [(3, "Find"), (4, "FindBackward"), (4, "Check")]
+        )
+
+    def test_038_find_08(self):
+        self.verify(
+            "find quiet all check",
+            [(3, "Find"), (4, "Quiet"), (4, "All"), (4, "Check")],
+        )
+
+    def test_038_find_09(self):
+        self.verify(
+            "find all quiet check",
+            [(3, "Find"), (4, "All"), (4, "Quiet"), (4, "Check")],
+        )
+
+    def test_038_find_10(self):
+        self.verify("find all 1 check", [], returncode=1)
+
+    def test_038_find_11(self):
+        self.verify("find 1 all check", [], returncode=1)
+
+    def test_038_find_12(self):
+        self.verify(
+            "find quiet 2 4 check",
+            [
+                (3, "Find"),
+                (4, "Quiet"),
+                (4, "RangeInteger"),
+                (4, "RangeInteger"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_13(self):
+        self.verify(
+            "find 2 4 quiet check",
+            [
+                (3, "Find"),
+                (4, "RangeInteger"),
+                (4, "RangeInteger"),
+                (4, "Quiet"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_14(self):
+        self.verify(
+            "find <-- all check",
+            [(3, "Find"), (4, "FindBackward"), (4, "All"), (4, "Check")],
+        )
+
+    def test_038_find_15(self):
+        self.verify(
+            "find all <-- check",
+            [(3, "Find"), (4, "All"), (4, "FindBackward"), (4, "Check")],
+        )
+
+    def test_038_find_16(self):
+        self.verify(
+            "find <-- 4 check",
+            [
+                (3, "Find"),
+                (4, "FindBackward"),
+                (4, "RangeInteger"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_17(self):
+        self.verify(
+            "find 4 <-- check",
+            [
+                (3, "Find"),
+                (4, "RangeInteger"),
+                (4, "FindBackward"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_18(self):
+        self.verify(
+            "find <-- quiet check",
+            [
+                (3, "Find"),
+                (4, "FindBackward"),
+                (4, "Quiet"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_19(self):
+        self.verify(
+            "find quiet <-- check",
+            [
+                (3, "Find"),
+                (4, "Quiet"),
+                (4, "FindBackward"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_20(self):
+        self.verify("v=2 find all v check", [], returncode=1)
+
+    def test_038_find_21(self):
+        self.verify("v=2 find v all check", [], returncode=1)
+
+    def test_038_find_22(self):
+        self.verify(
+            "v=2 find quiet v <-- check",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Find"),
+                (4, "Quiet"),
+                (4, "RangeVariable"),
+                (4, "FindBackward"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_23(self):
+        self.verify(
+            "v=2 find quiet <-- v check",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Find"),
+                (4, "Quiet"),
+                (4, "FindBackward"),
+                (4, "RangeVariable"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_24(self):
+        self.verify(
+            "v=2 find v <-- quiet check",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Find"),
+                (4, "RangeVariable"),
+                (4, "FindBackward"),
+                (4, "Quiet"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_25(self):
+        self.verify(
+            "v=2 find v 5 <-- quiet check",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Find"),
+                (4, "RangeVariable"),
+                (4, "RangeInteger"),
+                (4, "FindBackward"),
+                (4, "Quiet"),
+                (4, "Check"),
+            ],
+        )
+
+    def test_038_find_26(self):
+        self.verify(
+            "v=2 find 1 v <-- quiet check",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Find"),
+                (4, "RangeInteger"),
+                (4, "RangeVariable"),
+                (4, "FindBackward"),
+                (4, "Quiet"),
+                (4, "Check"),
+            ],
+        )
+
     def test_039_flip_01_ascii(self):
         self.verify("flip", [], returncode=1)
 
