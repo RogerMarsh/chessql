@@ -25,8 +25,8 @@ class PatternAttributes(unittest.TestCase):
                 "ANCESTOR",
                 "AND",
                 "ANYDIRECTION",
-                "ANYTHING_ELSE",
                 "ANY_SQUARE",
+                "ANYTHING_ELSE",
                 "ARROW_BACKWARD",
                 "ARROW_FORWARD",
                 "ASCII",
@@ -173,6 +173,7 @@ class PatternAttributes(unittest.TestCase):
                 "MAX",
                 "MAX_PARAMETER",
                 "MESSAGE",
+                "MESSAGE_PARENTHESES",
                 "MIN",
                 "MINUS",
                 "MODELMATE",
@@ -306,7 +307,6 @@ class PatternAttributes(unittest.TestCase):
                 "XRAY",
                 "YEAR",
                 "_ALL_PIECES",
-                "_ALL_SQUARES",
                 "_COMPOUND_PIECE",
                 "_COMPOUND_SQUARE",
                 "_PIECE_CHARS",
@@ -688,7 +688,7 @@ class PatternElement(unittest.TestCase):
         )
 
     def test_any_square(self):
-        self.assertEqual(elements.ANY_SQUARE, r"(?P<any_square>)\.")
+        self.assertEqual(elements.ANY_SQUARE, r"(?P<any_square>)(?:\.|\u25a6)")
 
     def test_empty_square(self):
         self.assertEqual(
@@ -1054,7 +1054,13 @@ class PatternElement(unittest.TestCase):
 
     def test_message(self):
         self.assertEqual(
-            elements.MESSAGE, r"(?P<message>)message(?=(?:\s+quiet)?\s*\()"
+            elements.MESSAGE, r"(?P<message>)message(?:\s+quiet)?(?![\w$])"
+        )
+
+    def test_message_parentheses(self):
+        self.assertEqual(
+            elements.MESSAGE_PARENTHESES,
+            r"(?P<message_parentheses>)message(?:\s+quiet)?\s*\(",
         )
 
     def test_min(self):
@@ -1670,9 +1676,6 @@ class PatternElement(unittest.TestCase):
     def test__all_pieces(self):
         self.assertEqual(elements._ALL_PIECES, r"\u25ed")
 
-    def test__all_squares(self):
-        self.assertEqual(elements._ALL_SQUARES, r"\u25a6")
-
     def test__square_options(self):
         self.assertEqual(
             elements._SQUARE_OPTIONS,
@@ -1685,8 +1688,6 @@ class PatternElement(unittest.TestCase):
                     r")*\]",
                     r"|",
                     r"[a-h](?:-[a-h])?[1-8](?:-[1-8])?",
-                    r"|",
-                    r"\u25a6",
                 )
             ),
         )
@@ -1804,8 +1805,6 @@ class PatternElement(unittest.TestCase):
                     r")*\]",
                     r"|",
                     r"[a-h](?:-[a-h])?[1-8](?:-[1-8])?",
-                    r"|",
-                    r"\u25a6",
                     ")",
                     r")|(?:",
                     r"\[",
@@ -1926,7 +1925,7 @@ class PatternElement(unittest.TestCase):
         )
 
     def test_integer(self):
-        self.assertEqual(elements.INTEGER, r"(?P<integer>)-?\d+")
+        self.assertEqual(elements.INTEGER, r"(?P<integer>)\d+")
 
 
 if __name__ == "__main__":

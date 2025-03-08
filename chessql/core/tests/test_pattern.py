@@ -426,7 +426,10 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     r"(?P<max_parameter>)max(?![\w$])",  # MAX_PARAMETER
                     r")|(",
-                    r"(?P<message>)message(?=(?:\s+quiet)?\s*\()",  # MESSAGE
+                    # MESSAGE_PARENTHESES
+                    r"(?P<message_parentheses>)message(?:\s+quiet)?\s*\(",
+                    r")|(",
+                    r"(?P<message>)message(?:\s+quiet)?(?![\w$])",  # MESSAGE
                     r")|(",
                     r"(?P<min>)min\s*\(",  # MIN
                     r")|(",
@@ -722,8 +725,6 @@ class Pattern(unittest.TestCase):
                     r")*\]",
                     r"|",
                     r"[a-h](?:-[a-h])?[1-8](?:-[1-8])?",
-                    r"|",
-                    r"\u25a6",
                     ")",
                     r")|(?:",
                     r"\[",
@@ -775,7 +776,7 @@ class Pattern(unittest.TestCase):
                     # RESULT_ARGUMENT
                     r"(?P<result_argument>)(?:1-0|1/2-1/2|0-1)",
                     r")|(",
-                    r"(?P<integer>)-?\d+",  # INTEGER
+                    r"(?P<integer>)\d+",  # INTEGER
                     r")|(",
                     # KEYWORD_ANYTHING_ELSE
                     r"(?P<keyword_anything_else>)(?:",
@@ -812,7 +813,7 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     r"(?P<backslash>)\\",  # BACKSLASH
                     r")|(",
-                    r"(?P<any_square>)\.",  # ANY_SQUARE
+                    r"(?P<any_square>)(?:\.|\u25a6)",  # ANY_SQUARE
                     r")|(",
                     r"(?P<bracket_left>)\[",  # BRACKET_LEFT
                     r")|(",

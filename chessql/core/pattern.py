@@ -181,6 +181,7 @@ CQL_TOKENS = r")|(".join(
         elements.MATE,  # 6.0.4
         elements.MAX,  # 6.0.4
         elements.MAX_PARAMETER,  # 6.2
+        elements.MESSAGE_PARENTHESES,  # 6.0.4
         elements.MESSAGE,  # 6.0.4
         elements.MIN,  # 6.0.4
         elements.MODELMATE,  # 6.2

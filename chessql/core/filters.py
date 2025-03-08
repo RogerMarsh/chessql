@@ -47,14 +47,6 @@ _blank_line_re = re.compile(r"\n\s*\n$")
 # fits the pattern to detect 'echo' filters.
 _echo_variable_re = re.compile(r"(?P<variable>.*)")
 
-# Split a match on 'consecutivemoves' filter pattern into components.
-# The elements.CONSECUTIVEMOVES pattern ensures at most one 'quiet' matches.
-_consecutivemoves_filter_re = re.compile(
-    r"consecutivemoves(?:\s+(quiet))?"
-    + r"(?:\s+(\d+|[a-zA-Z0-9_$]+))?(?:\s+(\d+|[a-zA-Z0-9_$]+))?"
-    + r"(?:\s+(quiet))?\s*\("
-)
-
 # This gives misleading information about range integer derivation but
 # fits the pattern to detect 'consecutivemoves' filters.
 _range_integer_re = re.compile(r"(?P<integer>.*)")
@@ -62,6 +54,32 @@ _range_integer_re = re.compile(r"(?P<integer>.*)")
 # This gives misleading information about variable name derivation but
 # fits the pattern to detect 'function call' variable names.
 _range_variable_re = _echo_variable_re
+
+# Map compound directions to basic directions.
+_directions = {
+    "up": ["up"],
+    "down": ["down"],
+    "right": ["right"],
+    "left": ["left"],
+    "northeast": ["northeast"],
+    "northwest": ["northwest"],
+    "southeast": ["southeast"],
+    "southwest": ["southwest"],
+    "diagonal": ["northeast", "northwest", "southeast", "southwest"],
+    "orthogonal": ["up", "down", "left", "right"],
+    "vertical": ["up", "down"],
+    "horizontal": ["left", "right"],
+    "anydirection": [
+        "up",
+        "down",
+        "left",
+        "right",
+        "northeast",
+        "northwest",
+        "southeast",
+        "southwest",
+    ],
+}
 
 
 class MoveParameterImpliesSet(structure.ParameterArgument):
@@ -615,6 +633,17 @@ class RegexRepeat(RepeatConstituent):
     use the '{2 3}' option.
     """
 
+    def __init__(self, match_=None, container=None):
+        """Delegate then set details for this instance and add to tree."""
+        super().__init__(match_=match_, container=container)
+        if isinstance(container.cursor, Function):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot be applied to "
+                + container.cursor.__class__.__name__
+                + " instance"
+            )
+
 
 # The replaced complete() method returned False.
 # Verify ConstituentBraceRight sets completed True.
@@ -1115,6 +1144,15 @@ class CommentSymbol(structure.BlockLeft):
             node = node.parent
         super().__init__(match_=match_, container=container)
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        if not self.children or isinstance(
+            self.children[0], (EndPaths, EndCommentSymbol)
+        ):
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": no items in comment"
+            )
+
 
 class AttackArrow(structure.MoveInfix):
     """Represent '->' (→) set filter."""
@@ -1235,6 +1273,15 @@ class RegexMatch(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.STRING
     _precedence = cqltypes.Precedence.P220
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        structure.raise_if_not_same_filter_type(
+            self,
+            "match pattern",
+            filter_type=cqltypes.FilterType.STRING,
+        )
+
 
 class RegexCapturedGroup(structure.CQLObject):
     r"""Represent the variable named r'\\\d+' string filter.
@@ -1277,60 +1324,61 @@ class Eq(structure.CompareSet, structure.Compare, structure.InfixRight):
 
     _precedence = cqltypes.Precedence.P80
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        if (
+            len(
+                set(
+                    c.filter_type
+                    for c in self.children
+                    if c.filter_type
+                    in (cqltypes.FilterType.NUMERIC, cqltypes.FilterType.SET)
+                )
+            )
+            == 2
+        ):
+            return
+        structure.raise_if_not_same_filter_type(
+            self,
+            "compare",
+            filter_type=(
+                cqltypes.FilterType.SET
+                | cqltypes.FilterType.NUMERIC
+                | cqltypes.FilterType.STRING
+                | cqltypes.FilterType.POSITION
+            ),
+        )
+
 
 class NE(structure.CompareSet, structure.Compare, structure.InfixRight):
     """Represent '!=' ('≠') numeric filter or string filter."""
 
     _precedence = cqltypes.Precedence.P80
 
-
-class AssignIf(structure.InfixLeft):
-    """Represent '=?' logical filter."""
-
-    _filter_type = cqltypes.FilterType.LOGICAL
-
-    # CQL does not include '=?' in precedence table (with '+=' for example)
-    # but CQLi gives it same precedence as these.  Follow CQLi and assign
-    # precedence of 90.
-    _precedence = cqltypes.Precedence.P90
-
-    def verify_children_and_set_filter_type(self, set_node_completed=False):
-        """Delegate then adjust filter type if complete or full.
-
-        This method should be called only from a place_node_in_tree method.
-
-        """
-        # pylint R0801 duplicate code.  Ignored.
-        # See structure.ModifyAssign.verify_children_and_set_filter_type().
-        if self.container.function_body_cursor is not None:
-            return
-        super().verify_children_and_set_filter_type(
-            set_node_completed=set_node_completed
-        )
-        lhs = self.children[0]
-        assert isinstance(lhs, structure.VariableName)
-        rhs = self.children[1]
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
         if (
-            lhs.filter_type is cqltypes.FilterType.ANY
-            and rhs.filter_type is cqltypes.FilterType.SET
-        ):
-            self.container.definitions[lhs.name].filter_type = rhs.filter_type
-            return
-        if (
-            lhs.filter_type is rhs.filter_type
-            and rhs.filter_type is cqltypes.FilterType.SET
+            len(
+                set(
+                    c.filter_type
+                    for c in self.children
+                    if c.filter_type
+                    in (cqltypes.FilterType.NUMERIC, cqltypes.FilterType.SET)
+                )
+            )
+            == 2
         ):
             return
-        # pylint R0801 duplicate code.  Ignored.
-        # See structure.ModifyAssign.verify_children_and_set_filter_type().
-        raise basenode.NodeError(
-            self.__class__.__name__
-            + ": cannot assign "
-            + str(rhs.filter_type)
-            + " to "
-            + lhs.name
-            + " filter of type "
-            + str(lhs.filter_type)
+        structure.raise_if_not_same_filter_type(
+            self,
+            "compare",
+            filter_type=(
+                cqltypes.FilterType.SET
+                | cqltypes.FilterType.NUMERIC
+                | cqltypes.FilterType.STRING
+            ),
         )
 
 
@@ -1340,40 +1388,29 @@ class AssignPlus(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.LOGICAL
     _precedence = cqltypes.Precedence.P90
 
-    def verify_children_and_set_filter_type(self, set_node_completed=False):
-        """Delegate then adjust filter type if complete or full.
-
-        This method should be called only from a place_node_in_tree method.
-
-        """
-        if self.container.function_body_cursor is not None:
-            return
-        super().verify_children_and_set_filter_type(
-            set_node_completed=set_node_completed
-        )
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        assert isinstance(lhs, structure.VariableName)
-        rhs = self.children[1]
-        if lhs.filter_type is cqltypes.FilterType.ANY and (
-            rhs.filter_type is cqltypes.FilterType.NUMERIC
-            or rhs.filter_type is cqltypes.FilterType.STRING
-        ):
-            self.container.definitions[lhs.name].filter_type = rhs.filter_type
-            return
-        if lhs.filter_type is rhs.filter_type and (
-            rhs.filter_type is cqltypes.FilterType.NUMERIC
-            or rhs.filter_type is cqltypes.FilterType.STRING
-        ):
-            return
-        raise basenode.NodeError(
-            self.__class__.__name__
-            + ": cannot assign "
-            + str(rhs.filter_type)
-            + " to "
-            + lhs.name
-            + " filter of type "
-            + str(lhs.filter_type)
+        structure.raise_if_not_instance(
+            lhs, self, structure.VariableName, "lhs must be a"
         )
+        rhs = self.children[1]
+        if self.container.function_body_cursor is None or not isinstance(
+            rhs, structure.VariableName
+        ):
+            if (
+                rhs.filter_type is not cqltypes.FilterType.NUMERIC
+                and rhs.filter_type is not cqltypes.FilterType.STRING
+            ):
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + ": rhs must be a Numeric or String filter"
+                )
+        if self.container.function_body_cursor is None or (
+            not isinstance(lhs, structure.VariableName)
+            and not isinstance(rhs, structure.VariableName)
+        ):
+            structure.raise_if_not_same_filter_type(self, "assign")
 
 
 class AssignMinus(structure.ModifyAssign, structure.InfixLeft):
@@ -1757,30 +1794,50 @@ class ConsecutiveMoves(structure.ParenthesizedArguments):
         super().place_node_in_tree()
         container = self.container
         container.cursor = self
-        groups = _consecutivemoves_filter_re.match(
-            self.match_.group()
-        ).groups()
-        if groups[0]:
+        items = self.match_.group().rstrip("(").split()[1:]
+        if "quiet" in items:
             Quiet(match_=self.match_, container=container).place_node_in_tree()
             container.cursor = self
-        for count in (1, 2):
-            if not groups[count]:
-                continue
-            if groups[count].isdigit():
+            items.remove("quiet")
+        for item in items:
+            if item.isdigit():
                 range_item = RangeInteger(
-                    match_=_range_integer_re.match(groups[count]),
+                    match_=_range_integer_re.match(item),
                     container=container,
                 )
             else:
+                if item not in container.definitions:
+                    raise basenode.NodeError(
+                        self.__class__.__name__
+                        + ": range variable '"
+                        + item
+                        + "' not defined"
+                    )
                 range_item = RangeVariable(
-                    match_=_range_variable_re.match(groups[count]),
+                    match_=_range_variable_re.match(item),
                     container=container,
                 )
             range_item.place_node_in_tree()
             container.cursor = self
-        if groups[3]:
-            Quiet(match_=self.match_, container=container).place_node_in_tree()
-            container.cursor = self
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        components = [c for c in self.children if not c.is_parameter]
+        if len(components) != 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have exactly two components"
+            )
+        definitions = self.container.definitions
+        for child in components:
+            if (
+                not isinstance(child, Variable)
+                or not definitions[child.name].variable_type
+                in cqltypes.VariableType.POSITION
+            ):
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + ": argument must be a position variable"
+                )
 
 
 def is_count_parameter_accepted_by(node):
@@ -1840,16 +1897,42 @@ class Count(structure.NoArgumentsParameter):
                 return
 
 
-class CountMoves(structure.CQLObject):
+class CountMoves(structure.Argument):
     """Represent 'countmoves' numeric filter."""
 
     _filter_type = cqltypes.FilterType.NUMERIC
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        child = self.children[0]
+        if not _is_dash_or_capture(child) and not isinstance(
+            child, (Legal, Pseudolegal)
+        ):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": argument must be a '--', '[x]', 'legal', "
+                + "or 'pseudolegal', filter, not a '"
+                + self.children[0].__class__.__name__
+                + "' filter"
+            )
 
-class CurrentMove(structure.CQLObject):
+
+class CurrentMove(structure.Argument):
     """Represent 'currentmove' logical filter."""
 
     _filter_type = cqltypes.FilterType.LOGICAL
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        if not _is_dash_or_capture(self.children[0]):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": argument must be a '--' or '[x]' filter, not a '"
+                + self.children[0].__class__.__name__
+                + "' filter"
+            )
 
 
 class CurrentPosition(structure.NoArgumentsFilter):
@@ -2069,10 +2152,8 @@ class Echo(structure.Argument):
         groups = _echo_filter_re.match(self.match_.group()).groups()
         if groups[0]:
             Quiet(match_=self.match_, container=container).place_node_in_tree()
-            self._child_count = self._child_count + 1
         if groups[3]:
             InAll(match_=self.match_, container=container).place_node_in_tree()
-            self._child_count = self._child_count + 1
         for count in (1, 2):
             echovariable = Variable(
                 match_=_echo_variable_re.match(groups[count]),
@@ -2306,9 +2387,19 @@ class Find(structure.Argument):
     The absence of both 'all' and a range make 'find' a position filter.
     """
 
-    # The 'all' parameter changes the filter type to 'numeric'.
     _filter_type = cqltypes.FilterType.POSITION
     _precedence = cqltypes.Precedence.P30
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        filters = set(
+            f for f in self.children if isinstance(f, (All, RangeInteger))
+        )
+        if len(filters) != 1:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": specify either a range or 'all' parameter but not both"
+            )
 
 
 def is_firstmatch_parameter_accepted_by(node):
@@ -2729,12 +2820,6 @@ class GameNumber(structure.NoArgumentsFilter):
     _filter_type = cqltypes.FilterType.NUMERIC
 
 
-class HasComment(structure.Argument):
-    """Represent 'hascomment' logical filter."""
-
-    _filter_type = cqltypes.FilterType.LOGICAL
-
-
 class Horizontal(structure.Argument):
     """Represent 'horizontal' set filter."""
 
@@ -2863,6 +2948,15 @@ class In(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.LOGICAL
     _precedence = cqltypes.Precedence.P70
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        structure.raise_if_not_same_filter_type(
+            self,
+            "apply intersection operation",
+            filter_type=cqltypes.FilterType.SET | cqltypes.FilterType.STRING,
+        )
+
 
 class InParameter(structure.NoArgumentsParameter):
     """Represent ''in' parameter to 'piece' and 'square' filters."""
@@ -2980,6 +3074,17 @@ class Legal(structure.Argument):
     """Represent 'legal' set filter or parameter to 'move' filter."""
 
     _filter_type = cqltypes.FilterType.SET
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        if not _is_dash(self.children[0]):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": argument must be a '--' filter, not a '"
+                + self.children[0].__class__.__name__
+                + "' filter"
+            )
 
 
 class LegalParameter(MoveParameterImpliesNumeric):
@@ -3123,8 +3228,19 @@ class MakeSquareParentheses(structure.ParenthesizedArguments):
     # Treated as 'makesquare (' not 'makesquare' then '(' and ... ')'.
     # _precedence = cqltypes.Precedence.P90
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            structure.raise_if_not_filter_type(
+                child, self, cqltypes.FilterType.NUMERIC, "component is"
+            )
+        if len(self.children) != 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have exactly two components"
+            )
 
-class MakeSquareString(structure.CQLObject):
+
+class MakeSquareString(structure.Argument):
     """Represent 'makesquare' set filter for string argument."""
 
     _filter_type = cqltypes.FilterType.SET
@@ -3142,7 +3258,7 @@ def is_max_parameter_accepted_by(node):
     return isinstance(node, Path)
 
 
-class Max(structure.ParenthesizedArguments):
+class Max(structure.MaxOrMin):
     """Represent 'max' numeric or string filter."""
 
     _filter_type = cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING
@@ -3177,13 +3293,19 @@ def max_(match_=None, container=None):
     return Max(match_=match_, container=container)
 
 
-class Message(structure.ParenthesizedArguments):
-    """Represent 'message' logical filter."""
+class MessageParentheses(structure.ParenthesizedArguments):
+    """Represent 'message' string filter with parentheses."""
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
 
-class Min(structure.ParenthesizedArguments):
+class Message(structure.Argument):
+    """Represent 'message' string filter without parentheses."""
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+
+class Min(structure.MaxOrMin):
     """Represent 'min' numeric or string filter."""
 
     _filter_type = cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING
@@ -3855,6 +3977,8 @@ def primary(match_=None, container=None):
         if isinstance(node.children[-1], (ArrowBackward, ArrowForward)):
             return Primary(match_=match_, container=container)
     if len(node.children) == 0:
+        if isinstance(node, cql.CQL):
+            return Primary(match_=match_, container=container)
         return PrimaryParameter(match_=match_, container=container)
     if not node.children[-1].is_parameter:
         return Primary(match_=match_, container=container)
@@ -3869,10 +3993,21 @@ class Promote(structure.ParameterArgument):
         return isinstance(self.parent, Move)
 
 
-class Pseudolegal(structure.CQLObject):
+class Pseudolegal(structure.Argument):
     """Represent 'pseudolegal' set filter."""
 
     _filter_type = cqltypes.FilterType.SET
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        if not _is_dash(self.children[0]):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": argument must be a '--' filter, not a '"
+                + self.children[0].__class__.__name__
+                + "' filter"
+            )
 
 
 class PseudolegalParameter(MoveParameterImpliesNumeric):
@@ -3966,6 +4101,30 @@ class Ray(structure.ParenthesizedArguments):
     """
 
     _filter_type = cqltypes.FilterType.SET
+
+    def __init__(self, match_=None, container=None):
+        """Delegate then set details for this instance and add to tree."""
+        super().__init__(match_=match_, container=container)
+        directions = []
+        for word in match_.group().split()[1:-1]:
+            directions.extend(_directions[word])
+        if len(directions) != len(set(directions)):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": duplicate directions in "
+                + " ".join(match_.group().split()[1:-1])
+            )
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            structure.raise_if_not_filter_type(
+                child, self, cqltypes.FilterType.SET, "component is"
+            )
+        if len(self.children) < 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have at least two components"
+            )
 
 
 class ReadFile(structure.Argument):
@@ -4085,6 +4244,8 @@ def secondary(match_=None, container=None):
         if isinstance(node.children[-1], (ArrowBackward, ArrowForward)):
             return Secondary(match_=match_, container=container)
     if len(node.children) == 0:
+        if isinstance(node, cql.CQL):
+            return Secondary(match_=match_, container=container)
         return SecondaryParameter(match_=match_, container=container)
     if not node.children[-1].is_parameter:
         return Secondary(match_=match_, container=container)
@@ -4095,6 +4256,17 @@ class SetTag(structure.ParenthesizedArguments):
     """Represent 'settag' logical filter."""
 
     _filter_type = cqltypes.FilterType.LOGICAL
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        if len(self.children) != 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have exactly two arguments"
+            )
+        for child in self.children:
+            structure.raise_if_not_filter_type(
+                child, self, cqltypes.FilterType.STRING, "argument must be a"
+            )
 
 
 # See comment preceding Shift: same seen for ShiftHorizontal.
@@ -4479,6 +4651,12 @@ class Unbind(structure.Argument):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        child = self.children[0]
+        print(child.__class__.__name__)
+
 
 class UpperCase(structure.Argument):
     """Represent 'uppercase' string filter."""
@@ -4591,6 +4769,17 @@ class WriteFile(structure.ParenthesizedArguments):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        if len(self.children) != 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have exactly two components"
+            )
+        for child in self.children:
+            structure.raise_if_not_filter_type(
+                child, self, cqltypes.FilterType.STRING, "component must be a"
+            )
+
 
 class WTM(structure.NoArgumentsFilter):
     """Represent 'wtm' logical filter."""
@@ -4602,6 +4791,17 @@ class XRay(structure.ParenthesizedArguments):
     """Represent 'xray' set filter."""
 
     _filter_type = cqltypes.FilterType.SET
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            structure.raise_if_not_filter_type(
+                child, self, cqltypes.FilterType.SET, "component is"
+            )
+        if len(self.children) < 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have at least two components"
+            )
 
 
 class Year(structure.NoArgumentsFilter):
@@ -4826,6 +5026,18 @@ def variable(match_=None, container=None):
         definition_type = definitions[name].definition_type
         if definition_type is cqltypes.DefinitionType.DICTIONARY:
             return Dictionary(match_=match_, container=container)
+        if definition_type is cqltypes.DefinitionType.FUNCTION:
+            # Problem is 'unbind x', 'isbound x' and 'isunbound x' are
+            # acceptable filters when 'x' is a function name.  None of
+            # classes Variable, Function, and FunctionCall, are
+            # appropriate for this reference to 'x'.
+            raise basenode.NodeError(
+                container.cursor.__class__.__name__
+                + ": attempting to use function name "
+                + name
+                + " as a variable name"
+            )
+        assert definition_type is cqltypes.DefinitionType.VARIABLE
         variable_type = definitions[name].variable_type
         if variable_type is cqltypes.VariableType.NUMERIC:
             if is_range_parameter_accepted_by(container.cursor):
@@ -4885,9 +5097,12 @@ class Backslash(structure.CQLObject):
         raise basenode.NodeError(r"Unexpected bare '\' found")
 
 
-# See also AllSquares.
+# CQL documentation says '▦', or '.', is equivalent to 'a-h1-8' so why
+# not incorporate this in the piece designator sub-pattern, noting that
+# 'ka-h1-8' is one piece designator but 'k.' and 'k▦' are both two piece
+# designators.
 class AnySquare(structure.NoArgumentsFilter):
-    """Represent '.' set filter.
+    """Represent '.' set filter (utf8 ▦ '\u25a6').
 
     It is a piece designator meaning all squares.
 
@@ -4998,17 +5213,10 @@ class Colon(structure.InfixRight):
     _filter_type = cqltypes.FilterType.ANY
     _precedence = cqltypes.Precedence.P230  # Reference says ':', no context.
 
-    def verify_children_and_set_filter_type(self, set_node_completed=False):
-        """Delegate then adjust filter type if complete or full.
-
-        This method should be called only from a place_node_in_tree method.
-
-        """
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
         if self.container.function_body_cursor is not None:
             return
-        super().verify_children_and_set_filter_type(
-            set_node_completed=set_node_completed
-        )
         self.filter_type = self.children[-1].filter_type
 
     def place_node_in_tree(self):
@@ -5087,35 +5295,16 @@ class Intersection(structure.InfixLeft):
     # of child verification.  It is assumed possible the children of a node
     # may not be in their completed configuration if verification is done
     # in verify_children_and_set_filter_type().
-    @property
-    def filter_type(self):
-        """Verify children are both Set filters or both Position filters.
-
-        This method should be called only from a place_node_in_tree method.
-        """
-        children = self.children
-        filtertype = cqltypes.FilterType
-        for child in children[:2]:
-            if not child.filter_type & (filtertype.SET | filtertype.POSITION):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": cannot apply intersection to '"
-                    + str(child.filter_type)
-                    + "' filter '"
-                    + child.__class__.__name__
-                    + "')"
-                )
-        if not children[0].filter_type & children[1].filter_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": both lhs and rhs filters must be same type, "
-                + " but lhs filter is '"
-                + str(children[0].filter_type)
-                + "' and rhs filter is '"
-                + str(children[1].filter_type)
-                + "')"
-            )
-        return self._filter_type
+    # The override of filter_type property should not be needed if this
+    # _verify_children method gets called before accessing the property.
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        structure.raise_if_not_same_filter_type(
+            self,
+            "apply intersection operation",
+            filter_type=cqltypes.FilterType.SET | cqltypes.FilterType.POSITION,
+        )
 
 
 class LT(structure.Compare, structure.InfixRight):
@@ -5173,11 +5362,21 @@ class PlusRepeat(RepeatConstituent):
     _precedence = cqltypes.Precedence.P20
 
 
-class Plus(structure.InfixLeft):
+class Plus(structure.Numeric):
     """Represent '+' filter between two numeric or string filters."""
 
     _filter_type = cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING
     _precedence = cqltypes.Precedence.P110
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        structure.raise_if_not_same_filter_type(
+            self,
+            "apply arithmetic or string concatenation operation",
+            filter_type=cqltypes.FilterType.NUMERIC
+            | cqltypes.FilterType.STRING,
+        )
 
 
 def plus(match_=None, container=None):
@@ -5197,7 +5396,7 @@ class StarRepeat(RepeatConstituent):
     _precedence = cqltypes.Precedence.P20
 
 
-class Star(structure.InfixLeft):
+class Star(structure.Numeric):
     """Represent '*' filter between two numeric filters."""
 
     _filter_type = cqltypes.FilterType.NUMERIC
@@ -5211,21 +5410,21 @@ def star(match_=None, container=None):
     return Star(match_=match_, container=container)
 
 
-class Modulus(structure.InfixLeft):
+class Modulus(structure.Numeric):
     """Represent '%' filter between two numeric filters."""
 
     _filter_type = cqltypes.FilterType.NUMERIC
     _precedence = cqltypes.Precedence.P140
 
 
-class Divide(structure.InfixLeft):
+class Divide(structure.Numeric):
     """Represent '/' filter between two numeric filters."""
 
     _filter_type = cqltypes.FilterType.NUMERIC
     _precedence = cqltypes.Precedence.P140
 
 
-class Minus(structure.InfixLeft):
+class Minus(structure.Numeric):
     """Represent '-' filter between two numeric filters, eg '1 + 2'."""
 
     _filter_type = cqltypes.FilterType.NUMERIC
@@ -5241,10 +5440,9 @@ class UnaryMinus(structure.Argument):
 
 def minus(match_=None, container=None):
     """Return Minus or UnaryMinus instance."""
-    # Start picking UnaryMinus cases.
-    if isinstance(container.cursor, structure.Infix):
-        return UnaryMinus(match_=match_, container=container)
-    return Minus(match_=match_, container=container)
+    if container.cursor.filter_type is cqltypes.FilterType.NUMERIC:
+        return Minus(match_=match_, container=container)
+    return UnaryMinus(match_=match_, container=container)
 
 
 class Complement(structure.Argument):
@@ -5253,12 +5451,31 @@ class Complement(structure.Argument):
     _filter_type = cqltypes.FilterType.SET
     _precedence = cqltypes.Precedence.P180
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        structure.raise_if_not_filter_type(
+            self.children[0],
+            self,
+            cqltypes.FilterType.SET,
+            "argument must be a",
+        )
+
 
 class Union(structure.InfixLeft):
     """Represent '|' filter between two set filters."""
 
     _filter_type = cqltypes.FilterType.SET
     _precedence = cqltypes.Precedence.P160
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        structure.raise_if_not_same_filter_type(
+            self,
+            "apply union operation",
+            filter_type=cqltypes.FilterType.SET,
+        )
 
 
 # Because 'cql() variable=1' is ok but 'cql() variable' is not ok. (? later)
@@ -5281,104 +5498,16 @@ class Assign(structure.MoveInfix):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
-    # pylint R0912 too many branches.
-    # Sequence of 'elif' clauses changed to 'if ... return'.  This is
-    # clearer but gains a 'pylint R0911 too many returns' report.
-    # The block of 'isinstance(lhs, structure.VariableName)' tests is
-    # moved to _verify_children_lhs_variable_name_and_set_types() method
-    # getting rid of both pylint reports.
-    def verify_children_and_set_filter_type(self, set_node_completed=False):
-        """Delegate then adjust filter type if complete or full.
+    # '=' has the same precedence as 'find', and others, according to CQLi
+    # but no precedence is given in CQL's Table of Precedence.
+    # _precedence = cqltypes.Precedence.P30
 
-        This method should be called only from a place_node_in_tree method.
-
-        """
-        if self.container.function_body_cursor is not None:
-            return
-        super().verify_children_and_set_filter_type(
-            set_node_completed=set_node_completed
-        )
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        assert isinstance(lhs, (structure.VariableName, BracketLeft))
-        rhs = self.children[1]
-        if isinstance(rhs, structure.VariableName):
-            defn = self.container.definitions
-            variable_type = defn[rhs.name].variable_type
-            if variable_type is cqltypes.VariableType.PIECE:
-                if (
-                    defn[lhs.name].variable_type
-                    is not cqltypes.VariableType.PIECE
-                ):
-                    variable_type = cqltypes.VariableType.SET
-            # Hack to get serialpin examples prior to CQL-6.2 past a
-            # parsing failure at 'piece CurrentPinner=Pinner' where
-            # 'Pinner' is thought to be ANY rather than PIECE from
-            # the 'piece Pinner' declaration.
-            # Getting variable type and filter correct is thought to
-            # be a major task by itself.
-            if not (
-                defn[lhs.name].variable_type is cqltypes.VariableType.PIECE
-                and variable_type is cqltypes.VariableType.ANY
-            ):
-                lhs.set_types(
-                    variable_type,
-                    defn[rhs.name].filter_type,
-                )
-            return
-        if isinstance(lhs, structure.VariableName):
-            if self._verify_children_lhs_variable_name_and_set_types(lhs, rhs):
-                return
-        if isinstance(rhs, (structure.InfixLeft, structure.InfixRight)):
-            # Partial solution to filter type resolution when assigning
-            # infix operator value to variable.
-            # May not be possible to move this to Infix.complete() as
-            # it stands because the three objects involved may be
-            # allowed to have different filter types depending on
-            # operator.
-            def child_in_children_filter_type_fit(node):
-                for child in node.children:
-                    if child_in_children_filter_type_fit(child):
-                        return True
-                if node.filter_type in lhs.filter_type:
-                    return True
-                return False
-
-            if not child_in_children_filter_type_fit(rhs):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": unable to partially match RHS filter types "
-                    + "with filter type of variable named '"
-                    + lhs.name
-                    + "')"
-                )
-            return
-        if isinstance(rhs, FunctionCall):
-            # Partial solution to filter type resolution when assigning
-            # infix operator value to variable.
-            # It may not be possible to do more because the filter type
-            # of the function call may depend on the interaction between
-            # filter types of function arguments and the function body.
-            return
-        if isinstance(lhs, structure.VariableName):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": only set, numeric, position, or string filters "
-                + "can be assigned to a variable (named '"
-                + lhs.name
-                + "')"
-            )
-
-    def place_node_in_tree(self):
-        """Delegate then vefify LHS is a variable."""
-        # It is not clear the plausible replacement code following this
-        # super() call is progress.
-        super().place_node_in_tree()
-        # self.children.append(self.parent)
-        # del self.parent.children[-1]
-        # self.parent = self.parent.parent
-        # self.container.cursor = self
-        if not isinstance(
-            self.children[-1],
+        structure.raise_if_not_instance(
+            lhs,
+            self,
             (
                 Variable,
                 Persistent,
@@ -5386,51 +5515,159 @@ class Assign(structure.MoveInfix):
                 PieceVariable,
                 BracketLeft,  # For slices and dictionary keys.
             ),
+            "lhs must be a",
+        )
+        if self.container.function_body_cursor is not None:
+            return
+        rhs = self.children[1]
+        if self.container.function_body_cursor is None or not isinstance(
+            rhs, structure.VariableName
         ):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": LHS object for '=' operator must be a variable"
+            if (
+                rhs.filter_type is not cqltypes.FilterType.SET
+                and rhs.filter_type is not cqltypes.FilterType.NUMERIC
+                and rhs.filter_type is not cqltypes.FilterType.STRING
+                and rhs.filter_type is not cqltypes.FilterType.POSITION
+            ):
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + ": rhs must be a Set, Numeric, String,"
+                    + " or Position, filter"
+                )
+        if self.container.function_body_cursor is None or (
+            not isinstance(lhs, structure.VariableName)
+            and not isinstance(rhs, structure.VariableName)
+        ):
+            structure.raise_if_not_same_filter_type(
+                self,
+                "assign",
+                allowany=(
+                    isinstance(lhs, structure.VariableName)
+                    and lhs.filter_type is cqltypes.FilterType.ANY
+                ),
             )
+        self._set_types_lhs(lhs, rhs)
+
+    def place_node_in_tree(self):
+        """Delegate then vefify LHS is a variable."""
+        super().place_node_in_tree()
         if isinstance(self.parent, Assign):
             raise basenode.NodeError(
                 self.__class__.__name__ + ": cannot chain variable assignment"
             )
 
-    def _verify_children_lhs_variable_name_and_set_types(self, lhs, rhs):
-        """Return True if lhs and rhs combination is valid."""
+    def _set_types_lhs(self, lhs, rhs):
+        """Set types for lhs filter appropriate for rhs filter.
+
+        The rhs must be a set, numeric, string, or position, filter.
+
+        """
         if rhs.is_set_filter:
             lhs.set_types(
-                self.container.definitions[lhs.name].variable_type,
+                (
+                    cqltypes.VariableType.PIECE
+                    if isinstance(lhs, PieceVariable)
+                    else cqltypes.VariableType.SET
+                ),
                 cqltypes.FilterType.SET,
             )
-            return True
-        if rhs.is_logical_filter:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot assign logical filter to variable "
-                + "(named '"
-                + lhs.name
-                + "')"
-            )
+            return
         if rhs.is_numeric_filter:
             lhs.set_types(
                 cqltypes.VariableType.NUMERIC,
                 cqltypes.FilterType.NUMERIC,
             )
-            return True
+            return
         if rhs.is_string_filter:
             lhs.set_types(
                 cqltypes.VariableType.STRING,
                 cqltypes.FilterType.STRING,
             )
-            return True
+            return
         if rhs.is_position_filter:
             lhs.set_types(
                 cqltypes.VariableType.POSITION,
                 cqltypes.FilterType.POSITION,
             )
-            return True
-        return False
+            return
+        raise basenode.NodeError(
+            self.__class__.__name__
+            + ": cannot set lhs filter type because rhs filter type is "
+            + str(rhs.filter_type)
+        )
+
+
+class AssignIf(structure.MoveInfix):
+    """Represent '=?', conditional variable assignment, logical filter.
+
+    LHS cannot be PieceVariable or Dictionary item.
+
+    RHS must be a set filter.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # '=?' has the same precedence as '+=', and others including all the
+    # '<operatore>=' filters, according to CQLi but no precedence is given
+    # in CQL's Table of Precedence.
+    # _precedence = cqltypes.Precedence.P30
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        lhs = self.children[0]
+        structure.raise_if_not_instance(
+            lhs,
+            self,
+            (Variable, Persistent, PersistentQuiet),
+            "lhs must be a",
+        )
+        rhs = self.children[1]
+        if self.container.function_body_cursor is None or not isinstance(
+            rhs, structure.VariableName
+        ):
+            if rhs.filter_type is not cqltypes.FilterType.SET:
+                raise basenode.NodeError(
+                    self.__class__.__name__ + ": rhs must be a Set filter"
+                )
+        if self.container.function_body_cursor is None or (
+            not isinstance(lhs, structure.VariableName)
+            and not isinstance(rhs, structure.VariableName)
+        ):
+            structure.raise_if_not_same_filter_type(
+                self,
+                "assign",
+                allowany=(
+                    isinstance(lhs, structure.VariableName)
+                    and lhs.filter_type is cqltypes.FilterType.ANY
+                ),
+            )
+        self._set_types_lhs(lhs, rhs)
+
+    def place_node_in_tree(self):
+        """Delegate then vefify LHS is a variable."""
+        super().place_node_in_tree()
+        if isinstance(self.parent, Assign):
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": cannot chain variable assignment"
+            )
+
+    def _set_types_lhs(self, lhs, rhs):
+        """Set types for lhs filter appropriate for rhs filter.
+
+        The rhs must be a set filter.
+
+        """
+        if rhs.is_set_filter:
+            # Probably incomplete because of piece and square variables.
+            lhs.set_types(
+                cqltypes.VariableType.SET,
+                cqltypes.FilterType.SET,
+            )
+            return
+        raise basenode.NodeError(
+            self.__class__.__name__
+            + ": cannot set lhs filter type because rhs filter type is "
+            + str(rhs.filter_type)
+        )
 
 
 class AssignPromotion(structure.Argument):
@@ -5478,6 +5715,16 @@ class CountFilter(structure.Argument):
     _filter_type = cqltypes.FilterType.NUMERIC
     _precedence = cqltypes.Precedence.P100
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        structure.raise_if_not_filter_type(
+            self.children[0],
+            self,
+            cqltypes.FilterType.SET,
+            "argument must be a",
+        )
+
 
 class AnythingElse(structure.CQLObject):
     """Represent any (Python) str not caught by any other pattern.
@@ -5513,6 +5760,22 @@ class EndOfStream(structure.Complete):
             self.parent, (querycontainer.QueryContainer, cql.CQL)
         ):
             raise basenode.NodeError("Unexpected end of statement found")
+        if not self.parent.children:
+            raise basenode.NodeError(
+                "There must be at least one filter in the query"
+            )
+        # This copes with simple non-filter text in a query which is seen
+        # as variable names, like 'cql(<stuff>) some thing'.
+        # The general case of an unassigned variable hidden in a query is
+        # not covered.
+        for child in self.parent.children:
+            if (
+                isinstance(child, Variable)
+                and child.filter_type is cqltypes.FilterType.ANY
+            ):
+                raise basenode.NodeError(
+                    "Variable '" + child.name + "' has not been assigned"
+                )
         self.parent = None
 
 
@@ -5524,3 +5787,27 @@ def end_of_stream(match_=None, container=None):
             return EndPaths(match_=match_, container=container)
         node = node.parent
     return EndOfStream(match_=match_, container=container)
+
+
+def _is_dash_or_capture(filter_):
+    """Return True if filter_ class represents '--' or '[x]' filter."""
+    return isinstance(
+        filter_,
+        (
+            CapturesLR,
+            CapturesL,
+            CapturesR,
+            Captures,
+            SingleMoveLR,
+            SingleMoveL,
+            SingleMoveR,
+            SingleMove,
+        ),
+    )
+
+
+def _is_dash(filter_):
+    """Return True if filter_ class represents '--' filter."""
+    return isinstance(
+        filter_, (SingleMoveLR, SingleMoveL, SingleMoveR, SingleMove)
+    )

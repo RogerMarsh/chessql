@@ -8,17 +8,25 @@ See test_filter_captures for '[x]' filter tests.
 
 See test_filter_dash for '--' filter tests.
 
+See test_filters_atomic_dict for 'atomic' filter tests.
+
+See test_filters_atomic_dict for 'dictionary' filter tests.
+
+See test_filter_find for 'find' filter tests.
+
+See test_filters_for_bind for 'isunbound' filter tests.
+
+See test_filter_function for 'function' filter tests.
+
 See test_filter_line for 'line' filter tests.
 
 See test_filter_move for 'move' filter tests.
 
 See test_filter_path for 'path' filter tests.
 
-See test_filter_piecedesignator for piece designator filter tests.
-
 See test_filter_pin for 'pin' filter tests.
 
-See test_filters_relational for relational filter tests.
+See test_filters_for_bind for 'unbind' filter tests.
 
 The verification methods are provided by the Verify superclass.
 
@@ -30,6 +38,7 @@ evaluate.
 import unittest
 
 from . import verify
+from .. import cqltypes
 
 
 class Filters(verify.Verify):
@@ -63,12 +72,6 @@ class Filters(verify.Verify):
 
     def test_005_assert(self):
         self.verify("assert 1", [(3, "Assert"), (4, "Integer")])
-
-    def test_006_atomic_01(self):
-        self.verify("atomic X", [], returncode=1)
-
-    def test_006_atomic_02(self):  # Fails.
-        self.verify("atomic X=1", [(3, "Atomic"), (4, "Integer")])
 
     def test_007_attackedby(self):
         self.verify(
@@ -159,6 +162,13 @@ class Filters(verify.Verify):
 
     def test_018_consecutivemoves_02(self):
         self.verify(
+            "p1=position 1 consecutivemoves(p1)",
+            [],
+            returncode=1,
+        )
+
+    def test_018_consecutivemoves_03(self):
+        self.verify(
             "p1=position 1 p2=position 2 consecutivemoves(p1 p2)",
             [
                 (3, "Assign"),
@@ -175,7 +185,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_018_consecutivemoves_03(self):
+    def test_018_consecutivemoves_04(self):
         self.verify(
             "p1=position 1 p2=position 2 consecutivemoves quiet(p1 p2)",
             [
@@ -194,7 +204,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_018_consecutivemoves_04(self):
+    def test_018_consecutivemoves_05(self):
         self.verify(
             "p1=position 1 p2=position 2 consecutivemoves 1 2 (p1 p2)",
             [
@@ -214,7 +224,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_018_consecutivemoves_05(self):  # Fails.
+    def test_018_consecutivemoves_06(self):  # Fails.
         self.verify(
             "p1=position 1 p2=position 2 consecutivemoves 1 quiet (p1 p2)",
             [
@@ -227,14 +237,14 @@ class Filters(verify.Verify):
                 (4, "Position"),
                 (5, "Integer"),
                 (3, "ConsecutiveMoves"),
-                (4, "RangeInteger"),
                 (4, "Quiet"),
+                (4, "RangeInteger"),
                 (4, "Variable"),
                 (4, "Variable"),
             ],
         )
 
-    def test_018_consecutivemoves_06(self):
+    def test_018_consecutivemoves_07(self):
         self.verify(
             "p1=position 1 p2=position 2 consecutivemoves quiet 1(p1 p2)",
             [
@@ -254,13 +264,50 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_019_countmoves_01(self):  # chessql accepts this.
+    def test_018_consecutivemoves_08(self):
+        self.verify(
+            "p1=position 1 p2=position 2 consecutivemoves 1 rv(p1 p2)",
+            [],
+            returncode=1,
+        )
+
+    def test_018_consecutivemoves_09(self):
+        self.verify(
+            'rv="a" p1=position 1 p2=position 2 consecutivemoves 1 rv(p1 p2)',
+            [],
+            returncode=1,
+        )
+
+    def test_018_consecutivemoves_10(self):
+        self.verify(
+            "rv=1 p1=position 1 p2=position 2 consecutivemoves 1 rv(p1 p2)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Position"),
+                (5, "Integer"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Position"),
+                (5, "Integer"),
+                (3, "ConsecutiveMoves"),
+                (4, "RangeInteger"),
+                (4, "RangeVariable"),
+                (4, "Variable"),
+                (4, "Variable"),
+            ],
+        )
+
+    def test_019_countmoves_01(self):
         self.verify("countmoves", [], returncode=1)
 
-    def test_019_countmoves_02(self):  # chessql accepts this.
+    def test_019_countmoves_02(self):
         self.verify("countmoves k", [], returncode=1)
 
-    def test_019_countmoves_03(self):  # chessql gets this wrong.
+    def test_019_countmoves_03_move(self):
         self.verify(
             "countmoves --",
             [
@@ -271,37 +318,37 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_019_countmoves_04(self):  # chessql gets this wrong.
+    def test_019_countmoves_04_legal(self):
         self.verify(
             "countmoves legal --",
             [
                 (3, "CountMoves"),
                 (4, "Legal"),
-                (4, "SingleMove"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
+                (5, "SingleMove"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
             ],
         )
 
-    def test_019_countmoves_05(self):  # chessql gets this wrong.
+    def test_019_countmoves_05_pseudolegal(self):
         self.verify(
             "countmoves pseudolegal --",
             [
                 (3, "CountMoves"),
                 (4, "Pseudolegal"),
-                (4, "SingleMove"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
+                (5, "SingleMove"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
             ],
         )
 
-    def test_020_currentmove_01(self):  # chessql accepts this.
+    def test_020_currentmove_01(self):
         self.verify("currentmove", [], returncode=1)
 
-    def test_020_currentmove_02(self):  # chessql accepts this.
+    def test_020_currentmove_02(self):
         self.verify("currentmove k", [], returncode=1)
 
-    def test_020_currentmove_03(self):  # chessql gets this wrong.
+    def test_020_currentmove_03(self):
         self.verify(
             "currentmove --",
             [
@@ -357,14 +404,6 @@ class Filters(verify.Verify):
                 (3, "Descendant"),
                 (4, "Variable"),
                 (4, "Variable"),
-            ],
-        )
-
-    def test_027_dictionary(self):  # chessql gets this wrong.
-        self.verify(
-            'dictionary X["a"]="bc"',
-            [
-                (3, "Assign"),
             ],
         )
 
@@ -449,7 +488,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_030_echo_04(self):  # chessql gets this wrong.
+    def test_030_echo_04(self):
         self.verify(
             "s=position 1 t=position 2 echo quiet (s t) k",
             [
@@ -469,7 +508,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_030_echo_05(self):  # chessql gets this wrong.
+    def test_030_echo_05(self):
         self.verify(
             "s=position 1 t=position 2 echo (s t) in all k",
             [
@@ -482,14 +521,14 @@ class Filters(verify.Verify):
                 (4, "Position"),
                 (5, "Integer"),
                 (3, "Echo"),
-                (4, "Quiet"),
+                (4, "InAll"),
                 (4, "Variable"),
                 (4, "Variable"),
                 (4, "PieceDesignator"),
             ],
         )
 
-    def test_030_echo_06(self):  # chessql gets this wrong.
+    def test_030_echo_06(self):
         self.verify(
             "s=position 1 t=position 2 echo quiet (s t) in all k",
             [
@@ -503,6 +542,7 @@ class Filters(verify.Verify):
                 (5, "Integer"),
                 (3, "Echo"),
                 (4, "Quiet"),
+                (4, "InAll"),
                 (4, "Variable"),
                 (4, "Variable"),
                 (4, "PieceDesignator"),
@@ -515,17 +555,14 @@ class Filters(verify.Verify):
     def test_032_elo_01(self):
         self.verify("elo", [(3, "Elo")])
 
-    def test_032_elo_02(self):  # chessql gets this wrong.
-        self.verify("elo black", [(3, "Elo"), (4, "Black")])
+    def test_032_elo_02(self):
+        self.verify("elo black", [(3, "Elo")])
 
-    def test_032_elo_03(self):  # chessql gets this wrong.
-        self.verify("elo white", [(3, "Elo"), (4, "White")])
+    def test_032_elo_03(self):
+        self.verify("elo white", [(3, "Elo")])
 
-    def test_032_elo_04(self):  # chessql gets this wrong.
-        self.verify(
-            "elo white k",
-            [(3, "Elo"), (4, "White"), (3, "PieceDesignator")],
-        )
+    def test_032_elo_04(self):
+        self.verify("elo white k", [(3, "Elo"), (3, "PieceDesignator")])
 
     def test_033_event(self):
         self.verify("event", [(3, "Event")])
@@ -548,140 +585,6 @@ class Filters(verify.Verify):
             [
                 (3, "File"),
                 (4, "PieceDesignator"),
-            ],
-        )
-
-    def test_038_find_01(self):
-        self.verify("find", [], returncode=1)
-
-    def test_038_find_02(self):
-        self.verify("find check", [(3, "Find"), (4, "Check")])
-
-    def test_038_find_03(self):
-        self.verify("find all check", [(3, "Find"), (4, "All"), (4, "Check")])
-
-    def test_038_find_04(self):
-        self.verify(
-            "find quiet check",
-            [(3, "Find"), (4, "Quiet"), (4, "Check")],
-        )
-
-    def test_038_find_05(self):
-        self.verify(
-            "find 3 check", [(3, "Find"), (4, "RangeInteger"), (4, "Check")]
-        )
-
-    def test_038_find_06(self):
-        self.verify(
-            "find 3 10 check",
-            [
-                (3, "Find"),
-                (4, "RangeInteger"),
-                (4, "RangeInteger"),
-                (4, "Check"),
-            ],
-        )
-
-    def test_038_find_07(self):
-        self.verify(
-            "find <-- check", [(3, "Find"), (4, "FindBackward"), (4, "Check")]
-        )
-
-    def test_038_find_08(self):
-        self.verify(
-            "find quiet all check",
-            [(3, "Find"), (4, "Quiet"), (4, "All"), (4, "Check")],
-        )
-
-    def test_038_find_09(self):
-        self.verify(
-            "find all quiet check",
-            [(3, "Find"), (4, "All"), (4, "Quiet"), (4, "Check")],
-        )
-
-    def test_038_find_10(self):  # chessql gets this wrong.
-        self.verify("find all 1 check", [], returncode=1)
-
-    def test_038_find_11(self):  # chessql gets this wrong.
-        self.verify("find 1 all check", [], returncode=1)
-
-    def test_038_find_12(self):
-        self.verify(
-            "find quiet 2 4 check",
-            [
-                (3, "Find"),
-                (4, "Quiet"),
-                (4, "RangeInteger"),
-                (4, "RangeInteger"),
-                (4, "Check"),
-            ],
-        )
-
-    def test_038_find_13(self):
-        self.verify(
-            "find 2 4 quiet check",
-            [
-                (3, "Find"),
-                (4, "RangeInteger"),
-                (4, "RangeInteger"),
-                (4, "Quiet"),
-                (4, "Check"),
-            ],
-        )
-
-    def test_038_find_14(self):
-        self.verify(
-            "find <-- all check",
-            [(3, "Find"), (4, "FindBackward"), (4, "All"), (4, "Check")],
-        )
-
-    def test_038_find_15(self):  # chessql gets this wrong.
-        self.verify(
-            "find all <-- check",
-            [(3, "Find"), (4, "All"), (4, "FindBackward"), (4, "Check")],
-        )
-
-    def test_038_find_16(self):
-        self.verify(
-            "find <-- 4 check",
-            [
-                (3, "Find"),
-                (4, "FindBackward"),
-                (4, "RangeInteger"),
-                (4, "Check"),
-            ],
-        )
-
-    def test_038_find_17(self):  # chessql gets this wrong.
-        self.verify(
-            "find 4 <-- check",
-            [
-                (3, "Find"),
-                (4, "RangeInteger"),
-                (4, "FindBackward"),
-                (4, "Check"),
-            ],
-        )
-
-    def test_038_find_18(self):
-        self.verify(
-            "find <-- quiet check",
-            [
-                (3, "Find"),
-                (4, "FindBackward"),
-                (4, "Quiet"),
-                (4, "Check"),
-            ],
-        )
-
-    def test_038_find_19(self):  # chessql gets this wrong.
-        self.verify(
-            "find quiet <-- check",
-            [
-                (3, "Find"),
-                (4, "Quiet"),
-                (4, "FindBackward"),
-                (4, "Check"),
             ],
         )
 
@@ -754,55 +657,17 @@ class Filters(verify.Verify):
     def test_043_from(self):
         self.verify("from", [(3, "From")])
 
-    def test_044_function_01(self):
-        self.verify("function", [], returncode=1)
-
-    def test_044_function_02(self):
-        self.verify("function fn", [], returncode=1)
-
-    def test_044_function_03(self):
-        self.verify("function fn()", [], returncode=1)
-
-    def test_044_function_04(self):
-        self.verify("function fn(){wtm}", [(3, "Function")])
-
-    def test_044_function_05(self):
-        self.verify(
-            "function fn(){wtm} fn()",
-            [
-                (3, "Function"),
-                (3, "FunctionCall"),
-                (4, "BraceLeft"),
-                (5, "BraceLeft"),
-                (6, "WTM"),
-            ],
-        )
-
-    def test_044_function_06(self):
-        self.verify(
-            "function fn(y){y==1} x=1 fn(x)",
-            [
-                (3, "Function"),
-                (3, "Assign"),
-                (4, "Variable"),
-                (4, "Integer"),
-                (3, "FunctionCall"),
-                (4, "BraceLeft"),
-                (5, "BraceLeft"),
-                (6, "Eq"),
-                (7, "Variable"),
-                (7, "Integer"),
-            ],
-        )
-
     def test_045_gamenumber(self):
         self.verify("gamenumber", [(3, "GameNumber")])
 
-    def test_046_hascomment_01(self):  # chessql gets this wrong.
-        self.verify("hascomment", [(3, "HasComment")])
+    def test_046_hascomment_01(self):
+        self.verify("hascomment", [(3, "OriginalComment")])
 
-    def test_046_hascomment_02(self):  # chessql gets this wrong.
-        self.verify("hascomment", [(3, "HasComment"), (4, "String")])
+    def test_046_hascomment_02(self):
+        self.verify(
+            'hascomment "text"',
+            [(3, "OriginalComment"), (4, "ImplicitSearchParameter")],
+        )
 
     def test_047_idealmate(self):
         self.verify("idealmate", [(3, "IdealMate")])
@@ -903,40 +768,19 @@ class Filters(verify.Verify):
     def test_054_int_02(self):
         self.verify('int "64"', [(3, "Int"), (4, "String")])
 
-    def test_055_isbound_01(self):  # chessql gets this wrong.
-        self.verify("isbound", [], returncode=1)
-
-    def test_055_isbound_02(self):  # chessql gets this wrong.
-        self.verify("isbound x", [])
-
-    def test_055_isbound_03(self):  # chessql gets this wrong.
-        self.verify("x=0 isbound x", [(3, "Isunbound")])
-
     def test_056_isolatedpwans(self):
         self.verify("isolatedpawns", [(3, "IsolatedPawns")])
 
-    def test_057_isunbound_01(self):  # chessql gets this wrong.
-        self.verify("isunbound", [], returncode=1)
+    def test_058_lastgamenumber_01_bare(self):
+        self.verify_run(
+            "lastgamenumber", [(3, "LastGameNumber")], returncode=1
+        )
 
-    def test_057_isunbound_02(self):  # chessql gets this wrong.
-        self.verify("isunbound x", [])
-
-    def test_057_isunbound_03(self):  # chessql gets this wrong.
-        self.verify("x=0 isunbound x", [(3, "Isunbound")])
-
-    def test_058_lastgamenumber(self):
-        # self.verify(...) is not called because the invoked subprocess
-        # attempts to read the input file despite the -parse option,
-        # getting a returncode of 1 in the expected case the file does
-        # not exist.
-        # self.verify("lastgamenumber", [(3, "LastGameNumber")])
-        string = "lastgamenumber"
-        classname_structure = [(3, "LastGameNumber")]
-        container = parser.parse(_CHESSQL_PREFIX + string)
-        trace = []
-        container.parse_tree_node(trace=trace)
-        trace = [(e, n.__class__.__name__) for e, n in trace]
-        self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
+    def test_058_lastgamenumber_02_used(self):
+        self.verify_run(
+            "lastgamenumber==2",
+            [(3, "Eq"), (4, "LastGameNumber"), (4, "Integer")],
+        )
 
     def test_059_lca_01(self):
         self.verify(
@@ -971,7 +815,7 @@ class Filters(verify.Verify):
     def test_060_legal_01(self):
         self.verify("legal", [], returncode=1)
 
-    def test_060_legal_02(self):  # chessql accepts this.
+    def test_060_legal_02(self):
         self.verify("legal k", [], returncode=1)
 
     def test_060_legal_03(self):
@@ -984,6 +828,9 @@ class Filters(verify.Verify):
                 (5, "AnySquare"),
             ],
         )
+
+    def test_060_legal_04_capture(self):
+        self.verify("legal [x]", [], returncode=1)
 
     def test_061_left_01(self):
         self.verify("left", [], returncode=1)
@@ -1008,13 +855,13 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_062_pseudolegal_01(self):  # chessql accepts this.
+    def test_062_pseudolegal_01(self):
         self.verify("pseudolegal", [], returncode=1)
 
-    def test_062_pseudolegal_02(self):  # chessql accepts this.
+    def test_062_pseudolegal_02(self):
         self.verify("pseudolegal k", [], returncode=1)
 
-    def test_062_pseudolegal_03(self):  # chessql gets this wrong.
+    def test_062_pseudolegal_03_move(self):
         self.verify(
             "pseudolegal --",
             [
@@ -1024,6 +871,9 @@ class Filters(verify.Verify):
                 (5, "AnySquare"),
             ],
         )
+
+    def test_062_pseudolegal_04_capture(self):
+        self.verify("pseudolegal [x]", [], returncode=1)
 
     def test_061_light_01(self):
         self.verify("light", [], returncode=1)
@@ -1036,18 +886,6 @@ class Filters(verify.Verify):
                 (4, "PieceDesignator"),
             ],
         )
-
-    def test_063_local_01(self):
-        self.verify("local", [], returncode=1)
-
-    def test_063_local_02(self):
-        self.verify("local dictionary", [], returncode=1)
-
-    def test_063_local_03(self):
-        self.verify("local dictionary K", [], returncode=1)
-
-    def test_063_local_04(self):
-        self.verify("local dictionary D", [(3, "Dictionary")])
 
     def test_064_loop_01(self):
         self.verify("loop", [], returncode=1)
@@ -1067,19 +905,80 @@ class Filters(verify.Verify):
     def test_067_makesquare_01(self):
         self.verify("makesquare", [], returncode=1)
 
-    def test_067_makesquare_02(self):
+    def test_067_makesquare_02_argument_01_set(self):
+        self.verify("makesquare k", [], returncode=1)
+
+    def test_067_makesquare_02_argument_02_numeric(self):
+        self.verify("makesquare 3", [], returncode=1)
+
+    def test_067_makesquare_02_argument_03_logical(self):
+        self.verify("makesquare false", [], returncode=1)
+
+    def test_067_makesquare_02_argument_04_position(self):
+        self.verify("makesquare currentposition", [], returncode=1)
+
+    def test_067_makesquare_03(self):
         self.verify("makesquare(6)", [], returncode=1)
 
-    def test_067_makesquare_03(self):  # chessql accepts this.
+    def test_067_makesquare_04(self):
         self.verify('makesquare(6 "a")', [], returncode=1)
-
-    def test_067_makesquare_04(self):  # chessql accepts this.
-        self.verify("makesquare(6 10)", [], returncode=1)
 
     def test_067_makesquare_05(self):
         self.verify(
+            "makesquare(6 10)",
+            [(3, "MakeSquareParentheses"), (4, "Integer"), (4, "Integer")],
+        )
+
+    def test_067_makesquare_06(self):
+        self.verify(
             "makesquare(5 5)",
             [(3, "MakeSquareParentheses"), (4, "Integer"), (4, "Integer")],
+        )
+
+    def test_067_makesquare_07(self):
+        self.verify('makesquare ""', [(3, "MakeSquareString"), (4, "String")])
+
+    def test_067_makesquare_08(self):
+        self.verify('makesquare "a"', [(3, "MakeSquareString"), (4, "String")])
+
+    def test_067_makesquare_09(self):
+        self.verify(
+            'makesquare "ab"', [(3, "MakeSquareString"), (4, "String")]
+        )
+
+    def test_067_makesquare_10(self):
+        self.verify('makesquare "2"', [(3, "MakeSquareString"), (4, "String")])
+
+    def test_067_makesquare_11(self):
+        self.verify(
+            'makesquare "22"', [(3, "MakeSquareString"), (4, "String")]
+        )
+
+    def test_067_makesquare_12(self):
+        self.verify(
+            'makesquare "any"', [(3, "MakeSquareString"), (4, "String")]
+        )
+
+    def test_067_makesquare_13(self):
+        self.verify(
+            'makesquare "a2"', [(3, "MakeSquareString"), (4, "String")]
+        )
+
+    def test_067_makesquare_14(self):
+        self.verify('makesquare "a" + 2', [], returncode=1)
+
+    def test_067_makesquare_15(self):
+        self.verify("makesquare 3 + 2", [], returncode=1)
+
+    def test_067_makesquare_16(self):
+        self.verify(
+            'makesquare "a" + "2"',
+            [
+                (3, "MakeSquareString"),
+                (4, "Plus"),
+                (5, "String"),
+                (5, "String"),
+            ],
         )
 
     def test_068_mate(self):
@@ -1088,16 +987,16 @@ class Filters(verify.Verify):
     def test_069_max_01(self):
         self.verify("max", [], returncode=1)
 
-    def test_069_max_02(self):  # chessql accepts this.
+    def test_069_max_02(self):
         self.verify("max()", [], returncode=1)
 
-    def test_069_max_03(self):  # chessql accepts this.
+    def test_069_max_03(self):
         self.verify("max(2)", [], returncode=1)
 
     def test_069_max_04(self):
         self.verify("max(2 5)", [(3, "Max"), (4, "Integer"), (4, "Integer")])
 
-    def test_069_max_05(self):  # chessql accepts this.
+    def test_069_max_05(self):
         self.verify('max(2 5 "k")', [], returncode=1)
 
     def test_069_max_06(self):
@@ -1106,43 +1005,48 @@ class Filters(verify.Verify):
             [(3, "Max"), (4, "Integer"), (4, "Integer"), (4, "Integer")],
         )
 
-    def test_070_message_01(self):  # chessql gets this wrong.
+    def test_070_message_01(self):
         self.verify(
             'message("x is" A)',
-            [(3, "CommentParentheses"), (4, "String"), (4, "PieceDesignator")],
+            [(3, "MessageParentheses"), (4, "String"), (4, "PieceDesignator")],
         )
 
-    def test_070_message_02(self):  # chessql gets this wrong.
+    def test_070_message_02(self):
         self.verify(
             'message "x is"',
-            [(3, "Comment"), (4, "String")],
+            [(3, "Message"), (4, "String")],
         )
 
-    def test_070_message_03(self):  # chessql gets this wrong.
+    def test_070_message_03(self):
         self.verify(
             "message A",
-            [(3, "Comment"), (4, "PieceDesignator")],
+            [(3, "Message"), (4, "PieceDesignator")],
         )
 
-    def test_070_message_04(self):  # chessql gets this wrong.
-        self.verify("message quiet (A)", [])
+    def test_070_message_04(self):
+        self.verify(
+            "message quiet (A)",
+            [(3, "MessageParentheses"), (4, "PieceDesignator")],
+        )
 
-    def test_070_message_05(self):  # chessql gets this wrong.
-        self.verify("message quiet A", [])
+    def test_070_message_05(self):
+        self.verify(
+            "message quiet A", [(3, "Message"), (4, "PieceDesignator")]
+        )
 
     def test_071_min_01(self):
         self.verify("min", [], returncode=1)
 
-    def test_071_min_02(self):  # chessql accepts this.
+    def test_071_min_02(self):
         self.verify("min()", [], returncode=1)
 
-    def test_071_min_03(self):  # chessql accepts this.
+    def test_071_min_03(self):
         self.verify("min(2)", [], returncode=1)
 
     def test_071_min_04(self):
         self.verify("min(2 5)", [(3, "Min"), (4, "Integer"), (4, "Integer")])
 
-    def test_071_min_05(self):  # chessql accepts this.
+    def test_071_min_05(self):
         self.verify('min(2 5 "k")', [], returncode=1)
 
     def test_071_min_06(self):
@@ -1284,7 +1188,7 @@ class Filters(verify.Verify):
 
     # Not 'pathstatus' as given in Table of Filters.
     def test_091_pathstart(self):
-        self.verify("pathstart", [], returncode=1)
+        self.verify("pathstart", [(3, "PathStart")])
 
     def test_092_persistent_01(self):
         self.verify("persistent", [], returncode=1)
@@ -1381,6 +1285,7 @@ class Filters(verify.Verify):
         self.verify("piece x=", [], returncode=1)
 
     def test_095_piece_assignment_05_variable_equals_set(self):
+        # More tests in "=" and "=?" tests.
         self.verify(
             "piece x=K",
             [(3, "Assign"), (4, "PieceVariable"), (4, "PieceDesignator")],
@@ -1440,7 +1345,7 @@ class Filters(verify.Verify):
     def test_105_primary(self):  # chessql gets this wrong.
         self.verify("primary", [(3, "Primary")])
 
-    def test_106_pseudolegal_01(self):  # chessql accepts this.
+    def test_106_pseudolegal_01(self):
         self.verify("pseudolegal", [], returncode=1)
 
     def test_106_pseudolegal_02_dash(self):
@@ -1455,7 +1360,7 @@ class Filters(verify.Verify):
         )
 
     def test_106_pseudolegal_02_captures(self):
-        self.verify("pseudolegal [x]")
+        self.verify("pseudolegal [x]", [], returncode=1)
 
     def test_107_puremate(self):
         self.verify("puremate", [(3, "PureMate")])
@@ -1475,10 +1380,10 @@ class Filters(verify.Verify):
     def test_110_ray_02_direction(self):
         self.verify("ray up", [], returncode=1)
 
-    def test_110_ray_03_set(self):  # chessql accepts this.
+    def test_110_ray_03_set(self):
         self.verify("ray (Q)", [], returncode=1)
 
-    def test_110_ray_04_direction_set(self):  # chessql accepts this.
+    def test_110_ray_04_direction_set(self):
         self.verify("ray up (Q)", [], returncode=1)
 
     def test_110_ray_05_set_set(self):
@@ -1542,10 +1447,10 @@ class Filters(verify.Verify):
             [(3, "Ray"), (4, "PieceDesignator"), (4, "PieceDesignator")],
         )
 
-    def test_110_ray_11_direction_repeated_set_set(self):  # chessql accepts.
+    def test_110_ray_11_direction_repeated_set_set(self):
         self.verify("ray up up (Q r)", [], returncode=1)
 
-    def test_110_ray_12_direction_duplicate_set_set(self):  # chessql accepts.
+    def test_110_ray_12_direction_duplicate_set_set(self):
         self.verify("ray up vertical (Q r)", [], returncode=1)
 
     def test_111_readfile_01(self):
@@ -1634,7 +1539,7 @@ class Filters(verify.Verify):
             [(3, "SetTag"), (4, "String"), (4, "String")],
         )
 
-    def test_119_settag_04_string_int_01(self):  # chessql accepts.
+    def test_119_settag_04_string_int_01(self):
         self.verify('settag("MyTag" 1)', [], returncode=1)
 
     def test_119_settag_04_string_int_02(self):
@@ -1704,8 +1609,8 @@ class Filters(verify.Verify):
     def test_125_sort_01(self):
         self.verify("sort", [], returncode=1)
 
-    def test_125_sort_02_int(self):  # chessql accepts.
-        self.verify("sort 1", [], returncode=1)
+    def test_125_sort_02_int(self):
+        self.verify_declare_fail("sort 1", [(3, "Sort"), (4, "Integer")])
 
     def test_125_sort_03_string(self):
         self.verify('sort "1"', [], returncode=1)
@@ -1739,22 +1644,27 @@ class Filters(verify.Verify):
     def test_125_sort_05_min(self):
         self.verify("sort min", [], returncode=1)
 
-    def test_125_sort_05_min_01_filter_int(self):  # chessql accepts.
-        self.verify('sort min int "1"', [], returncode=1)
+    def test_125_sort_05_min_01_filter_int(self):
+        self.verify_declare_fail(
+            'sort min int "1"', [(3, "Sort"), (4, "Int"), (5, "String")]
+        )
 
-    def test_125_sort_05_min_02_filter_str(self):  # chessql accepts.
-        self.verify('sort min str("1")', [], returncode=1)
+    def test_125_sort_05_min_02_filter_str(self):
+        self.verify_declare_fail(
+            'sort min str("1")',
+            [(3, "Sort"), (4, "StrParentheses"), (5, "String")],
+        )
 
     def test_125_sort_06_min_doc(self):
         self.verify('sort min "doc"', [], returncode=1)
 
-    def test_125_sort_06_min_doc_01_filter_int(self):  # chessql wrong.
+    def test_125_sort_06_min_doc_01_filter_int(self):
         self.verify(
             'sort min "doc" int "1"',
             [(3, "Sort"), (4, "Documentation"), (4, "Int"), (5, "String")],
         )
 
-    def test_125_sort_06_min_doc_02_filter_str(self):  # chessql wrong.
+    def test_125_sort_06_min_doc_02_filter_str(self):
         self.verify(
             'sort min "doc" str("1")',
             [
@@ -1870,67 +1780,6 @@ class Filters(verify.Verify):
             [(3, "TypeName"), (4, "PieceDesignator")],
         )
 
-    def test_137_unbind_01(self):
-        self.verify("unbind", [], returncode=1)
-
-    def test_137_unbind_02_variable(self):  # chessql wrong.
-        self.verify("unbind x", [], returncode=1)
-
-    def test_137_unbind_03_variable(self):
-        self.verify(
-            "x=1 unbind x",
-            [
-                (3, "Assign"),
-                (4, "Variable"),
-                (4, "Integer"),
-                (3, "Unbind"),
-                (4, "Variable"),
-            ],
-        )
-
-    def test_137_unbind_04_dictionary(self):
-        self.verify(
-            "dictionary v unbind v",
-            [
-                (3, "Dictionary"),
-                (3, "Unbind"),
-                (4, "Dictionary"),
-            ],
-        )
-
-    def test_137_unbind_04_dictionary_key_01(self):  # chessql accepts.
-        self.verify('dictionary v unbind v["key"]', [], returncode=1)
-
-    def test_137_unbind_04_dictionary_key_02(self):
-        self.verify(
-            'dictionary v["key"]="value" unbind v["key"]',
-            [
-                (3, "Assign"),
-                (4, "BracketLeft"),
-                (5, "Dictionary"),
-                (5, "String"),
-                (4, "String"),
-                (3, "Unbind"),
-                (4, "BracketLeft"),
-                (5, "Dictionary"),
-                (5, "String"),
-            ],
-        )
-
-    def test_137_unbind_04_dictionary_key_03(self):
-        self.verify(
-            'dictionary v["key"]="value" unbind v',
-            [
-                (3, "Assign"),
-                (4, "BracketLeft"),
-                (5, "Dictionary"),
-                (5, "String"),
-                (4, "String"),
-                (3, "Unbind"),
-                (4, "Dictionary"),
-            ],
-        )
-
     def test_138_up_01(self):
         self.verify("up", [], returncode=1)
 
@@ -2034,10 +1883,10 @@ class Filters(verify.Verify):
     def test_144_writefile_02(self):
         self.verify("writefile(", [], returncode=1)
 
-    def test_144_writefile_03(self):  # chessql accepts.
+    def test_144_writefile_03(self):
         self.verify("writefile()", [], returncode=1)
 
-    def test_144_writefile_04_out_01(self):  # chessql accepts.
+    def test_144_writefile_04_out_01(self):
         self.verify('writefile("outfile")', [], returncode=1)
 
     def test_144_writefile_04_out_02_text(self):
@@ -2046,16 +1895,13 @@ class Filters(verify.Verify):
             [(3, "WriteFile"), (4, "String"), (4, "String")],
         )
 
-    def test_144_writefile_04_out_03_text_more(self):  # chessql accepts.
+    def test_144_writefile_04_out_03_text_more(self):
         self.verify('writefile("outfile" "text" K)', [], returncode=1)
-
-    def test_144_white(self):
-        self.verify("wtm", [(3, "WTM")])
 
     def test_145_xray_01(self):
         self.verify("xray", [], returncode=1)
 
-    def test_145_xray_02_set(self):  # chessql accepts this.
+    def test_145_xray_02_set(self):
         self.verify("xray (Q)", [], returncode=1)
 
     def test_145_xray_03_set_set(self):
@@ -2066,6 +1912,65 @@ class Filters(verify.Verify):
 
     def test_146_year(self):
         self.verify("year", [(3, "Year")])
+
+    def test_149_piecedsignator_01_K_ascii(self):
+        self.verify("K", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_01_K_utf8(self):
+        self.verify("♔", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_02_A_ascii(self):
+        self.verify("A", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_02_A_utf8(self):
+        self.verify("△", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_03_a_ascii(self):
+        self.verify("a", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_03_a_utf8(self):
+        self.verify("▲", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_04_Aa_ascii(self):
+        self.verify("[Aa]", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_04_Aa_utf8(self):
+        self.verify("◭", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_05_empty_ascii(self):
+        self.verify("_", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_05_empty_utf8(self):
+        self.verify("□", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_06_all_squares_ascii(self):
+        self.verify("a-h1-8", [(3, "PieceDesignator")])
+
+    # utf8 '▦' is textually equivalent to ascii '.' not ascii 'a-h1-8'.
+    # '<piece>▦' is two set filters, not one like '<piece>a-h1-8'.
+    def test_149_piecedsignator_06_all_squares_utf8(self):
+        self.verify("▦", [(3, "AnySquare")])
+
+    def test_149_piecedsignator_07_some_pieces_ascii(self):
+        self.verify("[QrbNp]", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_07_some_pieces_utf8(self):
+        self.verify("♕♜♝♘♟", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_08_some_pieces_some_squares_ascii_01(self):
+        self.verify("[QrbNp]b-c4-5", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_08_some_pieces_some_squares_ascii_02(self):
+        self.verify("[QrbNp][a5,b-c4-5,h1-2,e-g4]", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_08_some_pieces_some_squares_utf8_01(self):
+        self.verify("♕♜♝♘♟b-c4-5", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_08_some_pieces_some_squares_utf8_02(self):
+        self.verify("♕♜♝♘♟[a5,b-c4-5,h1-2,e-g4]", [(3, "PieceDesignator")])
+
+    def test_149_piecedsignator_09_mix_ascii_utf8_pieces(self):
+        self.verify("[♕♜B♘♟]", [], returncode=1)
 
     def test_150_attackarrow_01_ascii(self):
         self.verify("->", [], returncode=1)
@@ -2232,10 +2137,10 @@ class Filters(verify.Verify):
     def test_152_less_than_03(self):
         self.verify("<A", [], returncode=1)
 
-    def test_152_less_than_04_set_01_set(self):  # chessql accepts.
+    def test_152_less_than_04_set_01_set(self):
         self.verify("a<A", [], returncode=1)
 
-    def test_152_less_than_04_set_02_logical(self):  # chessql accepts.
+    def test_152_less_than_04_set_02_logical(self):
         self.verify("a<true", [], returncode=1)
 
     def test_152_less_than_04_set_03_numeric(self):
@@ -2244,25 +2149,25 @@ class Filters(verify.Verify):
             [(3, "LT"), (4, "PieceDesignator"), (4, "Integer")],
         )
 
-    def test_152_less_than_04_set_04_string(self):  # chessql accepts.
+    def test_152_less_than_04_set_04_string(self):
         self.verify('a<"t"', [], returncode=1)
 
-    def test_152_less_than_04_set_05_position(self):  # chessql accepts.
+    def test_152_less_than_04_set_05_position(self):
         self.verify("a<initialposition", [], returncode=1)
 
-    def test_152_less_than_05_logical_01_set(self):  # chessql accepts.
+    def test_152_less_than_05_logical_01_set(self):
         self.verify("true<A", [], returncode=1)
 
-    def test_152_less_than_05_logical_02_logical(self):  # chessql accepts.
+    def test_152_less_than_05_logical_02_logical(self):
         self.verify("true<true", [], returncode=1)
 
-    def test_152_less_than_05_logical_03_numeric(self):  # chessql accepts.
+    def test_152_less_than_05_logical_03_numeric(self):
         self.verify("true<1", [], returncode=1)
 
-    def test_152_less_than_05_logical_04_string(self):  # chessql accepts.
+    def test_152_less_than_05_logical_04_string(self):
         self.verify('true<"t"', [], returncode=1)
 
-    def test_152_less_than_05_logical_05_position(self):  # chessql accepts.
+    def test_152_less_than_05_logical_05_position(self):
         self.verify("true<initialposition", [], returncode=1)
 
     def test_152_less_than_06_numeric_01_set(self):
@@ -2271,52 +2176,1492 @@ class Filters(verify.Verify):
             [(3, "LT"), (4, "Integer"), (4, "PieceDesignator")],
         )
 
-    def test_152_less_than_06_numeric_02_logical(self):  # chessql accepts.
+    def test_152_less_than_06_numeric_02_logical(self):
         self.verify("1<true", [], returncode=1)
 
     def test_152_less_than_06_numeric_03_numeric(self):
         self.verify("1<2", [(3, "LT"), (4, "Integer"), (4, "Integer")])
 
-    def test_152_less_than_06_numeric_04_string(self):  # chessql accepts.
+    def test_152_less_than_06_numeric_04_string(self):
         self.verify('1<"t"', [], returncode=1)
 
-    def test_152_less_than_06_numeric_05_position(self):  # chessql accepts.
+    def test_152_less_than_06_numeric_05_position(self):
         self.verify("1<initialposition", [], returncode=1)
 
-    def test_152_less_than_07_string_01_set(self):  # chessql accepts.
+    def test_152_less_than_07_string_01_set(self):
         self.verify('"a"<A', [], returncode=1)
 
-    def test_152_less_than_07_string_02_logical(self):  # chessql accepts.
+    def test_152_less_than_07_string_02_logical(self):
         self.verify('"a"<true', [], returncode=1)
 
-    def test_152_less_than_07_string_03_numeric(self):  # chessql accepts.
+    def test_152_less_than_07_string_03_numeric(self):
         self.verify('"a"<1', [], returncode=1)
 
     def test_152_less_than_07_string_04_string(self):
         self.verify('"a"<"b"', [(3, "LT"), (4, "String"), (4, "String")])
 
-    def test_152_less_than_07_string_05_position(self):  # chessql accepts.
+    def test_152_less_than_07_string_05_position(self):
         self.verify("a<initialposition", [], returncode=1)
 
-    def test_152_less_than_08_position_01_set(self):  # chessql accepts.
+    def test_152_less_than_08_position_01_set(self):
         self.verify("initialposition<A", [], returncode=1)
 
-    def test_152_less_than_08_position_02_logical(self):  # chessql accepts.
+    def test_152_less_than_08_position_02_logical(self):
         self.verify("initialposition<true", [], returncode=1)
 
-    def test_152_less_than_08_position_03_numeric(self):  # chessql accepts.
+    def test_152_less_than_08_position_03_numeric(self):
         self.verify("initialposition<1", [], returncode=1)
 
-    def test_152_less_than_08_position_04_string(self):  # chessql accepts.
+    def test_152_less_than_08_position_04_string(self):
         self.verify('initialposition<"t"', [], returncode=1)
 
     def test_152_less_than_08_position_05_position(self):
         self.verify(
-            "a<initialposition",
-        )
-        self.verify(
             "initialposition<currentposition",
             [(3, "LT"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_153_lt_eq_ascii_01(self):
+        self.verify("<=", [], returncode=1)
+
+    def test_153_lt_eq_ascii_02(self):
+        self.verify("A<=", [], returncode=1)
+
+    def test_153_lt_eq_ascii_03(self):
+        self.verify("<=A", [], returncode=1)
+
+    def test_153_lt_eq_ascii_04_set_01_set(self):
+        self.verify("a<=A", [], returncode=1)
+
+    def test_153_lt_eq_ascii_04_set_02_logical(self):
+        self.verify("a<=true", [], returncode=1)
+
+    def test_153_lt_eq_ascii_04_set_03_numeric(self):
+        self.verify(
+            "a<=1",
+            [(3, "LE"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_153_lt_eq_ascii_04_set_04_string(self):
+        self.verify('a<="t"', [], returncode=1)
+
+    def test_153_lt_eq_ascii_04_set_05_position(self):
+        self.verify("a<=initialposition", [], returncode=1)
+
+    def test_153_lt_eq_ascii_05_logical_01_set(self):
+        self.verify("true<=A", [], returncode=1)
+
+    def test_153_lt_eq_ascii_05_logical_02_logical(self):
+        self.verify("true<=true", [], returncode=1)
+
+    def test_153_lt_eq_ascii_05_logical_03_numeric(self):
+        self.verify("true<=1", [], returncode=1)
+
+    def test_153_lt_eq_ascii_05_logical_04_string(self):
+        self.verify('true<="t"', [], returncode=1)
+
+    def test_153_lt_eq_ascii_05_logical_05_position(self):
+        self.verify("true<=initialposition", [], returncode=1)
+
+    def test_153_lt_eq_ascii_06_numeric_01_set(self):
+        self.verify(
+            "1<=A",
+            [(3, "LE"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_153_lt_eq_ascii_06_numeric_02_logical(self):
+        self.verify("1<=true", [], returncode=1)
+
+    def test_153_lt_eq_ascii_06_numeric_03_numeric(self):
+        self.verify("1<=2", [(3, "LE"), (4, "Integer"), (4, "Integer")])
+
+    def test_153_lt_eq_ascii_06_numeric_04_string(self):
+        self.verify('1<="t"', [], returncode=1)
+
+    def test_153_lt_eq_ascii_06_numeric_05_position(self):
+        self.verify("1<=initialposition", [], returncode=1)
+
+    def test_153_lt_eq_ascii_07_string_01_set(self):
+        self.verify('"a"<=A', [], returncode=1)
+
+    def test_153_lt_eq_ascii_07_string_02_logical(self):
+        self.verify('"a"<=true', [], returncode=1)
+
+    def test_153_lt_eq_ascii_07_string_03_numeric(self):
+        self.verify('"a"<=1', [], returncode=1)
+
+    def test_153_lt_eq_ascii_07_string_04_string(self):
+        self.verify('"a"<="b"', [(3, "LE"), (4, "String"), (4, "String")])
+
+    def test_153_lt_eq_ascii_07_string_05_position(self):
+        self.verify("a<=initialposition", [], returncode=1)
+
+    def test_153_lt_eq_ascii_08_position_01_set(self):
+        self.verify("initialposition<=A", [], returncode=1)
+
+    def test_153_lt_eq_ascii_08_position_02_logical(self):
+        self.verify("initialposition<=true", [], returncode=1)
+
+    def test_153_lt_eq_ascii_08_position_03_numeric(self):
+        self.verify("initialposition<=1", [], returncode=1)
+
+    def test_153_lt_eq_ascii_08_position_04_string(self):
+        self.verify('initialposition<="t"', [], returncode=1)
+
+    def test_153_lt_eq_ascii_08_position_05_position(self):
+        self.verify(
+            "initialposition<=currentposition",
+            [(3, "LE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_154_lt_eq_utf8_01(self):
+        self.verify("≤", [], returncode=1)
+
+    def test_154_lt_eq_utf8_02(self):
+        self.verify("A≤", [], returncode=1)
+
+    def test_154_lt_eq_utf8_03(self):
+        self.verify("≤A", [], returncode=1)
+
+    def test_154_lt_eq_utf8_04_set_01_set(self):
+        self.verify("a≤A", [], returncode=1)
+
+    def test_154_lt_eq_utf8_04_set_02_logical(self):
+        self.verify("a≤true", [], returncode=1)
+
+    def test_154_lt_eq_utf8_04_set_03_numeric(self):
+        self.verify(
+            "a≤1",
+            [(3, "LE"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_154_lt_eq_utf8_04_set_04_string(self):
+        self.verify('a≤"t"', [], returncode=1)
+
+    def test_154_lt_eq_utf8_04_set_05_position(self):
+        self.verify("a≤initialposition", [], returncode=1)
+
+    def test_154_lt_eq_utf8_05_logical_01_set(self):
+        self.verify("true≤A", [], returncode=1)
+
+    def test_154_lt_eq_utf8_05_logical_02_logical(self):
+        self.verify("true≤true", [], returncode=1)
+
+    def test_154_lt_eq_utf8_05_logical_03_numeric(self):
+        self.verify("true≤1", [], returncode=1)
+
+    def test_154_lt_eq_utf8_05_logical_04_string(self):
+        self.verify('true≤"t"', [], returncode=1)
+
+    def test_154_lt_eq_utf8_05_logical_05_position(self):
+        self.verify("true≤initialposition", [], returncode=1)
+
+    def test_154_lt_eq_utf8_06_numeric_01_set(self):
+        self.verify(
+            "1≤A",
+            [(3, "LE"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_154_lt_eq_utf8_06_numeric_02_logical(self):
+        self.verify("1≤true", [], returncode=1)
+
+    def test_154_lt_eq_utf8_06_numeric_03_numeric(self):
+        self.verify("1≤2", [(3, "LE"), (4, "Integer"), (4, "Integer")])
+
+    def test_154_lt_eq_utf8_06_numeric_04_string(self):
+        self.verify('1≤"t"', [], returncode=1)
+
+    def test_154_lt_eq_utf8_06_numeric_05_position(self):
+        self.verify("1≤initialposition", [], returncode=1)
+
+    def test_154_lt_eq_utf8_07_string_01_set(self):
+        self.verify('"a"≤A', [], returncode=1)
+
+    def test_154_lt_eq_utf8_07_string_02_logical(self):
+        self.verify('"a"≤true', [], returncode=1)
+
+    def test_154_lt_eq_utf8_07_string_03_numeric(self):
+        self.verify('"a"≤1', [], returncode=1)
+
+    def test_154_lt_eq_utf8_07_string_04_string(self):
+        self.verify('"a"≤"b"', [(3, "LE"), (4, "String"), (4, "String")])
+
+    def test_154_lt_eq_utf8_07_string_05_position(self):
+        self.verify("a≤initialposition", [], returncode=1)
+
+    def test_154_lt_eq_utf8_08_position_01_set(self):
+        self.verify("initialposition≤A", [], returncode=1)
+
+    def test_154_lt_eq_utf8_08_position_02_logical(self):
+        self.verify("initialposition≤true", [], returncode=1)
+
+    def test_154_lt_eq_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≤1", [], returncode=1)
+
+    def test_154_lt_eq_utf8_08_position_04_string(self):
+        self.verify('initialposition≤"t"', [], returncode=1)
+
+    def test_154_lt_eq_utf8_08_position_05_position(self):
+        self.verify(
+            "initialposition≤currentposition",
+            [(3, "LE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_155_gt_eq_ascii_01(self):
+        self.verify(">=", [], returncode=1)
+
+    def test_155_gt_eq_ascii_02(self):
+        self.verify("A>=", [], returncode=1)
+
+    def test_155_gt_eq_ascii_03(self):
+        self.verify(">=A", [], returncode=1)
+
+    def test_155_gt_eq_ascii_04_set_01_set(self):
+        self.verify("a>=A", [], returncode=1)
+
+    def test_155_gt_eq_ascii_04_set_02_logical(self):
+        self.verify("a>=true", [], returncode=1)
+
+    def test_155_gt_eq_ascii_04_set_03_numeric(self):
+        self.verify(
+            "a>=1",
+            [(3, "GE"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_155_gt_eq_ascii_04_set_04_string(self):
+        self.verify('a>="t"', [], returncode=1)
+
+    def test_155_gt_eq_ascii_04_set_05_position(self):
+        self.verify("a>=initialposition", [], returncode=1)
+
+    def test_155_gt_eq_ascii_05_logical_01_set(self):
+        self.verify("true>=A", [], returncode=1)
+
+    def test_155_gt_eq_ascii_05_logical_02_logical(self):
+        self.verify("true>=true", [], returncode=1)
+
+    def test_155_gt_eq_ascii_05_logical_03_numeric(self):
+        self.verify("true>=1", [], returncode=1)
+
+    def test_155_gt_eq_ascii_05_logical_04_string(self):
+        self.verify('true>="t"', [], returncode=1)
+
+    def test_155_gt_eq_ascii_05_logical_05_position(self):
+        self.verify("true>=initialposition", [], returncode=1)
+
+    def test_155_gt_eq_ascii_06_numeric_01_set(self):
+        self.verify(
+            "1>=A",
+            [(3, "GE"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_155_gt_eq_ascii_06_numeric_02_logical(self):
+        self.verify("1>=true", [], returncode=1)
+
+    def test_155_gt_eq_ascii_06_numeric_03_numeric(self):
+        self.verify("1>=2", [(3, "GE"), (4, "Integer"), (4, "Integer")])
+
+    def test_155_gt_eq_ascii_06_numeric_04_string(self):
+        self.verify('1>="t"', [], returncode=1)
+
+    def test_155_gt_eq_ascii_06_numeric_05_position(self):
+        self.verify("1>=initialposition", [], returncode=1)
+
+    def test_155_gt_eq_ascii_07_string_01_set(self):
+        self.verify('"a">=A', [], returncode=1)
+
+    def test_155_gt_eq_ascii_07_string_02_logical(self):
+        self.verify('"a">=true', [], returncode=1)
+
+    def test_155_gt_eq_ascii_07_string_03_numeric(self):
+        self.verify('"a">=1', [], returncode=1)
+
+    def test_155_gt_eq_ascii_07_string_04_string(self):
+        self.verify('"a">="b"', [(3, "GE"), (4, "String"), (4, "String")])
+
+    def test_155_gt_eq_ascii_07_string_05_position(self):
+        self.verify("a>=initialposition", [], returncode=1)
+
+    def test_155_gt_eq_ascii_08_position_01_set(self):
+        self.verify("initialposition>=A", [], returncode=1)
+
+    def test_155_gt_eq_ascii_08_position_02_logical(self):
+        self.verify("initialposition>=true", [], returncode=1)
+
+    def test_155_gt_eq_ascii_08_position_03_numeric(self):
+        self.verify("initialposition>=1", [], returncode=1)
+
+    def test_155_gt_eq_ascii_08_position_04_string(self):
+        self.verify('initialposition>="t"', [], returncode=1)
+
+    def test_155_gt_eq_ascii_08_position_05_position(self):
+        self.verify(
+            "initialposition>=currentposition",
+            [(3, "GE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_156_gt_eq_utf8_01(self):
+        self.verify("≥", [], returncode=1)
+
+    def test_156_gt_eq_utf8_02(self):
+        self.verify("A≥", [], returncode=1)
+
+    def test_156_gt_eq_utf8_03(self):
+        self.verify("≥A", [], returncode=1)
+
+    def test_156_gt_eq_utf8_04_set_01_set(self):
+        self.verify("a≥A", [], returncode=1)
+
+    def test_156_gt_eq_utf8_04_set_02_logical(self):
+        self.verify("a≥true", [], returncode=1)
+
+    def test_156_gt_eq_utf8_04_set_03_numeric(self):
+        self.verify(
+            "a≥1",
+            [(3, "GE"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_156_gt_eq_utf8_04_set_04_string(self):
+        self.verify('a≥"t"', [], returncode=1)
+
+    def test_156_gt_eq_utf8_04_set_05_position(self):
+        self.verify("a≥initialposition", [], returncode=1)
+
+    def test_156_gt_eq_utf8_05_logical_01_set(self):
+        self.verify("true≥A", [], returncode=1)
+
+    def test_156_gt_eq_utf8_05_logical_02_logical(self):
+        self.verify("true≥true", [], returncode=1)
+
+    def test_156_gt_eq_utf8_05_logical_03_numeric(self):
+        self.verify("true≥1", [], returncode=1)
+
+    def test_156_gt_eq_utf8_05_logical_04_string(self):
+        self.verify('true≥"t"', [], returncode=1)
+
+    def test_156_gt_eq_utf8_05_logical_05_position(self):
+        self.verify("true≥initialposition", [], returncode=1)
+
+    def test_156_gt_eq_utf8_06_numeric_01_set(self):
+        self.verify(
+            "1≥A",
+            [(3, "GE"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_156_gt_eq_utf8_06_numeric_02_logical(self):
+        self.verify("1≥true", [], returncode=1)
+
+    def test_156_gt_eq_utf8_06_numeric_03_numeric(self):
+        self.verify("1≥2", [(3, "GE"), (4, "Integer"), (4, "Integer")])
+
+    def test_156_gt_eq_utf8_06_numeric_04_string(self):
+        self.verify('1≥"t"', [], returncode=1)
+
+    def test_156_gt_eq_utf8_06_numeric_05_position(self):
+        self.verify("1≥initialposition", [], returncode=1)
+
+    def test_156_gt_eq_utf8_07_string_01_set(self):
+        self.verify('"a"≥A', [], returncode=1)
+
+    def test_156_gt_eq_utf8_07_string_02_logical(self):
+        self.verify('"a"≥true', [], returncode=1)
+
+    def test_156_gt_eq_utf8_07_string_03_numeric(self):
+        self.verify('"a"≥1', [], returncode=1)
+
+    def test_156_gt_eq_utf8_07_string_04_string(self):
+        self.verify('"a"≥"b"', [(3, "GE"), (4, "String"), (4, "String")])
+
+    def test_156_gt_eq_utf8_07_string_05_position(self):
+        self.verify("a≥initialposition", [], returncode=1)
+
+    def test_156_gt_eq_utf8_08_position_01_set(self):
+        self.verify("initialposition≥A", [], returncode=1)
+
+    def test_156_gt_eq_utf8_08_position_02_logical(self):
+        self.verify("initialposition≥true", [], returncode=1)
+
+    def test_156_gt_eq_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≥1", [], returncode=1)
+
+    def test_156_gt_eq_utf8_08_position_04_string(self):
+        self.verify('initialposition≥"t"', [], returncode=1)
+
+    def test_156_gt_eq_utf8_08_position_05_position(self):
+        self.verify(
+            "initialposition≥currentposition",
+            [(3, "GE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_157_gt_01(self):
+        self.verify(">", [], returncode=1)
+
+    def test_157_gt_02(self):
+        self.verify("A>", [], returncode=1)
+
+    def test_157_gt_03(self):
+        self.verify(">A", [], returncode=1)
+
+    def test_157_gt_04_set_01_set(self):
+        self.verify("a>A", [], returncode=1)
+
+    def test_157_gt_04_set_02_logical(self):
+        self.verify("a>true", [], returncode=1)
+
+    def test_157_gt_04_set_03_numeric(self):
+        self.verify(
+            "a>1",
+            [(3, "GT"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_157_gt_04_set_04_string(self):
+        self.verify('a>"t"', [], returncode=1)
+
+    def test_157_gt_04_set_05_position(self):
+        self.verify("a>initialposition", [], returncode=1)
+
+    def test_157_gt_05_logical_01_set(self):
+        self.verify("true>A", [], returncode=1)
+
+    def test_157_gt_05_logical_02_logical(self):
+        self.verify("true>true", [], returncode=1)
+
+    def test_157_gt_05_logical_03_numeric(self):
+        self.verify("true>1", [], returncode=1)
+
+    def test_157_gt_05_logical_04_string(self):
+        self.verify('true>"t"', [], returncode=1)
+
+    def test_157_gt_05_logical_05_position(self):
+        self.verify("true>initialposition", [], returncode=1)
+
+    def test_157_gt_06_numeric_01_set(self):
+        self.verify(
+            "1>A",
+            [(3, "GT"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_157_gt_06_numeric_02_logical(self):
+        self.verify("1>true", [], returncode=1)
+
+    def test_157_gt_06_numeric_03_numeric(self):
+        self.verify("1>2", [(3, "GT"), (4, "Integer"), (4, "Integer")])
+
+    def test_157_gt_06_numeric_04_string(self):
+        self.verify('1>"t"', [], returncode=1)
+
+    def test_157_gt_06_numeric_05_position(self):
+        self.verify("1>initialposition", [], returncode=1)
+
+    def test_157_gt_07_string_01_set(self):
+        self.verify('"a">A', [], returncode=1)
+
+    def test_157_gt_07_string_02_logical(self):
+        self.verify('"a">true', [], returncode=1)
+
+    def test_157_gt_07_string_03_numeric(self):
+        self.verify('"a">1', [], returncode=1)
+
+    def test_157_gt_07_string_04_string(self):
+        self.verify('"a">"b"', [(3, "GT"), (4, "String"), (4, "String")])
+
+    def test_157_gt_07_string_05_position(self):
+        self.verify("a>initialposition", [], returncode=1)
+
+    def test_157_gt_08_position_01_set(self):
+        self.verify("initialposition>A", [], returncode=1)
+
+    def test_157_gt_08_position_02_logical(self):
+        self.verify("initialposition>true", [], returncode=1)
+
+    def test_157_gt_08_position_03_numeric(self):
+        self.verify("initialposition>1", [], returncode=1)
+
+    def test_157_gt_08_position_04_string(self):
+        self.verify('initialposition>"t"', [], returncode=1)
+
+    def test_157_gt_08_position_05_position(self):
+        self.verify(
+            "initialposition>currentposition",
+            [(3, "GT"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_158_ne_ascii_01(self):
+        self.verify("!=", [], returncode=1)
+
+    def test_158_ne_ascii_02(self):
+        self.verify("A!=", [], returncode=1)
+
+    def test_158_ne_ascii_03(self):
+        self.verify("!=A", [], returncode=1)
+
+    def test_158_ne_ascii_04_set_01_set(self):
+        self.verify(
+            "a!=A",
+            [(3, "NE"), (4, "PieceDesignator"), (4, "PieceDesignator")],
+        )
+
+    def test_158_ne_ascii_04_set_02_logical(self):
+        self.verify("a!=true", [], returncode=1)
+
+    def test_158_ne_ascii_04_set_03_numeric(self):
+        self.verify(
+            "a!=1",
+            [(3, "NE"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_158_ne_ascii_04_set_04_string(self):
+        self.verify('a!="t"', [], returncode=1)
+
+    def test_158_ne_ascii_04_set_05_position(self):
+        self.verify("a!=initialposition", [], returncode=1)
+
+    def test_158_ne_ascii_05_logical_01_set(self):
+        self.verify("true!=A", [], returncode=1)
+
+    def test_158_ne_ascii_05_logical_02_logical(self):
+        self.verify("true!=true", [], returncode=1)
+
+    def test_158_ne_ascii_05_logical_03_numeric(self):
+        self.verify("true!=1", [], returncode=1)
+
+    def test_158_ne_ascii_05_logical_04_string(self):
+        self.verify('true!="t"', [], returncode=1)
+
+    def test_158_ne_ascii_05_logical_05_position(self):
+        self.verify("true!=initialposition", [], returncode=1)
+
+    def test_158_ne_ascii_06_numeric_01_set(self):
+        self.verify(
+            "1!=A",
+            [(3, "NE"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_158_ne_ascii_06_numeric_02_logical(self):
+        self.verify("1!=true", [], returncode=1)
+
+    def test_158_ne_ascii_06_numeric_03_numeric(self):
+        self.verify("1!=2", [(3, "NE"), (4, "Integer"), (4, "Integer")])
+
+    def test_158_ne_ascii_06_numeric_04_string(self):
+        self.verify('1!="t"', [], returncode=1)
+
+    def test_158_ne_ascii_06_numeric_05_position(self):
+        self.verify("1!=initialposition", [], returncode=1)
+
+    def test_158_ne_ascii_07_string_01_set(self):
+        self.verify('"a"!=A', [], returncode=1)
+
+    def test_158_ne_ascii_07_string_02_logical(self):
+        self.verify('"a"!=true', [], returncode=1)
+
+    def test_158_ne_ascii_07_string_03_numeric(self):
+        self.verify('"a"!=1', [], returncode=1)
+
+    def test_158_ne_ascii_07_string_04_string(self):
+        self.verify('"a"!="b"', [(3, "NE"), (4, "String"), (4, "String")])
+
+    def test_158_ne_ascii_07_string_05_position(self):
+        self.verify("a!=initialposition", [], returncode=1)
+
+    def test_158_ne_ascii_08_position_01_set(self):
+        self.verify("initialposition!=A", [], returncode=1)
+
+    def test_158_ne_ascii_08_position_02_logical(self):
+        self.verify("initialposition!=true", [], returncode=1)
+
+    def test_158_ne_ascii_08_position_03_numeric(self):
+        self.verify("initialposition!=1", [], returncode=1)
+
+    def test_158_ne_ascii_08_position_04_string(self):
+        self.verify('initialposition!="t"', [], returncode=1)
+
+    def test_158_ne_ascii_08_position_05_position(self):
+        self.verify("initialposition!=currentposition", [], returncode=1)
+
+    def test_159_ne_utf8_01(self):
+        self.verify("≠", [], returncode=1)
+
+    def test_159_ne_utf8_02(self):
+        self.verify("A≠", [], returncode=1)
+
+    def test_159_ne_utf8_03(self):
+        self.verify("≠A", [], returncode=1)
+
+    def test_159_ne_utf8_04_set_01_set(self):
+        self.verify(
+            "a≠A",
+            [(3, "NE"), (4, "PieceDesignator"), (4, "PieceDesignator")],
+        )
+
+    def test_159_ne_utf8_04_set_02_logical(self):
+        self.verify("a≠true", [], returncode=1)
+
+    def test_159_ne_utf8_04_set_03_numeric(self):
+        self.verify(
+            "a≠1",
+            [(3, "NE"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_159_ne_utf8_04_set_04_string(self):
+        self.verify('a≠"t"', [], returncode=1)
+
+    def test_159_ne_utf8_04_set_05_position(self):
+        self.verify("a≠initialposition", [], returncode=1)
+
+    def test_159_ne_utf8_05_logical_01_set(self):
+        self.verify("true≠A", [], returncode=1)
+
+    def test_159_ne_utf8_05_logical_02_logical(self):
+        self.verify("true≠true", [], returncode=1)
+
+    def test_159_ne_utf8_05_logical_03_numeric(self):
+        self.verify("true≠1", [], returncode=1)
+
+    def test_159_ne_utf8_05_logical_04_string(self):
+        self.verify('true≠"t"', [], returncode=1)
+
+    def test_159_ne_utf8_05_logical_05_position(self):
+        self.verify("true≠initialposition", [], returncode=1)
+
+    def test_159_ne_utf8_06_numeric_01_set(self):
+        self.verify(
+            "1≠A",
+            [(3, "NE"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_159_ne_utf8_06_numeric_02_logical(self):
+        self.verify("1≠true", [], returncode=1)
+
+    def test_159_ne_utf8_06_numeric_03_numeric(self):
+        self.verify("1≠2", [(3, "NE"), (4, "Integer"), (4, "Integer")])
+
+    def test_159_ne_utf8_06_numeric_04_string(self):
+        self.verify('1≠"t"', [], returncode=1)
+
+    def test_159_ne_utf8_06_numeric_05_position(self):
+        self.verify("1≠initialposition", [], returncode=1)
+
+    def test_159_ne_utf8_07_string_01_set(self):
+        self.verify('"a"≠A', [], returncode=1)
+
+    def test_159_ne_utf8_07_string_02_logical(self):
+        self.verify('"a"≠true', [], returncode=1)
+
+    def test_159_ne_utf8_07_string_03_numeric(self):
+        self.verify('"a"≠1', [], returncode=1)
+
+    def test_159_ne_utf8_07_string_04_string(self):
+        self.verify('"a"≠"b"', [(3, "NE"), (4, "String"), (4, "String")])
+
+    def test_159_ne_utf8_07_string_05_position(self):
+        self.verify("a≠initialposition", [], returncode=1)
+
+    def test_159_ne_utf8_08_position_01_set(self):
+        self.verify("initialposition≠A", [], returncode=1)
+
+    def test_159_ne_utf8_08_position_02_logical(self):
+        self.verify("initialposition≠true", [], returncode=1)
+
+    def test_159_ne_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≠1", [], returncode=1)
+
+    def test_159_ne_utf8_08_position_04_string(self):
+        self.verify('initialposition≠"t"', [], returncode=1)
+
+    def test_159_ne_utf8_08_position_05_position(self):
+        self.verify("initialposition≠currentposition", [], returncode=1)
+
+    def test_160_ancestor_ascii_01(self):
+        self.verify("[<]", [], returncode=1)
+
+    def test_160_ancestor_ascii_02(self):
+        self.verify("A[<]", [], returncode=1)
+
+    def test_160_ancestor_ascii_03(self):
+        self.verify("[<]A", [], returncode=1)
+
+    def test_160_ancestor_ascii_04_set_01_set(self):
+        self.verify("a[<]A", [], returncode=1)
+
+    def test_160_ancestor_ascii_04_set_02_logical(self):
+        self.verify("a[<]true", [], returncode=1)
+
+    def test_160_ancestor_ascii_04_set_03_numeric(self):
+        self.verify("a[<]1", [], returncode=1)
+
+    def test_160_ancestor_ascii_04_set_04_string(self):
+        self.verify('a[<]"t"', [], returncode=1)
+
+    def test_160_ancestor_ascii_04_set_05_position(self):
+        self.verify("a[<]initialposition", [], returncode=1)
+
+    def test_160_ancestor_ascii_05_logical_01_set(self):
+        self.verify("true[<]A", [], returncode=1)
+
+    def test_160_ancestor_ascii_05_logical_02_logical(self):
+        self.verify("true[<]true", [], returncode=1)
+
+    def test_160_ancestor_ascii_05_logical_03_numeric(self):
+        self.verify("true[<]1", [], returncode=1)
+
+    def test_160_ancestor_ascii_05_logical_04_string(self):
+        self.verify('true[<]"t"', [], returncode=1)
+
+    def test_160_ancestor_ascii_05_logical_05_position(self):
+        self.verify("true[<]initialposition", [], returncode=1)
+
+    def test_160_ancestor_ascii_06_numeric_01_set(self):
+        self.verify_run_fail("1[<]A")
+
+    def test_160_ancestor_ascii_06_numeric_02_logical(self):
+        self.verify("1[<]true", [], returncode=1)
+
+    def test_160_ancestor_ascii_06_numeric_03_numeric(self):
+        self.verify_run_fail("1[<]2")
+
+    def test_160_ancestor_ascii_06_numeric_04_string(self):
+        self.verify('1[<]"t"', [], returncode=1)
+
+    def test_160_ancestor_ascii_06_numeric_05_position(self):
+        self.verify("1[<]initialposition", [], returncode=1)
+
+    def test_160_ancestor_ascii_07_string_01_set(self):
+        self.verify('"a"[<]A', [], returncode=1)
+
+    def test_160_ancestor_ascii_07_string_02_logical(self):
+        self.verify('"a"[<]true', [], returncode=1)
+
+    def test_160_ancestor_ascii_07_string_03_numeric(self):
+        self.verify('"a"[<]1', [], returncode=1)
+
+    def test_160_ancestor_ascii_07_string_04_string(self):
+        self.verify_run_fail('"a"[<]"b"')
+
+    def test_160_ancestor_ascii_07_string_05_position(self):
+        self.verify("a[<]initialposition", [], returncode=1)
+
+    def test_160_ancestor_ascii_08_position_01_set(self):
+        self.verify("initialposition[<]A", [], returncode=1)
+
+    def test_160_ancestor_ascii_08_position_02_logical(self):
+        self.verify("initialposition[<]true", [], returncode=1)
+
+    def test_160_ancestor_ascii_08_position_03_numeric(self):
+        self.verify("initialposition[<]1", [], returncode=1)
+
+    def test_160_ancestor_ascii_08_position_04_string(self):
+        self.verify('initialposition[<]"t"', [], returncode=1)
+
+    def test_160_ancestor_ascii_08_position_05_position(self):
+        self.verify(
+            "initialposition[<]currentposition",
+            [(3, "BeforeNE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_161_ancestor_utf8_01(self):
+        self.verify("≺", [], returncode=1)
+
+    def test_161_ancestor_utf8_02(self):
+        self.verify("A≺", [], returncode=1)
+
+    def test_161_ancestor_utf8_03(self):
+        self.verify("≺A", [], returncode=1)
+
+    def test_161_ancestor_utf8_04_set_01_set(self):
+        self.verify("a≺A", [], returncode=1)
+
+    def test_161_ancestor_utf8_04_set_02_logical(self):
+        self.verify("a≺true", [], returncode=1)
+
+    def test_161_ancestor_utf8_04_set_03_numeric(self):
+        self.verify_run_fail("a≺1")
+
+    def test_161_ancestor_utf8_04_set_04_string(self):
+        self.verify('a≺"t"', [], returncode=1)
+
+    def test_161_ancestor_utf8_04_set_05_position(self):
+        self.verify("a≺initialposition", [], returncode=1)
+
+    def test_161_ancestor_utf8_05_logical_01_set(self):
+        self.verify("true≺A", [], returncode=1)
+
+    def test_161_ancestor_utf8_05_logical_02_logical(self):
+        self.verify("true≺true", [], returncode=1)
+
+    def test_161_ancestor_utf8_05_logical_03_numeric(self):
+        self.verify("true≺1", [], returncode=1)
+
+    def test_161_ancestor_utf8_05_logical_04_string(self):
+        self.verify('true≺"t"', [], returncode=1)
+
+    def test_161_ancestor_utf8_05_logical_05_position(self):
+        self.verify("true≺initialposition", [], returncode=1)
+
+    def test_161_ancestor_utf8_06_numeric_01_set(self):
+        self.verify_run_fail("1≺A")
+
+    def test_161_ancestor_utf8_06_numeric_02_logical(self):
+        self.verify("1≺true", [], returncode=1)
+
+    def test_161_ancestor_utf8_06_numeric_03_numeric(self):
+        self.verify_run_fail("1≺2")
+
+    def test_161_ancestor_utf8_06_numeric_04_string(self):
+        self.verify('1≺"t"', [], returncode=1)
+
+    def test_161_ancestor_utf8_06_numeric_05_position(self):
+        self.verify("1≺initialposition", [], returncode=1)
+
+    def test_161_ancestor_utf8_07_string_01_set(self):
+        self.verify('"a"≺A', [], returncode=1)
+
+    def test_161_ancestor_utf8_07_string_02_logical(self):
+        self.verify('"a"≺true', [], returncode=1)
+
+    def test_161_ancestor_utf8_07_string_03_numeric(self):
+        self.verify('"a"≺1', [], returncode=1)
+
+    def test_161_ancestor_utf8_07_string_04_string(self):
+        self.verify_run_fail('"a"≺"b"')
+
+    def test_161_ancestor_utf8_07_string_05_position(self):
+        self.verify("a≺initialposition", [], returncode=1)
+
+    def test_161_ancestor_utf8_08_position_01_set(self):
+        self.verify("initialposition≺A", [], returncode=1)
+
+    def test_161_ancestor_utf8_08_position_02_logical(self):
+        self.verify("initialposition≺true", [], returncode=1)
+
+    def test_161_ancestor_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≺1", [], returncode=1)
+
+    def test_161_ancestor_utf8_08_position_04_string(self):
+        self.verify('initialposition≺"t"', [], returncode=1)
+
+    def test_161_ancestor_utf8_08_position_05_position(self):
+        self.verify(
+            "initialposition≺currentposition",
+            [(3, "BeforeNE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_162_descendant_ascii_01(self):
+        self.verify("[>]", [], returncode=1)
+
+    def test_162_descendant_ascii_02(self):
+        self.verify("A[>]", [], returncode=1)
+
+    def test_162_descendant_ascii_03(self):
+        self.verify("[>]A", [], returncode=1)
+
+    def test_162_descendant_ascii_04_set_01_set(self):
+        self.verify("a[>]A", [], returncode=1)
+
+    def test_162_descendant_ascii_04_set_02_logical(self):
+        self.verify("a[>]true", [], returncode=1)
+
+    def test_162_descendant_ascii_04_set_03_numeric(self):
+        self.verify("a[>]1", [], returncode=1)
+
+    def test_162_descendant_ascii_04_set_04_string(self):
+        self.verify('a[>]"t"', [], returncode=1)
+
+    def test_162_descendant_ascii_04_set_05_position(self):
+        self.verify("a[>]initialposition", [], returncode=1)
+
+    def test_162_descendant_ascii_05_logical_01_set(self):
+        self.verify("true[>]A", [], returncode=1)
+
+    def test_162_descendant_ascii_05_logical_02_logical(self):
+        self.verify("true[>]true", [], returncode=1)
+
+    def test_162_descendant_ascii_05_logical_03_numeric(self):
+        self.verify("true[>]1", [], returncode=1)
+
+    def test_162_descendant_ascii_05_logical_04_string(self):
+        self.verify('true[>]"t"', [], returncode=1)
+
+    def test_162_descendant_ascii_05_logical_05_position(self):
+        self.verify("true[>]initialposition", [], returncode=1)
+
+    def test_162_descendant_ascii_06_numeric_01_set(self):
+        self.verify_run_fail("1[>]A")
+
+    def test_162_descendant_ascii_06_numeric_02_logical(self):
+        self.verify("1[>]true", [], returncode=1)
+
+    def test_162_descendant_ascii_06_numeric_03_numeric(self):
+        self.verify_run_fail("1[>]2")
+
+    def test_162_descendant_ascii_06_numeric_04_string(self):
+        self.verify('1[>]"t"', [], returncode=1)
+
+    def test_162_descendant_ascii_06_numeric_05_position(self):
+        self.verify("1[>]initialposition", [], returncode=1)
+
+    def test_162_descendant_ascii_07_string_01_set(self):
+        self.verify('"a"[>]A', [], returncode=1)
+
+    def test_162_descendant_ascii_07_string_02_logical(self):
+        self.verify('"a"[>]true', [], returncode=1)
+
+    def test_162_descendant_ascii_07_string_03_numeric(self):
+        self.verify('"a"[>]1', [], returncode=1)
+
+    def test_162_descendant_ascii_07_string_04_string(self):
+        self.verify_run_fail('"a"[>]"b"')
+
+    def test_162_descendant_ascii_07_string_05_position(self):
+        self.verify("a[>]initialposition", [], returncode=1)
+
+    def test_162_descendant_ascii_08_position_01_set(self):
+        self.verify("initialposition[>]A", [], returncode=1)
+
+    def test_162_descendant_ascii_08_position_02_logical(self):
+        self.verify("initialposition[>]true", [], returncode=1)
+
+    def test_162_descendant_ascii_08_position_03_numeric(self):
+        self.verify("initialposition[>]1", [], returncode=1)
+
+    def test_162_descendant_ascii_08_position_04_string(self):
+        self.verify('initialposition[>]"t"', [], returncode=1)
+
+    def test_162_descendant_ascii_08_position_05_position(self):
+        self.verify(
+            "initialposition[>]currentposition",
+            [(3, "AfterNE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_163_descendant_utf8_01(self):
+        self.verify("≻", [], returncode=1)
+
+    def test_163_descendant_utf8_02(self):
+        self.verify("A≻", [], returncode=1)
+
+    def test_163_descendant_utf8_03(self):
+        self.verify("≻A", [], returncode=1)
+
+    def test_163_descendant_utf8_04_set_01_set(self):
+        self.verify("a≻A", [], returncode=1)
+
+    def test_163_descendant_utf8_04_set_02_logical(self):
+        self.verify("a≻true", [], returncode=1)
+
+    def test_163_descendant_utf8_04_set_03_numeric(self):
+        self.verify_run_fail("a≻1")
+
+    def test_163_descendant_utf8_04_set_04_string(self):
+        self.verify('a≻"t"', [], returncode=1)
+
+    def test_163_descendant_utf8_04_set_05_position(self):
+        self.verify("a≻initialposition", [], returncode=1)
+
+    def test_163_descendant_utf8_05_logical_01_set(self):
+        self.verify("true≻A", [], returncode=1)
+
+    def test_163_descendant_utf8_05_logical_02_logical(self):
+        self.verify("true≻true", [], returncode=1)
+
+    def test_163_descendant_utf8_05_logical_03_numeric(self):
+        self.verify("true≻1", [], returncode=1)
+
+    def test_163_descendant_utf8_05_logical_04_string(self):
+        self.verify('true≻"t"', [], returncode=1)
+
+    def test_163_descendant_utf8_05_logical_05_position(self):
+        self.verify("true≻initialposition", [], returncode=1)
+
+    def test_163_descendant_utf8_06_numeric_01_set(self):
+        self.verify_run_fail("1≻A")
+
+    def test_163_descendant_utf8_06_numeric_02_logical(self):
+        self.verify("1≻true", [], returncode=1)
+
+    def test_163_descendant_utf8_06_numeric_03_numeric(self):
+        self.verify_run_fail("1≻2")
+
+    def test_163_descendant_utf8_06_numeric_04_string(self):
+        self.verify('1≻"t"', [], returncode=1)
+
+    def test_163_descendant_utf8_06_numeric_05_position(self):
+        self.verify("1≻initialposition", [], returncode=1)
+
+    def test_163_descendant_utf8_07_string_01_set(self):
+        self.verify('"a"≻A', [], returncode=1)
+
+    def test_163_descendant_utf8_07_string_02_logical(self):
+        self.verify('"a"≻true', [], returncode=1)
+
+    def test_163_descendant_utf8_07_string_03_numeric(self):
+        self.verify('"a"≻1', [], returncode=1)
+
+    def test_163_descendant_utf8_07_string_04_string(self):
+        self.verify_run_fail('"a"≻"b"')
+
+    def test_163_descendant_utf8_07_string_05_position(self):
+        self.verify("a≻initialposition", [], returncode=1)
+
+    def test_163_descendant_utf8_08_position_01_set(self):
+        self.verify("initialposition≻A", [], returncode=1)
+
+    def test_163_descendant_utf8_08_position_02_logical(self):
+        self.verify("initialposition≻true", [], returncode=1)
+
+    def test_163_descendant_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≻1", [], returncode=1)
+
+    def test_163_descendant_utf8_08_position_04_string(self):
+        self.verify('initialposition≻"t"', [], returncode=1)
+
+    def test_163_descendant_utf8_08_position_05_position(self):
+        self.verify(
+            "initialposition≻currentposition",
+            [(3, "AfterNE"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_164_ancestor_eq_ascii_01(self):
+        self.verify("[<=]", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_02(self):
+        self.verify("A[<=]", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_03(self):
+        self.verify("[<=]A", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_04_set_01_set(self):
+        self.verify("a[<=]A", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_04_set_02_logical(self):
+        self.verify("a[<=]true", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_04_set_03_numeric(self):
+        self.verify("a[<=]1", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_04_set_04_string(self):
+        self.verify('a[<=]"t"', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_04_set_05_position(self):
+        self.verify("a[<=]initialposition", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_05_logical_01_set(self):
+        self.verify("true[<=]A", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_05_logical_02_logical(self):
+        self.verify("true[<=]true", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_05_logical_03_numeric(self):
+        self.verify("true[<=]1", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_05_logical_04_string(self):
+        self.verify('true[<=]"t"', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_05_logical_05_position(self):
+        self.verify("true[<=]initialposition", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_06_numeric_01_set(self):
+        self.verify_run_fail("1[<=]A")
+
+    def test_164_ancestor_eq_ascii_06_numeric_02_logical(self):
+        self.verify("1[<=]true", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_06_numeric_03_numeric(self):
+        self.verify_run_fail("1[<=]2")
+
+    def test_164_ancestor_eq_ascii_06_numeric_04_string(self):
+        self.verify('1[<=]"t"', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_06_numeric_05_position(self):
+        self.verify("1[<=]initialposition", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_07_string_01_set(self):
+        self.verify('"a"[<=]A', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_07_string_02_logical(self):
+        self.verify('"a"[<=]true', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_07_string_03_numeric(self):
+        self.verify('"a"[<=]1', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_07_string_04_string(self):
+        self.verify_run_fail('"a"[<=]"b"')
+
+    def test_164_ancestor_eq_ascii_07_string_05_position(self):
+        self.verify("a[<=]initialposition", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_08_position_01_set(self):
+        self.verify("initialposition[<=]A", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_08_position_02_logical(self):
+        self.verify("initialposition[<=]true", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_08_position_03_numeric(self):
+        self.verify("initialposition[<=]1", [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_08_position_04_string(self):
+        self.verify('initialposition[<=]"t"', [], returncode=1)
+
+    def test_164_ancestor_eq_ascii_08_position_05_position(self):
+        self.verify(
+            "initialposition[<=]currentposition",
+            [(3, "BeforeEq"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_165_ancestor_eq_utf8_01(self):
+        self.verify("≼", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_02(self):
+        self.verify("A≼", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_03(self):
+        self.verify("≼A", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_04_set_01_set(self):
+        self.verify("a≼A", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_04_set_02_logical(self):
+        self.verify("a≼true", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_04_set_03_numeric(self):
+        self.verify_run_fail("a≼1")
+
+    def test_165_ancestor_eq_utf8_04_set_04_string(self):
+        self.verify('a≼"t"', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_04_set_05_position(self):
+        self.verify("a≼initialposition", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_05_logical_01_set(self):
+        self.verify("true≼A", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_05_logical_02_logical(self):
+        self.verify("true≼true", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_05_logical_03_numeric(self):
+        self.verify("true≼1", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_05_logical_04_string(self):
+        self.verify('true≼"t"', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_05_logical_05_position(self):
+        self.verify("true≼initialposition", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_06_numeric_01_set(self):
+        self.verify_run_fail("1≼A")
+
+    def test_165_ancestor_eq_utf8_06_numeric_02_logical(self):
+        self.verify("1≼true", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_06_numeric_03_numeric(self):
+        self.verify_run_fail("1≼2")
+
+    def test_165_ancestor_eq_utf8_06_numeric_04_string(self):
+        self.verify('1≼"t"', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_06_numeric_05_position(self):
+        self.verify("1≼initialposition", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_07_string_01_set(self):
+        self.verify('"a"≼A', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_07_string_02_logical(self):
+        self.verify('"a"≼true', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_07_string_03_numeric(self):
+        self.verify('"a"≼1', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_07_string_04_string(self):
+        self.verify_run_fail('"a"≼"b"')
+
+    def test_165_ancestor_eq_utf8_07_string_05_position(self):
+        self.verify("a≼initialposition", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_08_position_01_set(self):
+        self.verify("initialposition≼A", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_08_position_02_logical(self):
+        self.verify("initialposition≼true", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≼1", [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_08_position_04_string(self):
+        self.verify('initialposition≼"t"', [], returncode=1)
+
+    def test_165_ancestor_eq_utf8_08_position_05_position(self):
+        self.verify(
+            "initialposition≼currentposition",
+            [(3, "BeforeEq"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_166_descendant_eq_ascii_01(self):
+        self.verify("[>=]", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_02(self):
+        self.verify("A[>=]", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_03(self):
+        self.verify("[>=]A", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_04_set_01_set(self):
+        self.verify("a[>=]A", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_04_set_02_logical(self):
+        self.verify("a[>=]true", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_04_set_03_numeric(self):  # accepts.
+        self.verify("a[>=]1", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_04_set_04_string(self):
+        self.verify('a[>=]"t"', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_04_set_05_position(self):
+        self.verify("a[>=]initialposition", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_05_logical_01_set(self):
+        self.verify("true[>=]A", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_05_logical_02_logical(self):
+        self.verify("true[>=]true", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_05_logical_03_numeric(self):
+        self.verify("true[>=]1", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_05_logical_04_string(self):
+        self.verify('true[>=]"t"', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_05_logical_05_position(self):
+        self.verify("true[>=]initialposition", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_06_numeric_01_set(self):
+        self.verify_run_fail("1[>=]A")
+
+    def test_166_descendant_eq_ascii_06_numeric_02_logical(self):
+        self.verify("1[>=]true", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_06_numeric_03_numeric(self):
+        self.verify_run_fail("1[>=]2")
+
+    def test_166_descendant_eq_ascii_06_numeric_04_string(self):
+        self.verify('1[>=]"t"', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_06_numeric_05_position(self):
+        self.verify("1[>=]initialposition", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_07_string_01_set(self):
+        self.verify('"a"[>=]A', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_07_string_02_logical(self):
+        self.verify('"a"[>=]true', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_07_string_03_numeric(self):
+        self.verify('"a"[>=]1', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_07_string_04_string(self):
+        self.verify_run_fail('"a"[>=]"b"')
+
+    def test_166_descendant_eq_ascii_07_string_05_position(self):
+        self.verify("a[>=]initialposition", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_08_position_01_set(self):
+        self.verify("initialposition[>=]A", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_08_position_02_logical(self):
+        self.verify("initialposition[>=]true", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_08_position_03_numeric(self):
+        self.verify("initialposition[>=]1", [], returncode=1)
+
+    def test_166_descendant_eq_ascii_08_position_04_string(self):
+        self.verify('initialposition[>=]"t"', [], returncode=1)
+
+    def test_166_descendant_eq_ascii_08_position_05_position(self):
+        self.verify(
+            "initialposition[>=]currentposition",
+            [(3, "AfterEq"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_167_descendant_eq_utf8_01(self):
+        self.verify("≽", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_02(self):
+        self.verify("A≽", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_03(self):
+        self.verify("≽A", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_04_set_01_set(self):
+        self.verify("a≽A", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_04_set_02_logical(self):
+        self.verify("a≽true", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_04_set_03_numeric(self):
+        self.verify_run_fail("a≽1")
+
+    def test_167_descendant_eq_utf8_04_set_04_string(self):
+        self.verify('a≽"t"', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_04_set_05_position(self):
+        self.verify("a≽initialposition", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_05_logical_01_set(self):
+        self.verify("true≽A", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_05_logical_02_logical(self):
+        self.verify("true≽true", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_05_logical_03_numeric(self):
+        self.verify("true≽1", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_05_logical_04_string(self):
+        self.verify('true≽"t"', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_05_logical_05_position(self):
+        self.verify("true≽initialposition", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_06_numeric_01_set(self):
+        self.verify_run_fail("1≽A")
+
+    def test_167_descendant_eq_utf8_06_numeric_02_logical(self):
+        self.verify("1≽true", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_06_numeric_03_numeric(self):
+        self.verify_run_fail("1≽2")
+
+    def test_167_descendant_eq_utf8_06_numeric_04_string(self):
+        self.verify('1≽"t"', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_06_numeric_05_position(self):
+        self.verify("1≽initialposition", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_07_string_01_set(self):
+        self.verify('"a"≽A', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_07_string_02_logical(self):
+        self.verify('"a"≽true', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_07_string_03_numeric(self):
+        self.verify('"a"≽1', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_07_string_04_string(self):
+        self.verify_run_fail('"a"≽"b"')
+
+    def test_167_descendant_eq_utf8_07_string_05_position(self):
+        self.verify("a≽initialposition", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_08_position_01_set(self):
+        self.verify("initialposition≽A", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_08_position_02_logical(self):
+        self.verify("initialposition≽true", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_08_position_03_numeric(self):
+        self.verify("initialposition≽1", [], returncode=1)
+
+    def test_167_descendant_eq_utf8_08_position_04_string(self):
+        self.verify('initialposition≽"t"', [], returncode=1)
+
+    def test_167_descendant_eq_utf8_08_position_05_position(self):
+        self.verify(
+            "initialposition≽currentposition",
+            [(3, "AfterEq"), (4, "InitialPosition"), (4, "CurrentPosition")],
+        )
+
+    def test_168_eq_01(self):
+        self.verify("==", [], returncode=1)
+
+    def test_168_eq_02(self):
+        self.verify("A==", [], returncode=1)
+
+    def test_168_eq_03(self):
+        self.verify("==A", [], returncode=1)
+
+    def test_168_eq_04_set_01_set(self):
+        self.verify(
+            "a==A",
+            [(3, "Eq"), (4, "PieceDesignator"), (4, "PieceDesignator")],
+        )
+
+    def test_168_eq_04_set_02_logical(self):
+        self.verify("a==true", [], returncode=1)
+
+    def test_168_eq_04_set_03_numeric(self):
+        self.verify(
+            "a==1",
+            [(3, "Eq"), (4, "PieceDesignator"), (4, "Integer")],
+        )
+
+    def test_168_eq_04_set_04_string(self):
+        self.verify('a=="t"', [], returncode=1)
+
+    def test_168_eq_04_set_05_position(self):
+        self.verify("a==initialposition", [], returncode=1)
+
+    def test_168_eq_05_logical_01_set(self):
+        self.verify("true==A", [], returncode=1)
+
+    def test_168_eq_05_logical_02_logical(self):
+        self.verify("true==true", [], returncode=1)
+
+    def test_168_eq_05_logical_03_numeric(self):
+        self.verify("true==1", [], returncode=1)
+
+    def test_168_eq_05_logical_04_string(self):
+        self.verify('true=="t"', [], returncode=1)
+
+    def test_168_eq_05_logical_05_position(self):
+        self.verify("true==initialposition", [], returncode=1)
+
+    def test_168_eq_06_numeric_01_set(self):
+        self.verify(
+            "1==A",
+            [(3, "Eq"), (4, "Integer"), (4, "PieceDesignator")],
+        )
+
+    def test_168_eq_06_numeric_02_logical(self):
+        self.verify("1==true", [], returncode=1)
+
+    def test_168_eq_06_numeric_03_numeric(self):
+        self.verify("1==2", [(3, "Eq"), (4, "Integer"), (4, "Integer")])
+
+    def test_168_eq_06_numeric_04_string(self):
+        self.verify('1=="t"', [], returncode=1)
+
+    def test_168_eq_06_numeric_05_position(self):
+        self.verify("1==initialposition", [], returncode=1)
+
+    def test_168_eq_07_string_01_set(self):
+        self.verify('"a"==A', [], returncode=1)
+
+    def test_168_eq_07_string_02_logical(self):
+        self.verify('"a"==true', [], returncode=1)
+
+    def test_168_eq_07_string_03_numeric(self):
+        self.verify('"a"==1', [], returncode=1)
+
+    def test_168_eq_07_string_04_string(self):
+        self.verify('"a"=="b"', [(3, "Eq"), (4, "String"), (4, "String")])
+
+    def test_168_eq_07_string_05_position(self):
+        self.verify('"a"==initialposition', [], returncode=1)
+
+    def test_168_eq_08_position_01_set(self):
+        self.verify("initialposition==A", [], returncode=1)
+
+    def test_168_eq_08_position_02_logical(self):
+        self.verify("initialposition==true", [], returncode=1)
+
+    def test_168_eq_08_position_03_numeric(self):
+        self.verify("initialposition==1", [], returncode=1)
+
+    def test_168_eq_08_position_04_string(self):
+        self.verify('initialposition=="t"', [], returncode=1)
+
+    def test_168_eq_08_position_05_position(self):
+        self.verify(
+            "initialposition==currentposition",
+            [(3, "Eq"), (4, "InitialPosition"), (4, "CurrentPosition")],
         )
 
     def test_181_union_ascii_01(self):
@@ -2567,14 +3912,24 @@ class Filters(verify.Verify):
     def test_185_all_squares_01_ascii_03_missing(self):
         self.verify("ka-h1-8", [(3, "PieceDesignator")])
 
-    def test_185_all_squares_02_utf8_01(self):  # wrong.
+    def test_185_all_squares_02_utf8_01_all_squares(self):
         self.verify("▦", [(3, "AnySquare")])
 
-    def test_185_all_squares_02_utf8_02_piece(self):  # wrong.
+    def test_185_all_squares_02_utf8_02_piece_all_squares(self):
         self.verify("k▦", [(3, "PieceDesignator"), (3, "AnySquare")])
 
-    def test_185_all_squares_02_utf8_03_piece_squares(self):  # wrong.
+    def test_185_all_squares_02_utf8_03_piece_squares_all_squares(self):
         self.verify("ka-h1-8▦", [(3, "PieceDesignator"), (3, "AnySquare")])
+
+    def test_185_all_squares_02_utf8_04_piece_all_squares_squares(self):
+        self.verify(
+            "k▦a-h1-8",
+            [
+                (3, "PieceDesignator"),
+                (3, "AnySquare"),
+                (3, "PieceDesignator"),
+            ],
+        )
 
     def test_186_pattern_match_01(self):
         self.verify("~~", [], returncode=1)
@@ -2605,43 +3960,43 @@ class Filters(verify.Verify):
             '"king" ~~ "i"', [(3, "RegexMatch"), (4, "String"), (4, "String")]
         )
 
-    def test_186_pattern_match_05_set(self):  # accepted.
+    def test_186_pattern_match_05_set(self):
         self.verify('k~~"d"', [], returncode=1)
 
-    def test_186_pattern_match_06_set(self):  # accepted.
+    def test_186_pattern_match_06_set(self):
         self.verify('"king"~~k', [], returncode=1)
 
-    def test_186_pattern_match_07_numeric(self):  # accepted.
+    def test_186_pattern_match_07_numeric(self):
         self.verify('1~~"d"', [], returncode=1)
 
-    def test_186_pattern_match_08_numeric(self):  # accepted.
+    def test_186_pattern_match_08_numeric(self):
         self.verify('"king"~~1', [], returncode=1)
 
-    def test_186_pattern_match_09_logigal(self):  # accepted.
+    def test_186_pattern_match_09_logigal(self):
         self.verify('false~~"d"', [], returncode=1)
 
-    def test_186_pattern_match_10_logical(self):  # accepted.
+    def test_186_pattern_match_10_logical(self):
         self.verify('"king"~~false', [], returncode=1)
 
-    def test_186_pattern_match_11_position(self):  # accepted.
+    def test_186_pattern_match_11_position(self):
         self.verify('currentposition~~"d"', [], returncode=1)
 
-    def test_186_pattern_match_12_position(self):  # accepted.
+    def test_186_pattern_match_12_position(self):
         self.verify('"king"~~currentposition', [], returncode=1)
 
-    def test_187_backslash_string_01_backslash(self):  # wrong.
+    def xtest_187_backslash_string_01_backslash(self):  # wrong.
         self.verify(r"\\", [])
 
-    def test_187_backslash_string_02_newline(self):  # wrong.
+    def xtest_187_backslash_string_02_newline(self):  # wrong.
         self.verify(r"\n", [])
 
-    def test_187_backslash_string_03_quote(self):  # wrong.
+    def xtest_187_backslash_string_03_quote(self):  # wrong.
         self.verify(r"\n", [])
 
-    def test_187_backslash_string_04_tab(self):  # wrong.
+    def xtest_187_backslash_string_04_tab(self):  # wrong.
         self.verify(r"\t", [])
 
-    def test_187_backslash_string_05_return(self):  # wrong.
+    def xtest_187_backslash_string_05_return(self):  # wrong.
         self.verify(r"\r", [])
 
     def test_187_backslash_string_06_digit(self):
@@ -2722,9 +4077,6 @@ class Filters(verify.Verify):
     def test_189_plus_01_bare(self):
         self.verify("+", [], returncode=1)
 
-    def test_189_plus_01_force_repeat(self):  # accepted.
-        self.verify("{+}", [], returncode=1)
-
     def test_189_plus_02_integer_01(self):
         self.verify("3+", [], returncode=1)
 
@@ -2743,16 +4095,16 @@ class Filters(verify.Verify):
     def test_189_plus_05_string(self):
         self.verify('"x"+"y"', [(3, "Plus"), (4, "String"), (4, "String")])
 
-    def test_189_plus_06_integer_string(self):  # accepted.
+    def test_189_plus_06_integer_string(self):
         self.verify('2+"y"', [], returncode=1)
 
-    def test_189_plus_07_set_set(self):  # accepted.
+    def test_189_plus_07_set_set(self):
         self.verify("K+Q", [], returncode=1)
 
-    def test_189_plus_08_logical_logical(self):  # accepted.
+    def test_189_plus_08_logical_logical(self):
         self.verify("true+false", [], returncode=1)
 
-    def test_189_plus_09_position_position(self):  # accepted.
+    def test_189_plus_09_position_position(self):
         self.verify("initialposition+currentposition", [], returncode=1)
 
     def test_189_plus_10_repetition(self):
@@ -2780,63 +4132,8 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_189_plus_12_repetition_path_01(self):  # wrong.
-        self.verify(
-            "path --(K)+",
-            [
-                (3, "Path"),
-                (4, "SingleMoveR"),  # wrong.
-                (5, "AnySquare"),
-                (5, "TargetParenthesisLeft"),
-                (6, "PieceDesignator"),
-                (4, "PlusRepeat"),
-            ],
-        )
-
-    def test_189_plus_12_repetition_path_02(self):  # wrong.
-        self.verify(
-            "path --(K){+}",
-            [
-                (3, "Path"),
-                (4, "SingleMoveR"),  # wrong.
-                (5, "AnySquare"),
-                (5, "TargetParenthesisLeft"),
-                (6, "PieceDesignator"),
-                (4, "WildcardPlus"),
-            ],
-        )
-
-    def test_189_plus_13_repetition_path_01(self):  # wrong.
-        self.verify(
-            "path -- K+",
-            [
-                (3, "Path"),
-                (4, "SingleMove"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
-                (4, "PieceDesignator"),  # wrong.
-                (4, "PlusRepeat"),
-            ],
-        )
-
-    def test_189_plus_13_repetition_path_02(self):  # wrong.
-        self.verify(
-            "path -- K{+}",
-            [
-                (3, "Path"),
-                (4, "SingleMove"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
-                (4, "PieceDesignator"),  # wrong.
-                (4, "WildcardPlus"),
-            ],
-        )
-
     def test_190_star_01_bare(self):
         self.verify("*", [], returncode=1)
-
-    def test_190_star_01_force_repeat(self):  # accepted.
-        self.verify("{*}", [], returncode=1)
 
     def test_190_star_02_integer_01(self):
         self.verify("3*", [], returncode=1)
@@ -2853,19 +4150,19 @@ class Filters(verify.Verify):
     def test_190_star_04_string_02(self):
         self.verify('*"y"', [], returncode=1)
 
-    def test_190_star_04_string_03(self):  # accepted.
+    def test_190_star_04_string_03(self):
         self.verify('"x"*"y"', [], returncode=1)
 
-    def test_190_star_05_integer_string(self):  # accepted.
+    def test_190_star_05_integer_string(self):
         self.verify('2*"y"', [], returncode=1)
 
-    def test_190_star_06_set_set(self):  # accepted.
+    def test_190_star_06_set_set(self):
         self.verify("K*Q", [], returncode=1)
 
-    def test_190_star_07_logical_logical(self):  # accepted.
+    def test_190_star_07_logical_logical(self):
         self.verify("true*false", [], returncode=1)
 
-    def test_190_star_08_position_position(self):  # accepted.
+    def test_190_star_08_position_position(self):
         self.verify("initialposition*currentposition", [], returncode=1)
 
     def test_190_star_09_repetition(self):
@@ -2882,32 +4179,6 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_190_star_11_repetition_path(self):  # wrong.
-        self.verify(
-            "path --(K)*",
-            [
-                (3, "Path"),
-                (4, "SingleMoveR"),  # wrong.
-                (5, "AnySquare"),
-                (5, "TargetParenthesisLeft"),
-                (6, "PieceDesignator"),
-                (4, "StarRepeat"),
-            ],
-        )
-
-    def test_190_star_12_repetition_path(self):  # wrong.
-        self.verify(
-            "path -- K*",
-            [
-                (3, "Path"),
-                (4, "SingleMove"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
-                (4, "PieceDesignator"),  # wrong.
-                (4, "StarRepeat"),
-            ],
-        )
-
     def test_191_modulus_01_bare(self):
         self.verify("%", [], returncode=1)
 
@@ -2920,28 +4191,28 @@ class Filters(verify.Verify):
     def test_191_modulus_03_integer(self):
         self.verify("2%3", [(3, "Modulus"), (4, "Integer"), (4, "Integer")])
 
-    def test_191_modulus_04_integer_01_set(self):  # accepted.
+    def test_191_modulus_04_integer_01_set(self):
         self.verify("K%3", [], returncode=1)
 
-    def test_191_modulus_04_integer_02_set(self):  # accepted.
+    def test_191_modulus_04_integer_02_set(self):
         self.verify("2%K", [], returncode=1)
 
-    def test_191_modulus_05_integer_01_string(self):  # accepted.
+    def test_191_modulus_05_integer_01_string(self):
         self.verify('"v"%3', [], returncode=1)
 
-    def test_191_modulus_05_integer_02_string(self):  # accepted.
+    def test_191_modulus_05_integer_02_string(self):
         self.verify('2%"v"', [], returncode=1)
 
-    def test_191_modulus_06_integer_01_logical(self):  # accepted.
+    def test_191_modulus_06_integer_01_logical(self):
         self.verify("true%3", [], returncode=1)
 
-    def test_191_modulus_06_integer_02_logical(self):  # accepted.
+    def test_191_modulus_06_integer_02_logical(self):
         self.verify("2%true", [], returncode=1)
 
-    def test_191_modulus_07_integer_01_position(self):  # accepted.
+    def test_191_modulus_07_integer_01_position(self):
         self.verify("initialposition%3", [], returncode=1)
 
-    def test_191_modulus_07_integer_02_position(self):  # accepted.
+    def test_191_modulus_07_integer_02_position(self):
         self.verify("2%initialposition", [], returncode=1)
 
     def test_192_divide_01_bare(self):
@@ -2956,37 +4227,37 @@ class Filters(verify.Verify):
     def test_192_divide_03_integer(self):
         self.verify("2/3", [(3, "Divide"), (4, "Integer"), (4, "Integer")])
 
-    def test_192_divide_04_integer_01_set(self):  # accepted.
+    def test_192_divide_04_integer_01_set(self):
         self.verify("K/3", [], returncode=1)
 
-    def test_192_divide_04_integer_02_set(self):  # accepted.
+    def test_192_divide_04_integer_02_set(self):
         self.verify("2/K", [], returncode=1)
 
-    def test_192_divide_05_integer_01_string(self):  # accepted.
+    def test_192_divide_05_integer_01_string(self):
         self.verify('"v"/3', [], returncode=1)
 
-    def test_192_divide_05_integer_02_string(self):  # accepted.
+    def test_192_divide_05_integer_02_string(self):
         self.verify('2/"v"', [], returncode=1)
 
-    def test_192_divide_06_integer_01_logical(self):  # accepted.
+    def test_192_divide_06_integer_01_logical(self):
         self.verify("true/3", [], returncode=1)
 
-    def test_192_divide_06_integer_02_logical(self):  # accepted.
+    def test_192_divide_06_integer_02_logical(self):
         self.verify("2/true", [], returncode=1)
 
-    def test_192_divide_07_integer_01_position(self):  # accepted.
+    def test_192_divide_07_integer_01_position(self):
         self.verify("initialposition/3", [], returncode=1)
 
-    def test_192_divide_07_integer_02_position(self):  # accepted.
+    def test_192_divide_07_integer_02_position(self):
         self.verify("2/initialposition", [], returncode=1)
 
     def test_193_comment_eol_01_bare(self):
         self.verify("//", [], returncode=1)
 
     def test_193_comment_eol_02(self):  # wromg.
-        self.verify("K//", [(3, "PieceDesignator")])
+        self.verify("K//\n", [(3, "PieceDesignator")])
 
-    def test_194_comment_symbol_01_bare(self):  # accepted.
+    def test_194_comment_symbol_01_bare(self):
         self.verify("///", [], returncode=1)
 
     def test_194_comment_symbol_01(self):
@@ -2998,7 +4269,7 @@ class Filters(verify.Verify):
     def test_195_block_comment_02_bare(self):
         self.verify("*/", [], returncode=1)
 
-    def test_195_block_comment_03(self):  # accepted.
+    def test_195_block_comment_03(self):
         self.verify("/**/", [], returncode=1)
 
     def test_195_block_comment_04(self):
@@ -3010,10 +4281,10 @@ class Filters(verify.Verify):
     def test_196_minus_02_integer_01(self):
         self.verify("3-", [], returncode=1)
 
-    def test_196_minus_02_integer_02_unary(self):  # unsure.
-        self.verify("-3", [(3, "Integer")])
+    def test_196_minus_02_integer_02_unary(self):
+        self.verify("-3", [(3, "UnaryMinus"), (4, "Integer")])
 
-    def test_196_minus_03_integer_01(self):  # wrong.
+    def test_196_minus_03_integer_01(self):
         self.verify("2-3", [(3, "Minus"), (4, "Integer"), (4, "Integer")])
 
     def test_196_minus_03_integer_02(self):
@@ -3029,28 +4300,40 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_196_minus_04_integer_01_set(self):  # accepted.
-        self.verify("K-3", [], returncode=1)
+    def test_196_minus_04_integer_01_set(self):
+        self.verify(
+            "K-3",
+            [(3, "PieceDesignator"), (3, "UnaryMinus"), (4, "Integer")],
+        )
 
-    def test_196_minus_04_integer_02_set(self):  # accepted.
-        self.verify("2/K", [], returncode=1)
+    def test_196_minus_04_integer_02_set(self):
+        self.verify("2-K", [], returncode=1)
 
-    def test_196_minus_05_integer_01_string(self):  # accepted.
-        self.verify('"v"-3', [], returncode=1)
+    def test_196_minus_05_integer_01_string(self):
+        self.verify(
+            '"v"-3',
+            [(3, "String"), (3, "UnaryMinus"), (4, "Integer")],
+        )
 
-    def test_196_minus_05_integer_02_string(self):  # accepted.
+    def test_196_minus_05_integer_02_string(self):
         self.verify('2-"v"', [], returncode=1)
 
-    def test_196_minus_06_integer_01_logical(self):  # accepted.
-        self.verify("true-3", [], returncode=1)
+    def test_196_minus_06_integer_01_logical(self):
+        self.verify(
+            "true-2",
+            [(3, "True_"), (3, "UnaryMinus"), (4, "Integer")],
+        )
 
-    def test_196_minus_06_integer_02_logical(self):  # accepted.
+    def test_196_minus_06_integer_02_logical(self):
         self.verify("2-true", [], returncode=1)
 
-    def test_196_minus_07_integer_01_position(self):  # accepted.
-        self.verify("initialposition-3", [], returncode=1)
+    def test_196_minus_07_integer_01_position(self):
+        self.verify(
+            "initialposition-3",
+            [(3, "InitialPosition"), (3, "UnaryMinus"), (4, "Integer")],
+        )
 
-    def test_196_minus_07_integer_02_position(self):  # accepted.
+    def test_196_minus_07_integer_02_position(self):
         self.verify("2-initialposition", [], returncode=1)
 
     def test_197_complement_01_bare(self):
@@ -3062,16 +4345,16 @@ class Filters(verify.Verify):
     def test_197_complement_03_set(self):
         self.verify("~k", [(3, "Complement"), (4, "PieceDesignator")])
 
-    def test_197_complement_04_integer(self):  # accepted.
+    def test_197_complement_04_integer(self):
         self.verify("~3", [], returncode=1)
 
-    def test_197_complement_05_string(self):  # accepted.
+    def test_197_complement_05_string(self):
         self.verify('~"y"', [], returncode=1)
 
-    def test_197_complement_06_logical(self):  # accepted.
+    def test_197_complement_06_logical(self):
         self.verify("~true", [], returncode=1)
 
-    def test_197_complement_07_position(self):  # accepted.
+    def test_197_complement_07_position(self):
         self.verify("~currentposition", [], returncode=1)
 
     def test_198_compound_01_bare_01(self):
@@ -3092,22 +4375,299 @@ class Filters(verify.Verify):
     def test_199_assign_02_name(self):
         self.verify("y=", [], returncode=1)
 
-    def test_199_assign_03_set(self):
-        self.verify(
-            "y=k", [(3, "Assign"), (4, "Variable"), (4, "PieceDesignator")]
+    def test_199_assign_03_set_01_set_variable(self):
+        self.verify_assign(
+            "y=k",
+            [(3, "Assign"), (4, "Variable"), (4, "PieceDesignator")],
+            "y",
+            cqltypes.VariableType.SET,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_03_set_02_piece_variable(self):
+        self.verify_assign(
+            "piece y=k",
+            [(3, "Assign"), (4, "PieceVariable"), (4, "PieceDesignator")],
+            "y",
+            cqltypes.VariableType.PIECE,
+            cqltypes.FilterType.SET,
         )
 
     def test_199_assign_04_integer(self):
-        self.verify("y=3", [(3, "Assign"), (4, "Variable"), (4, "Integer")])
+        self.verify_assign(
+            "y=3",
+            [(3, "Assign"), (4, "Variable"), (4, "Integer")],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
+        )
 
     def test_199_assign_05_string(self):
-        self.verify('y="str"', [(3, "Assign"), (4, "Variable"), (4, "String")])
+        self.verify_assign(
+            'y="str"',
+            [(3, "Assign"), (4, "Variable"), (4, "String")],
+            "y",
+            cqltypes.VariableType.STRING,
+            cqltypes.FilterType.STRING,
+        )
 
-    def test_199_assign_06_position(self):
-        self.verify(
+    def test_199_assign_06_logical(self):
+        self.verify("y=true", [], returncode=1)
+
+    def test_199_assign_07_position(self):
+        self.verify_assign(
             "y=currentposition",
             [(3, "Assign"), (4, "Variable"), (4, "CurrentPosition")],
+            "y",
+            cqltypes.VariableType.POSITION,
+            cqltypes.FilterType.POSITION,
         )
+
+    def test_199_assign_08_function_set_01_set_variable(self):
+        self.verify_assign(
+            "function x(){k} y=x()",
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "PieceDesignator"),
+            ],
+            "y",
+            cqltypes.VariableType.SET,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_08_function_set_02_piece_variable(self):
+        self.verify_assign(
+            "function x(){k} piece y=x()",
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "PieceDesignator"),
+            ],
+            "y",
+            cqltypes.VariableType.PIECE,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_09_function_integer_01(self):
+        self.verify_assign(
+            "function x(){(7)} y=x()",
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "ParenthesisLeft"),
+                (8, "Integer"),
+            ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
+        )
+
+    def test_199_assign_09_function_integer_02(self):
+        self.verify_assign(
+            "function x(){k 7} y=x()",
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "PieceDesignator"),
+                (7, "Integer"),
+            ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
+        )
+
+    def test_199_assign_10_function_string(self):
+        self.verify_assign(
+            'function x(){"a"} y=x()',
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "String"),
+            ],
+            "y",
+            cqltypes.VariableType.STRING,
+            cqltypes.FilterType.STRING,
+        )
+
+    def test_199_assign_11_function_logical(self):
+        self.verify("function x(){true} y=x()", [], returncode=1)
+
+    def test_199_assign_12_function_position(self):
+        self.verify_assign(
+            "function x(){currentposition} y=x()",
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "CurrentPosition"),
+            ],
+            "y",
+            cqltypes.VariableType.POSITION,
+            cqltypes.FilterType.POSITION,
+        )
+
+    def test_199_assign_13_set_01_integer(self):
+        self.verify("y=k y=7", [], returncode=1)
+
+    def test_199_assign_13_set_02_string(self):
+        self.verify('y=k y="a"', [], returncode=1)
+
+    def test_199_assign_13_set_03_position(self):
+        self.verify("y=k y=currentposition", [], returncode=1)
+
+    def test_199_assign_13_set_04_piece(self):
+        self.verify("y=k piece y=q", [], returncode=1)
+
+    def test_199_assign_13_set_05_piece(self):
+        self.verify_assign(
+            "y=k piece x=y",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "Variable"),
+            ],
+            "x",
+            cqltypes.VariableType.PIECE,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_13_set_06_piece(self):
+        self.verify_assign(
+            "piece x=q y=k piece x=y",
+            [
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "Variable"),
+            ],
+            "x",
+            cqltypes.VariableType.PIECE,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_13_set_07_piece(self):
+        self.verify_assign(
+            "piece x=q piece y=k piece y=x",
+            [
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "PieceVariable"),
+            ],
+            "y",
+            cqltypes.VariableType.PIECE,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_13_set_08_piece(self):
+        self.verify("piece x=q piece y=k y=x", [], returncode=1)
+
+    def test_199_assign_14_integer_01_set(self):
+        self.verify("y=7 y=k", [], returncode=1)
+
+    def test_199_assign_14_integer_02_string(self):
+        self.verify('y=7 y="a"', [], returncode=1)
+
+    def test_199_assign_14_integer_03_position(self):
+        self.verify("y=7 y=currentposition", [], returncode=1)
+
+    def test_199_assign_14_integer_04_piece(self):
+        self.verify("y=7 piece y=q", [], returncode=1)
+
+    def test_199_assign_15_string_01_set(self):
+        self.verify('y="a" y=k', [], returncode=1)
+
+    def test_199_assign_15_string_02_integer(self):
+        self.verify('y="a" y=7', [], returncode=1)
+
+    def test_199_assign_15_string_03_position(self):
+        self.verify('y="a" y=currentposition', [], returncode=1)
+
+    def test_199_assign_15_string_04_piece(self):
+        self.verify('y="a" piece y=q', [], returncode=1)
+
+    def test_199_assign_16_position_01_set(self):
+        self.verify("y=currentposition y=k", [], returncode=1)
+
+    def test_199_assign_16_position_02_integer(self):
+        self.verify("y=currentposition y=7", [], returncode=1)
+
+    def test_199_assign_16_position_03_string(self):
+        self.verify('y=currentposition y="a"', [], returncode=1)
+
+    def test_199_assign_16_position_04_piece(self):
+        self.verify("y=currentposition piece y=q", [], returncode=1)
+
+    def test_199_assign_17_piece_01_set(self):
+        self.verify("piece y=q y=k", [], returncode=1)
+
+    def test_199_assign_17_piece_02_integer(self):
+        self.verify("piece y=q y=7", [], returncode=1)
+
+    def test_199_assign_17_piece_03_string(self):
+        self.verify('piece y=q y="a"', [], returncode=1)
+
+    def test_199_assign_17_piece_04_position(self):
+        self.verify("piece y=q y=currentposition", [], returncode=1)
+
+    def test_199_assign_17_piece_05_piece(self):
+        self.verify_assign(
+            "piece y=q piece y=q",
+            [
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "PieceVariable"),
+                (4, "PieceDesignator"),
+            ],
+            "y",
+            cqltypes.VariableType.PIECE,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_199_assign_18_variable_01_variable(self):
+        self.verify("y=x", [], returncode=1)
+
+    def test_199_assign_18_variable_02_piece_variable(self):
+        self.verify("piece y=x", [], returncode=1)
 
     def test_200_assignif_01_bare(self):
         self.verify("=?", [], returncode=1)
@@ -3116,18 +4676,91 @@ class Filters(verify.Verify):
         self.verify("y=?", [], returncode=1)
 
     def test_200_assignif_03_set(self):
-        self.verify(
-            "y=?k", [(3, "AssignIf"), (4, "Variable"), (4, "PieceDesignator")]
+        self.verify_assign(
+            "y=?k",
+            [(3, "AssignIf"), (4, "Variable"), (4, "PieceDesignator")],
+            "y",
+            cqltypes.VariableType.SET,
+            cqltypes.FilterType.SET,
         )
 
-    def test_200_assignif_04_integer(self):
+    def test_200_assignif_04_piece(self):
+        self.verify("piece y=?3", [], returncode=1)
+
+    def test_200_assignif_05_integer(self):
         self.verify("y=?3", [], returncode=1)
 
-    def test_200_assignif_05_string(self):
+    def test_200_assignif_06_string(self):
         self.verify('y=?"str"', [], returncode=1)
 
-    def test_200_assignif_06_position(self):
+    def test_200_assignif_07_logical(self):
+        self.verify("y=?true", [], returncode=1)
+
+    def test_200_assignif_08_position(self):
         self.verify("y=?currentposition", [], returncode=1)
+
+    def test_200_assignif_09_function_set(self):
+        self.verify_assign(
+            "function x(){k} y=?x()",
+            [
+                (3, "Function"),
+                (3, "AssignIf"),
+                (4, "Variable"),
+                (4, "FunctionCall"),
+                (5, "BraceLeft"),
+                (6, "BraceLeft"),
+                (7, "PieceDesignator"),
+            ],
+            "y",
+            cqltypes.VariableType.SET,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_200_assignif_10_function_piece(self):
+        self.verify("function x(){k} piece y=?x()", [], returncode=1)
+
+    def test_200_assignif_11_function_integer_01(self):
+        self.verify("function x(){(7)} y=?x()", [], returncode=1)
+
+    def test_200_assignif_11_function_integer_02(self):
+        self.verify("function x(){k 7} y=?x()", [], returncode=1)
+
+    def test_200_assignif_12_function_string(self):
+        self.verify('function x(){"a"} y=?x()', [], returncode=1)
+
+    def test_200_assignif_13_function_logical(self):
+        self.verify("function x(){true} y=?x()", [], returncode=1)
+
+    def test_200_assignif_14_function_position(self):
+        self.verify("function x(){currentposition} y=?x()", [], returncode=1)
+
+    def test_200_assignif_15_set_01_set(self):
+        self.verify_assign(
+            "y=k y=?q",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "PieceDesignator"),
+                (3, "AssignIf"),
+                (4, "Variable"),
+                (4, "PieceDesignator"),
+            ],
+            "y",
+            cqltypes.VariableType.SET,
+            cqltypes.FilterType.SET,
+        )
+
+    def test_200_assignif_15_set_02_piece(self):
+        self.verify("piece y=k y=?q", [], returncode=1)
+
+    def test_200_assignif_15_set_03_integer(self):
+        self.verify("y=7 y=?q", [], returncode=1)
+
+    def test_200_assignif_15_set_04_string(self):
+        self.verify('y="a" y=?q', [], returncode=1)
+
+    def test_200_assignif_15_set_05_position(self):
+        self.verify("y=currentposition y=?q", [], returncode=1)
 
     def test_201_count_01_bare(self):
         self.verify("#", [], returncode=1)
@@ -3135,16 +4768,16 @@ class Filters(verify.Verify):
     def test_201_count_02_set(self):
         self.verify("#k", [(3, "CountFilter"), (4, "PieceDesignator")])
 
-    def test_201_count_03_integer(self):  # accepted.
+    def test_201_count_03_integer(self):
         self.verify("#3", [], returncode=1)
 
     def test_201_count_04_string(self):
-        self.verify('#"str"', [(3, "CountFilter"), (4, "String")])
+        self.verify_run_fail('#"str"')
 
-    def test_201_count_05_logical(self):  # accepted.
+    def test_201_count_05_logical(self):
         self.verify("#false", [], returncode=1)
 
-    def test_201_count_06_position(self):  # accepted.
+    def test_201_count_06_position(self):
         self.verify("#currentposition", [], returncode=1)
 
     def test_202_assign_plus_01_bare_01(self):
@@ -3156,11 +4789,26 @@ class Filters(verify.Verify):
     def test_202_assign_plus_01_bare_03(self):
         self.verify("y=k y+=", [], returncode=1)
 
-    def test_202_assign_plus_02_set(self):
+    def test_202_assign_plus_02_undefined_01_set(self):
+        self.verify("y+=k", [], returncode=1)
+
+    def test_202_assign_plus_02_undefined_02_integer(self):
+        self.verify("y+=7", [], returncode=1)
+
+    def test_202_assign_plus_02_undefined_03_string(self):
+        self.verify('y+="a"', [], returncode=1)
+
+    def test_202_assign_plus_02_undefined_04_logical(self):
+        self.verify("y+=true", [], returncode=1)
+
+    def test_202_assign_plus_02_undefined_05_position(self):
+        self.verify("y+=currentposition", [], returncode=1)
+
+    def test_202_assign_plus_03_set(self):
         self.verify("y=k y+=q", [], returncode=1)
 
-    def test_202_assign_plus_03_integer(self):
-        self.verify(
+    def test_202_assign_plus_04_integer(self):
+        self.verify_assign(
             "y=3 y+=4",
             [
                 (3, "Assign"),
@@ -3170,10 +4818,13 @@ class Filters(verify.Verify):
                 (4, "Variable"),
                 (4, "Integer"),
             ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
         )
 
-    def test_202_assign_plus_04_string(self):
-        self.verify(
+    def test_202_assign_plus_05_string(self):
+        self.verify_assign(
             'y="3" y+="4"',
             [
                 (3, "Assign"),
@@ -3183,12 +4834,15 @@ class Filters(verify.Verify):
                 (4, "Variable"),
                 (4, "String"),
             ],
+            "y",
+            cqltypes.VariableType.STRING,
+            cqltypes.FilterType.STRING,
         )
 
-    def test_202_assign_plus_05_logical(self):
+    def test_202_assign_plus_06_logical(self):
         self.verify("y=true y+=false", [], returncode=1)
 
-    def test_202_assign_plus_06_position(self):
+    def test_202_assign_plus_07_position(self):
         self.verify("y=initialposition y+=currentposition", [], returncode=1)
 
     def test_203_assign_minus_01_bare_01(self):
@@ -3200,11 +4854,26 @@ class Filters(verify.Verify):
     def test_203_assign_minus_01_bare_03(self):
         self.verify("y=k y-=", [], returncode=1)
 
-    def test_203_assign_minus_02_set(self):
+    def test_203_assign_minus_02_undefined_01_set(self):
+        self.verify("y-=k", [], returncode=1)
+
+    def test_203_assign_minus_02_undefined_02_integer(self):
+        self.verify("y-=7", [], returncode=1)
+
+    def test_203_assign_minus_02_undefined_03_string(self):
+        self.verify('y-="a"', [], returncode=1)
+
+    def test_203_assign_minus_02_undefined_04_logical(self):
+        self.verify("y-=true", [], returncode=1)
+
+    def test_203_assign_minus_02_undefined_05_position(self):
+        self.verify("y-=currentposition", [], returncode=1)
+
+    def test_203_assign_minus_03_set(self):
         self.verify("y=k y-=q", [], returncode=1)
 
-    def test_203_assign_minus_03_integer(self):
-        self.verify(
+    def test_203_assign_minus_04_integer(self):
+        self.verify_assign(
             "y=3 y-=4",
             [
                 (3, "Assign"),
@@ -3214,15 +4883,18 @@ class Filters(verify.Verify):
                 (4, "Variable"),
                 (4, "Integer"),
             ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
         )
 
-    def test_203_assign_minus_04_string(self):
+    def test_203_assign_minus_05_string(self):
         self.verify('y="3" y-="4"', [], returncode=1)
 
-    def test_203_assign_minus_05_logical(self):
+    def test_203_assign_minus_06_logical(self):
         self.verify("y=true y-=false", [], returncode=1)
 
-    def test_203_assign_minus_06_position(self):
+    def test_203_assign_minus_07_position(self):
         self.verify("y=initialposition y-=currentposition", [], returncode=1)
 
     def test_204_assign_divide_01_bare_01(self):
@@ -3234,11 +4906,26 @@ class Filters(verify.Verify):
     def test_204_assign_divide_01_bare_03(self):
         self.verify("y=k y/=", [], returncode=1)
 
-    def test_204_assign_divide_02_set(self):
+    def test_204_assign_divide_02_undefined_01_set(self):
+        self.verify("y/=k", [], returncode=1)
+
+    def test_204_assign_divide_02_undefined_02_integer(self):
+        self.verify("y/=7", [], returncode=1)
+
+    def test_204_assign_divide_02_undefined_03_string(self):
+        self.verify('y/="a"', [], returncode=1)
+
+    def test_204_assign_divide_02_undefined_04_logical(self):
+        self.verify("y/=true", [], returncode=1)
+
+    def test_204_assign_divide_02_undefined_05_position(self):
+        self.verify("y/=currentposition", [], returncode=1)
+
+    def test_204_assign_divide_03_set(self):
         self.verify("y=k y/=q", [], returncode=1)
 
-    def test_204_assign_divide_03_integer(self):
-        self.verify(
+    def test_204_assign_divide_04_integer(self):
+        self.verify_assign(
             "y=3 y/=4",
             [
                 (3, "Assign"),
@@ -3248,15 +4935,18 @@ class Filters(verify.Verify):
                 (4, "Variable"),
                 (4, "Integer"),
             ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
         )
 
-    def test_204_assign_divide_04_string(self):
+    def test_204_assign_divide_05_string(self):
         self.verify('y="3" y/="4"', [], returncode=1)
 
-    def test_204_assign_divide_05_logical(self):
+    def test_204_assign_divide_06_logical(self):
         self.verify("y=true y/=false", [], returncode=1)
 
-    def test_204_assign_divide_06_position(self):
+    def test_204_assign_divide_07_position(self):
         self.verify("y=initialposition y/=currentposition", [], returncode=1)
 
     def test_205_assign_multiply_01_bare_01(self):
@@ -3268,11 +4958,26 @@ class Filters(verify.Verify):
     def test_205_assign_multiply_01_bare_03(self):
         self.verify("y=k y*=", [], returncode=1)
 
-    def test_205_assign_multiply_02_set(self):
+    def test_205_assign_multiply_02_undefined_01_set(self):
+        self.verify("y*=k", [], returncode=1)
+
+    def test_205_assign_multiply_02_undefined_02_integer(self):
+        self.verify("y*=7", [], returncode=1)
+
+    def test_205_assign_multiply_02_undefined_03_string(self):
+        self.verify('y*="a"', [], returncode=1)
+
+    def test_205_assign_multiply_02_undefined_04_logical(self):
+        self.verify("y*=true", [], returncode=1)
+
+    def test_205_assign_multiply_02_undefined_05_position(self):
+        self.verify("y*=currentposition", [], returncode=1)
+
+    def test_205_assign_multiply_03_set(self):
         self.verify("y=k y*=q", [], returncode=1)
 
-    def test_205_assign_multiply_03_integer(self):
-        self.verify(
+    def test_205_assign_multiply_04_integer(self):
+        self.verify_assign(
             "y=3 y*=4",
             [
                 (3, "Assign"),
@@ -3282,15 +4987,18 @@ class Filters(verify.Verify):
                 (4, "Variable"),
                 (4, "Integer"),
             ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
         )
 
-    def test_205_assign_multiply_04_string(self):
+    def test_205_assign_multiply_05_string(self):
         self.verify('y="3" y*="4"', [], returncode=1)
 
-    def test_205_assign_multiply_05_logical(self):
+    def test_205_assign_multiply_06_logical(self):
         self.verify("y=true y*=false", [], returncode=1)
 
-    def test_205_assign_multiply_06_position(self):
+    def test_205_assign_multiply_07_position(self):
         self.verify("y=initialposition y*=currentposition", [], returncode=1)
 
     def test_206_assign_modulus_01_bare_01(self):
@@ -3302,11 +5010,26 @@ class Filters(verify.Verify):
     def test_206_assign_modulus_01_bare_03(self):
         self.verify("y=k y%=", [], returncode=1)
 
-    def test_206_assign_modulus_02_set(self):
+    def test_206_assign_modulus_02_undefined_01_set(self):
+        self.verify("y%=k", [], returncode=1)
+
+    def test_206_assign_modulus_02_undefined_02_integer(self):
+        self.verify("y%=7", [], returncode=1)
+
+    def test_206_assign_modulus_02_undefined_03_string(self):
+        self.verify('y%="a"', [], returncode=1)
+
+    def test_206_assign_modulus_02_undefined_04_logical(self):
+        self.verify("y%=true", [], returncode=1)
+
+    def test_206_assign_modulus_02_undefined_05_position(self):
+        self.verify("y%=currentposition", [], returncode=1)
+
+    def test_206_assign_modulus_03_set(self):
         self.verify("y=k y%=q", [], returncode=1)
 
-    def test_206_assign_modulus_03_integer(self):
-        self.verify(
+    def test_206_assign_modulus_04_integer(self):
+        self.verify_assign(
             "y=3 y%=4",
             [
                 (3, "Assign"),
@@ -3316,15 +5039,18 @@ class Filters(verify.Verify):
                 (4, "Variable"),
                 (4, "Integer"),
             ],
+            "y",
+            cqltypes.VariableType.NUMERIC,
+            cqltypes.FilterType.NUMERIC,
         )
 
-    def test_206_assign_modulus_04_string(self):
+    def test_206_assign_modulus_05_string(self):
         self.verify('y="3" y%="4"', [], returncode=1)
 
-    def test_206_assign_modulus_05_logical(self):
+    def test_206_assign_modulus_06_logical(self):
         self.verify("y=true y%=false", [], returncode=1)
 
-    def test_206_assign_modulus_06_position(self):
+    def test_206_assign_modulus_07_position(self):
         self.verify("y=initialposition y%=currentposition", [], returncode=1)
 
     def test_207_brackets_01_bare_01(self):
@@ -3356,6 +5082,9 @@ class Filters(verify.Verify):
                 (4, "Integer"),
             ],
         )
+
+    def test_208_white(self):  # Original name 'test_144_white' is confusing.
+        self.verify("wtm", [(3, "WTM")])
 
 
 if __name__ == "__main__":

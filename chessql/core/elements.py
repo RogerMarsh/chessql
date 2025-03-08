@@ -192,7 +192,8 @@ CAPTURES_L_BR = r"(?P<captures_l_br>)(?<=\S)(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
 CAPTURES_LR = r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=\S)"
 CAPTURES_LR_P = r"(?P<captures_lr_p>)(?<=\S)(?:\[x\]|\u00d7)(?=\S+=)"
 
-ANY_SQUARE = r"(?P<any_square>)\."  # 6.0.4 index of symbols, '.'.
+# 6.0.4 index of symbols, '.'.  6.2 unicode symbols (equivalent to 'a-h1-8').
+ANY_SQUARE = r"(?P<any_square>)(?:\.|\u25a6)"
 
 # 6.0.4 index of symbols, '_'.  6.2 unicode symbols.
 EMPTY_SQUARE = r"(?P<empty_square>)(?:_|\u25a1)"
@@ -372,7 +373,9 @@ FUNCTION_CALL = constants.VARIABLE_NAME_CHARS.join(
 # 6.0.4 table of filters.
 GAMENUMBER = r"(?P<gamenumber>)gamenumber(?![\w$])"
 
-HASCOMMENT = r"(?P<hascomment>)hascomment(?![\w$])"  # 6.0.4 table of filters.
+# 6.0.4 table of filters.
+# Synonym for 'originalcomment' at 6.1 but is backward compatible.
+HASCOMMENT = r"(?P<hascomment>)hascomment(?![\w$])"
 
 # 6.0.4 direction filters, and ray parameter.
 HORIZONTAL = r"(?P<horizontal>)horizontal(?![\w$])"
@@ -419,8 +422,9 @@ MAX = r"(?P<max>)max\s*\("  # 6.0.4 table of filters.
 # Path parameter.  Must be after MAX in pattern.
 MAX_PARAMETER = r"(?P<max_parameter>)max(?![\w$])"
 
-# 6.0.4 table of filters.
-MESSAGE = r"(?P<message>)message(?=(?:\s+quiet)?\s*\()"
+# 6.0.4 table of filters.  'quiet' added at 6.1.
+MESSAGE_PARENTHESES = r"(?P<message_parentheses>)message(?:\s+quiet)?\s*\("
+MESSAGE = r"(?P<message>)message(?:\s+quiet)?(?![\w$])"
 
 # 6.0.4 table of filters. 'min' as a sort parameter is caught in SORT.
 MIN = r"(?P<min>)min\s*\("
@@ -774,8 +778,7 @@ _UNICODE_PIECE_CHARS = r"".join(
 )
 _UNICODE_PIECES = _UNICODE_PIECE_CHARS.join((r"(?:[", r"]+)|\[(?:[", r"]+)\]"))
 _ALL_PIECES = r"\u25ed"  # Equivalent to '[Aa]'.
-_ALL_SQUARES = r"\u25a6"  # Equivalent to 'a-h1-8'.
-_SQUARE_OPTIONS = r"|".join((_COMPOUND_SQUARE, _SIMPLE_SQUARE, _ALL_SQUARES))
+_SQUARE_OPTIONS = r"|".join((_COMPOUND_SQUARE, _SIMPLE_SQUARE))
 _PIECE_OPTIONS = r"|".join(
     (_COMPOUND_PIECE, _PIECE_CHARS, _UNICODE_PIECES, _ALL_PIECES)
 )
@@ -848,4 +851,4 @@ UNIVERSAL_PIECE_VARIABLE = "".join(
 RESULT_ARGUMENT = r"(?P<result_argument>)(?:1-0|1/2-1/2|0-1)"
 
 # Positive or negative number filter. count, or element of range, parameters.
-INTEGER = r"(?P<integer>)-?\d+"
+INTEGER = r"(?P<integer>)\d+"

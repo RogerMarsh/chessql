@@ -205,6 +205,9 @@ class BaseNode:
             >= self._child_count
         )
 
+    def _verify_children(self):
+        """Do nothing: subclasses should override as necessary."""
+
     def verify_children_and_set_filter_type(self, set_node_completed=False):
         """Verify children and adjust filter type if complete or full.
 
@@ -218,6 +221,7 @@ class BaseNode:
         verified.add(self)
         if set_node_completed:
             self.completed = True
+        self._verify_children()
 
     # An isinstance solution is preferred.
     def is_left_brace_or_parenthesis(self):

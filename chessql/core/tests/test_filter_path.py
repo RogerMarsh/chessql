@@ -272,6 +272,90 @@ class FilterPath(verify.Verify):
     def test_087_path_17(self):  # chessql accepts this.
         self.verify("path lastposition", [], returncode=1)
 
+    def test_189_plus_01_force_repeat(self):
+        self.verify("{+}", [], returncode=1)
+
+    def test_189_plus_12_repetition_path_01(self):  # wrong.
+        self.verify(
+            "path --(K)+",
+            [
+                (3, "Path"),
+                (4, "SingleMoveR"),  # wrong.
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (4, "PlusRepeat"),
+            ],
+        )
+
+    def test_189_plus_12_repetition_path_02(self):  # wrong.
+        self.verify(
+            "path --(K){+}",
+            [
+                (3, "Path"),
+                (4, "SingleMoveR"),  # wrong.
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (4, "WildcardPlus"),
+            ],
+        )
+
+    def test_189_plus_13_repetition_path_01(self):  # wrong.
+        self.verify(
+            "path -- K+",
+            [
+                (3, "Path"),
+                (4, "SingleMove"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "PieceDesignator"),  # wrong.
+                (4, "PlusRepeat"),
+            ],
+        )
+
+    def test_189_plus_13_repetition_path_02(self):  # wrong.
+        self.verify(
+            "path -- K{+}",
+            [
+                (3, "Path"),
+                (4, "SingleMove"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "PieceDesignator"),  # wrong.
+                (4, "WildcardPlus"),
+            ],
+        )
+
+    def test_190_star_01_force_repeat(self):
+        self.verify("{*}", [], returncode=1)
+
+    def test_190_star_11_repetition_path(self):  # wrong.
+        self.verify(
+            "path --(K)*",
+            [
+                (3, "Path"),
+                (4, "SingleMoveR"),  # wrong.
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (4, "StarRepeat"),
+            ],
+        )
+
+    def test_190_star_12_repetition_path(self):  # wrong.
+        self.verify(
+            "path -- K*",
+            [
+                (3, "Path"),
+                (4, "SingleMove"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "PieceDesignator"),  # wrong.
+                (4, "StarRepeat"),
+            ],
+        )
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner

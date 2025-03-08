@@ -581,6 +581,31 @@ class ParenthesizedArguments(BlockLeft):
     """
 
 
+class MaxOrMin(ParenthesizedArguments):
+    """Subclass of ParenthesizedArguments for 'min' and 'max' filters."""
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        if len(self.children) < 2:
+            raise basenode.NodeError(
+                self.__class__.__name__ + ": must have at least two arguments"
+            )
+        filter_types = set()
+        for child in self.children:
+            raise_if_not_filter_type(
+                child,
+                self,
+                cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING,
+                "argument must be a",
+            )
+            filter_types.add(child.filter_type)
+        if len(filter_types) != 1:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": arguments must be all string or all numeric"
+            )
+
+
 # An infix operator is first encountered in the sequence 'G P I' where
 # G is grandparent node, P is parent node, and infix operator I is self.
 # This sequence implies G.parent(P) and P.parent(I) with P and I being
@@ -766,6 +791,19 @@ class MoveInfix(Infix):
         self._verify_and_set_filter_type(parent)
 
 
+class Numeric(InfixLeft):
+    """Subclass of InfixLeft for numeric operators."""
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        raise_if_not_same_filter_type(
+            self,
+            "apply arithmetic operation",
+            filter_type=cqltypes.FilterType.NUMERIC,
+        )
+
+
 class ComparePosition(CQLObject):
     """Subclass of CQLObject for comparing only Position filters."""
 
@@ -785,6 +823,13 @@ class ComparePosition(CQLObject):
         ):
             return filtertype.POSITION
         return super().filter_type
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        raise_if_not_same_filter_type(
+            self, "compare", filter_type=cqltypes.FilterType.POSITION
+        )
 
 
 class CompareSet(CQLObject):
@@ -845,6 +890,31 @@ class Compare(CQLObject):
         ):
             return filtertype.NUMERIC
         return super().filter_type
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 2
+        if (
+            len(
+                set(
+                    c.filter_type
+                    for c in self.children
+                    if c.filter_type
+                    in (cqltypes.FilterType.NUMERIC, cqltypes.FilterType.SET)
+                )
+            )
+            == 2
+        ):
+            return
+        raise_if_not_same_filter_type(
+            self,
+            "compare",
+            filter_type=(
+                cqltypes.FilterType.NUMERIC
+                | cqltypes.FilterType.STRING
+                | cqltypes.FilterType.POSITION
+            ),
+        )
 
 
 class ParameterArgument(CQLObject):
@@ -921,43 +991,98 @@ class ImplicitSearchFilter(NoArgumentsFilter):
 
 
 class ModifyAssign(CQLObject):
-    """Verify lhs variable can be assigned a numeric filter and modify."""
+    """Shared behaviour of '<operator>=' filters which have numeric rhs."""
 
-    def verify_children_and_set_filter_type(self, set_node_completed=False):
-        """Delegate then adjust filter type if complete or full.
-
-        This method should be called only from a place_node_in_tree method.
-
-        """
-        # pylint R0801 duplicate code.  Ignored.
-        # See filters.AssignIf.verify_children_and_set_filter_type().
-        if self.container.function_body_cursor is not None:
-            return
-        super().verify_children_and_set_filter_type(
-            set_node_completed=set_node_completed
-        )
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        assert isinstance(lhs, VariableName)
+        raise_if_not_instance(lhs, self, VariableName, "lhs must be a")
         rhs = self.children[1]
-        if (
-            lhs.filter_type is cqltypes.FilterType.ANY
-            and rhs.filter_type is cqltypes.FilterType.NUMERIC
+        if self.container.function_body_cursor is None or not isinstance(
+            rhs, VariableName
         ):
-            self.container.definitions[lhs.name].filter_type = rhs.filter_type
-            return
-        if (
-            lhs.filter_type is rhs.filter_type
-            and rhs.filter_type is cqltypes.FilterType.NUMERIC
+            if rhs.filter_type is not cqltypes.FilterType.NUMERIC:
+                raise basenode.NodeError(
+                    self.__class__.__name__ + ": rhs must be a Numeric filter"
+                )
+        if self.container.function_body_cursor is None or (
+            not isinstance(lhs, VariableName)
+            and not isinstance(rhs, VariableName)
         ):
-            return
-        # pylint R0801 duplicate code.  Ignored.
-        # See filters.AssignIf.verify_children_and_set_filter_type().
+            raise_if_not_same_filter_type(self, "assign")
+
+
+def raise_if_not_instance(child, parent, instance, msg):
+    """Raise NodeError if child of parent is not an instance.
+
+    instance is a class or tuple of classses.
+
+    """
+    if not isinstance(child, instance):
+        if isinstance(instance, tuple):
+            names = ", ".join([c.__name__ for c in instance])
+        else:
+            names = instance.__name__
         raise basenode.NodeError(
-            self.__class__.__name__
-            + ": cannot assign "
+            parent.__class__.__name__
+            + ": "
+            + msg
+            + " "
+            + names
+            + ": not a "
+            + child.__class__.__name__
+        )
+
+
+def raise_if_not_filter_type(child, parent, filter_type, msg):
+    """Raise NodeError if child of parent is not a filter type.
+
+    filter_type is the union of the allowed filter types.
+
+    """
+    if child.filter_type not in filter_type:
+        raise basenode.NodeError(
+            parent.__class__.__name__
+            + ": "
+            + msg
+            + " "
+            + filter_type.name
+            + ": not a "
+            + child.filter_type.name
+        )
+
+
+def raise_if_not_same_filter_type(
+    parent, operation, filter_type=None, allowany=False
+):
+    """Raise NodeError if parent's children are different filter types.
+
+    parent should be instance of one of '+=', '-=', '*=', '/=', %=', and
+    comparison, classes.
+
+    Any filter type except ANY is acceptable as rhs.
+
+    When lhs is first mention of a variable, it's filter type will be ANY,
+    and any allowed rhs filter type is acceptable.
+
+    """
+    lhs = parent.children[0]
+    rhs = parent.children[1]
+    if filter_type is not None and rhs.filter_type not in filter_type:
+        raise basenode.NodeError(
+            parent.__class__.__name__
+            + ": cannot "
+            + operation
+            + " because rhs filter type is "
             + str(rhs.filter_type)
-            + " to "
-            + lhs.name
-            + " filter of type "
+        )
+    if lhs.filter_type is not rhs.filter_type and not allowany:
+        raise basenode.NodeError(
+            parent.__class__.__name__
+            + ": cannot "
+            + operation
+            + " because lhs filter type is "
             + str(lhs.filter_type)
+            + " and rhs is "
+            + str(rhs.filter_type)
         )
