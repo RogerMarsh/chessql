@@ -1668,6 +1668,8 @@ class Comment(structure.Argument):
     _filter_type = cqltypes.FilterType.LOGICAL
 
 
+# Assumption is 'move <parameters> comment <arguments>' should be marked
+# different from '<non-move filter> comment <arguments>'.
 class CommentParameter(structure.Argument):
     """Represent 'comment' filter immediately after 'move' filter."""
 
@@ -1682,19 +1684,13 @@ class CommentParameter(structure.Argument):
 def comment(match_=None, container=None):
     """Return Comment or CommentParameter instance.
 
-    CommentParameter is returned if parent is 'move' filter.
+    CommentParameter is returned if parent is 'move' filter and does
+    not already have either 'legal' or 'pseudolegal' parameter.
 
     """
-    node = container.cursor
-    while True:
-        if node is None:
-            break
-        if is_comment_parameter_accepted_by(node):
-            return CommentParameter(match_=match_, container=container)
-        if not node.full():
-            break
-        node = node.parent
-    return Comment(match_=match_, container=container)
+    return _string_or_parentheses_comment(
+        match_, container, Comment, CommentParameter
+    )
 
 
 class CommentParentheses(structure.ParenthesizedArguments):
@@ -1712,6 +1708,8 @@ class CommentParentheses(structure.ParenthesizedArguments):
     _filter_type = cqltypes.FilterType.LOGICAL
 
 
+# Assumption is 'move <parameters> comment <arguments>' should be marked
+# different from '<non-move filter> comment <arguments>'.
 class CommentParenthesesParameter(structure.ParenthesizedArguments):
     """Represent 'comment' filter immediately after 'move' filter."""
 
@@ -1729,18 +1727,9 @@ def comment_parentheses(match_=None, container=None):
     CommentParenthesesParameter is returned if parent is 'move' filter.
 
     """
-    node = container.cursor
-    while True:
-        if node is None:
-            break
-        if is_comment_parameter_accepted_by(node):
-            return CommentParenthesesParameter(
-                match_=match_, container=container
-            )
-        if not node.full():
-            break
-        node = node.parent
-    return CommentParentheses(match_=match_, container=container)
+    return _string_or_parentheses_comment(
+        match_, container, CommentParentheses, CommentParenthesesParameter
+    )
 
 
 class ConnectedPawns(structure.NoArgumentsFilter):
@@ -2264,7 +2253,7 @@ class EnPassantSquare(structure.NoArgumentsFilter):
     _filter_type = cqltypes.FilterType.LOGICAL
 
 
-class EnPassantSquareParameter(structure.NoArgumentsParameter):
+class EnPassantSquareParameter(MoveParameterImpliesSet):
     """Represent 'enpassantsquare' parameter to 'move' filter."""
 
     def is_parameter_accepted_by_filter(self):
@@ -3323,27 +3312,10 @@ class MoveNumber(structure.NoArgumentsFilter):
     _filter_type = cqltypes.FilterType.NUMERIC
 
 
-# Delete all but first line of docstring when implemented.
-# Other lines are a precis of what documentation says about 'move' filter.
 class Move(
     structure.PrecedenceFromChild, structure.CompleteParameterArguments
 ):
-    """Represent 'move' set, logical, or numeric, filter.
-
-    At CQL-6.2 'move' is:
-        set filter if 'from', 'to', or 'capture' is first parameter;
-        numeric filter if 'count' parameter is present, and either 'legal'
-            or 'pseudolegal' parameter is present;
-        logical filter otherwise.
-        The presence of 'count' takes precedence over location of 'from',
-        'to', or 'capture' parameters.
-
-    At CQL-6.2 the parameter interpretation takes precedence over the
-    filter specification where a keyword could be either.  For example
-    'move o-o o-o' is double specification of 'o-o' parameter: the second
-    'o-o' is not seen as a set filter like in 'move o-o b o-o'.
-
-    """
+    """Represent 'move' set, logical, or numeric, filter."""
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
@@ -3351,6 +3323,28 @@ class Move(
         """Delegate then set cursor to self."""
         super().place_node_in_tree()
         self.container.cursor = self
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        count_allowed = False
+        count_present = False
+        for item, child in enumerate(self.children):
+            if isinstance(child, CommentParenthesesParameter):
+                if item != len(self.children) - 1:
+                    raise basenode.NodeError(
+                        self.__class__.__name__
+                        + ": parameters follow 'comment' after 'move'"
+                    )
+            if isinstance(child, (LegalParameter, PseudolegalParameter)):
+                count_allowed = True
+            if isinstance(child, Count):
+                count_present = True
+        if count_present and not count_allowed:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": 'legal' or 'pseudolegal' parameter must be "
+                + "present with 'count' parameter "
+            )
 
 
 def is_nestban_parameter_accepted_by(node):
@@ -5792,13 +5786,54 @@ def _set_or_parameter(
         if node is None:
             break
         if is_parameter_accepted_by(node):
+            if isinstance(node, Pin):
+                parameters = (FromParameter, ToParameter, Through)
+            else:
+                parameters = (
+                    FromParameter,
+                    ToParameter,
+                    Capture,
+                    Promote,
+                    EnPassantSquareParameter,
+                    PseudolegalParameter,
+                    LegalParameter,
+                    Count,
+                    CommentParenthesesParameter,
+                    SecondaryParameter,
+                    PrimaryParameter,
+                    Previous,
+                    OOOParameter,
+                    OOParameter,
+                    Null,
+                    EnPassantParameter,
+                    CastleParameter,
+                )
             if (
                 cursor.filter_type in cqltypes.FilterType.SET
-                and isinstance(
-                    cursor.parent, (FromParameter, ToParameter, Through)
-                )
+                and isinstance(cursor.parent, parameters)
                 and is_parameter_accepted_by(cursor.parent.parent)
             ):
                 return parameter(match_=match_, container=container)
         node = node.parent
     return set_(match_=match_, container=container)
+
+
+def _string_or_parentheses_comment(match_, container, general, after_move):
+    """Return general or after 'move' filter version of comment.
+
+    This function exists to support 'comment ("s")' and 'comment "s"'.
+
+    """
+    node = container.cursor
+    while True:
+        if node is None:
+            break
+        if is_comment_parameter_accepted_by(node):
+            for child in node.children:
+                if isinstance(child, (LegalParameter, PseudolegalParameter)):
+                    return general(match_=match_, container=container)
+            return after_move(match_=match_, container=container)
+        if not node.full():
+            break
+        node = node.parent
+    return general(match_=match_, container=container)
