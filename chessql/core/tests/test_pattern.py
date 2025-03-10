@@ -51,7 +51,7 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     # REGEX_REPEAT
                     r"(?P<regex_repeat>)",
-                    r"\{(?:\d+(?:,(?:\d+)?)?)\}|(?:,(?:\d+))\}",
+                    r"\{(?:(?:\d+(?:,(?:\d+)?)?)|(?:,(?:\d+)))\}",
                     r")|(",
                     r"(?P<brace_left>){",  # BRACE_LEFT
                     r")|(",

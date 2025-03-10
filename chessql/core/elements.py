@@ -35,7 +35,7 @@ WHITESPACE = r"(?P<whitespace>)\s+"
 # '{2 3}' at 6.1 and later. '{2,3}' is supported at 6.0 but the examples
 # use the '{2 3}' option.
 # The line filter is deprecated at 6.2.
-REGEX_REPEAT = r"(?P<regex_repeat>)\{(?:\d+(?:,(?:\d+)?)?)\}|(?:,(?:\d+))\}"
+REGEX_REPEAT = r"(?P<regex_repeat>)\{(?:(?:\d+(?:,(?:\d+)?)?)|(?:,(?:\d+)))\}"
 
 # 6.0.4 table of filters: symbolic filters: {}.
 BRACE_LEFT = r"(?P<brace_left>){"  # Start compound filter.

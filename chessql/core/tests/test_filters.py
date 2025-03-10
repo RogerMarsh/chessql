@@ -1072,35 +1072,570 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_062_pseudolegal_01(self):
-        self.verify("pseudolegal", [], returncode=1)
+    def test_062_line_01(self):
+        self.verify("line", [], returncode=1)
 
-    def test_062_pseudolegal_02(self):
-        self.verify("pseudolegal k", [], returncode=1)
+    def test_062_line_02(self):
+        self.verify("line -->", [], returncode=1)
 
-    def test_062_pseudolegal_03_move(self):
+    def test_062_line_03(self):
         self.verify(
-            "pseudolegal --",
+            "line --> check",
+            [(3, "Line"), (4, "ArrowForward"), (5, "Check")],
+        )
+
+    def test_062_line_04(self):
+        self.verify("line --> check -->", [], returncode=1)
+
+    def test_062_line_05(self):
+        self.verify(
+            "line --> check --> check",
             [
-                (3, "Pseudolegal"),
-                (4, "SingleMove"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (4, "ArrowForward"),
+                (5, "Check"),
             ],
         )
 
-    def test_062_pseudolegal_04_capture(self):
-        self.verify("pseudolegal [x]", [], returncode=1)
+    def test_062_line_06(self):
+        self.verify("line --> check <--", [], returncode=1)
 
-    def test_061_light_01(self):
-        self.verify("light", [], returncode=1)
+    def test_062_line_07(self):
+        self.verify("line --> check <-- check", [], returncode=1)
 
-    def test_061_light_02(self):
+    def test_062_line_08(self):
+        self.verify("line <--", [], returncode=1)
+
+    def test_062_line_09(self):
         self.verify(
-            "light P",
+            "line <-- check",
+            [(3, "Line"), (4, "ArrowBackward"), (5, "Check")],
+        )
+
+    def test_062_line_10(self):
+        self.verify("line <-- check <--", [], returncode=1)
+
+    def test_062_line_11(self):
+        self.verify(
+            "line <-- check <-- check",
             [
-                (3, "Light"),
-                (4, "PieceDesignator"),
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_12(self):
+        self.verify("line <-- check -->", [], returncode=1)
+
+    def test_062_line_13(self):
+        self.verify("line <-- check --> check", [], returncode=1)
+
+    def test_062_line_14(self):
+        self.verify(
+            "line --> .",
+            [(3, "Line"), (4, "ArrowForward"), (5, "AnySquare")],
+        )
+
+    def test_062_line_15(self):
+        self.verify(
+            "line --> .*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "AnySquare"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_16(self):
+        self.verify(
+            "line --> check+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_17(self):
+        self.verify(
+            "line --> check?",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (5, "RepeatZeroOrOne"),
+            ],
+        )
+
+    def test_062_line_18_force_repeat_01_zero_or_more(self):
+        self.verify(
+            "line --> check{*}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (5, "WildcardStar"),
+            ],
+        )
+
+    def test_062_line_18_force_repeat_02_one_or_more(self):
+        self.verify(
+            "line --> check{+}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (5, "WildcardPlus"),
+            ],
+        )
+
+    def test_062_line_19(self):
+        self.verify(
+            "line --> (check --> r)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_20(self):
+        self.verify(
+            "line --> (check --> r)+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_21(self):
+        self.verify(
+            "line <-- .",
+            [(3, "Line"), (4, "ArrowBackward"), (5, "AnySquare")],
+        )
+
+    def test_062_line_22(self):
+        self.verify(
+            "line <-- .*",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "AnySquare"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_23(self):
+        self.verify(
+            "line <-- check+",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_24(self):
+        self.verify(
+            "line <-- check?",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+                (5, "RepeatZeroOrOne"),
+            ],
+        )
+
+    def test_062_line_25_repeat_01_closed_range(self):
+        self.verify(
+            "line <-- check{2,4}",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+                (5, "RegexRepeat"),
+            ],
+        )
+
+    def test_062_line_25_repeat_02_closed_range_upper(self):
+        self.verify(
+            "line <-- check{,4}",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+                (5, "RegexRepeat"),
+            ],
+        )
+
+    def test_062_line_25_repeat_03_closed_range_lower(self):
+        self.verify(
+            "line <-- check{2,}",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+                (5, "RegexRepeat"),
+            ],
+        )
+
+    def test_062_line_26(self):
+        self.verify(
+            "line <-- (check <-- r)",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_27(self):
+        self.verify(
+            "line <-- (check <-- r)+",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_28(self):
+        self.verify("line --> (check <-- r)+", [], returncode=1)
+
+    def test_062_line_29(self):
+        self.verify("line <-- (check --> r)+", [], returncode=1)
+
+    def test_062_line_30(self):
+        self.verify("line primary secondary --> check", [], returncode=1)
+
+    def test_062_line_31(self):
+        self.verify(
+            "line primary --> check",
+            [
+                (3, "Line"),
+                (4, "PrimaryParameter"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_32(self):
+        self.verify(
+            "line secondary --> check",
+            [
+                (3, "Line"),
+                (4, "SecondaryParameter"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_33(self):
+        self.verify(
+            "line firstmatch --> check",
+            [
+                (3, "Line"),
+                (4, "FirstMatch"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_34(self):
+        self.verify(
+            "line lastposition --> check",
+            [
+                (3, "Line"),
+                (4, "LastPosition"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_35(self):
+        self.verify(
+            "line singlecolor --> check",
+            [
+                (3, "Line"),
+                (4, "SingleColor"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_36(self):
+        self.verify(
+            "line quiet --> check",
+            [(3, "Line"), (4, "Quiet"), (4, "ArrowForward"), (5, "Check")],
+        )
+
+    def test_062_line_37(self):
+        self.verify(
+            "line nestban --> check",
+            [(3, "Line"), (4, "NestBan"), (4, "ArrowForward"), (5, "Check")],
+        )
+
+    def test_062_line_38(self):
+        self.verify(
+            "line singlecolor nestban quiet lastposition --> check",
+            [
+                (3, "Line"),
+                (4, "SingleColor"),
+                (4, "NestBan"),
+                (4, "Quiet"),
+                (4, "LastPosition"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_39(self):
+        self.verify(
+            "line 1 3 --> check",
+            [
+                (3, "Line"),
+                (4, "RangeInteger"),
+                (4, "RangeInteger"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_40(self):
+        self.verify(
+            "line quiet 1 3 firstmatch --> check",
+            [
+                (3, "Line"),
+                (4, "Quiet"),
+                (4, "RangeInteger"),
+                (4, "RangeInteger"),
+                (4, "FirstMatch"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_41(self):
+        self.verify(
+            "line quiet 1 3 firstmatch <-- check",
+            [
+                (3, "Line"),
+                (4, "Quiet"),
+                (4, "RangeInteger"),
+                (4, "RangeInteger"),
+                (4, "FirstMatch"),
+                (4, "ArrowBackward"),
+                (5, "Check"),
+            ],
+        )
+
+    def test_062_line_42(self):
+        self.verify("line secondary primary --> check", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_01_zero_or_more(self):
+        self.verify("check*", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_02_one_or_more(self):
+        self.verify("check+", [], returncode=1)
+
+    def test_062__line_43_regex_no_line_arrow_03_zero_or_one(self):
+        self.verify("check?", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_04_zero_or_more(self):
+        self.verify("check{*}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_05_one_or_more(self):
+        self.verify("check{+}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_06_closed_range(self):
+        self.verify("check{2,4}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_07_closed_range_high(self):
+        self.verify("check{,4}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_08_closed_range_low(self):
+        self.verify("check{2,}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_09_group_zero_or_more(self):
+        self.verify("(check)*", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_10_group_one_or_more(self):
+        self.verify("(check)+", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_11_group_zero_or_one(self):
+        self.verify("(check)?", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_12_group_zero_or_more(self):
+        self.verify("(check){*}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_13_group_one_or_more(self):
+        self.verify("(check){+}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_14_group_closed_range(self):
+        self.verify("(check){2,4}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_15_group_closed_range_high(self):
+        self.verify("(check){,4}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_16_group_closed_range_low(self):
+        self.verify("(check){2,}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_17_arrow_zero_or_more(self):
+        self.verify("(check --> mate)*", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_18_arrow_one_or_more(self):
+        self.verify("(check --> mate)+", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_19_arrow_zero_or_one(self):
+        self.verify("(check --> mate)?", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_20_arrow_zero_or_more(self):
+        self.verify("(check --> mate){*}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_21_arrow_one_or_more(self):
+        self.verify("(check --> mate){+}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_22_arrow_closed_range(self):
+        self.verify("(check --> mate){2,4}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_23_arrow_closed_range_high(self):
+        self.verify("(check --> mate){,4}", [], returncode=1)
+
+    def test_062_line_43_regex_no_line_arrow_24_arrow_closed_range_low(self):
+        self.verify("(check --> mate){2,}", [], returncode=1)
+
+    def test_062_line_44_regex_line_arrow_01_arrow_zero_or_more(self):
+        self.verify(
+            "line --> (check --> mate)*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_02_arrow_one_or_more(self):
+        self.verify(
+            "line --> (check --> mate)+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_03_arrow_zero_or_one(self):
+        self.verify(
+            "line --> (check --> mate)?",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "RepeatZeroOrOne"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_04_arrow_zero_or_more(self):
+        self.verify(
+            "line --> (check --> mate){*}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "WildcardStar"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_05_arrow_one_or_more(self):
+        self.verify(
+            "line --> (check --> mate){+}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "WildcardPlus"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_06_arrow_closed_range(self):
+        self.verify(
+            "line --> (check --> mate){2,4}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "RegexRepeat"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_07_arrow_closed_range_high(self):
+        self.verify(
+            "line --> (check --> mate){,4}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "RegexRepeat"),
+            ],
+        )
+
+    def test_062_line_44_regex_line_arrow_08_arrow_closed_range_low(self):
+        self.verify(
+            "line --> (check --> mate){2,}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Check"),
+                (6, "ArrowForward"),
+                (7, "Mate"),
+                (5, "RegexRepeat"),
             ],
         )
 
@@ -1508,6 +2043,12 @@ class Filters(verify.Verify):
                 (4, "String"),
             ],
         )
+
+    def test_074_move_37(self):
+        self.verify("move primary secondary", [], returncode=1)
+
+    def test_074_move_38(self):
+        self.verify("move secondary primary", [], returncode=1)
 
     def test_075_movenumber(self):
         self.verify("movenumber", [(3, "MoveNumber")])
@@ -5687,6 +6228,38 @@ class Filters(verify.Verify):
 
     def test_208_white(self):  # Original name 'test_144_white' is confusing.
         self.verify("wtm", [(3, "WTM")])
+
+    def test_209_pseudolegal_01(self):  # Original name 'test_062_' confusing.
+        self.verify("pseudolegal", [], returncode=1)
+
+    def test_209_pseudolegal_02(self):  # Original name 'test_062_' confusing.
+        self.verify("pseudolegal k", [], returncode=1)
+
+    def test_209_pseudolegal_03_move(self):  # Original 'test_062_' confusing.
+        self.verify(
+            "pseudolegal --",
+            [
+                (3, "Pseudolegal"),
+                (4, "SingleMove"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_209_pseudolegal_04_capture(self):  # Original '_062_' confusing.
+        self.verify("pseudolegal [x]", [], returncode=1)
+
+    def test_210_light_01(self):  # Original name 'test_061_' confusing.
+        self.verify("light", [], returncode=1)
+
+    def test_210_light_02(self):  # Original name 'test_061_' confusing.
+        self.verify(
+            "light P",
+            [
+                (3, "Light"),
+                (4, "PieceDesignator"),
+            ],
+        )
 
 
 if __name__ == "__main__":

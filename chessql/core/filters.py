@@ -232,6 +232,11 @@ class RepeatConstituent(structure.Complete):
             node.parent.children.append(node.children.pop())
             node.verify_children_and_set_filter_type(set_node_completed=True)
             node = node.parent
+        if not isinstance(self.parent, LineArrow):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": parent is not a '<--' or '-->' filter"
+            )
         self.container.cursor = self
 
 
@@ -911,6 +916,8 @@ class LineArrow(structure.CQLObject):
     in filters module.
     """
 
+    _precedence = cqltypes.Precedence.P10
+
     def place_node_in_tree(self):
         """Move self to nearest ancestor which is a 'line' node.
 
@@ -948,6 +955,46 @@ class LineArrow(structure.CQLObject):
             node.parent.children.append(node.children.pop())
             node.verify_children_and_set_filter_type(set_node_completed=True)
             node = node.parent
+        self.raise_if_name_parameter_not_for_filters()
+        self._raise_if_other_line_arrow_present()
+        self.container.cursor = self
+
+    def _raise_if_other_line_arrow_present(self):
+        """Raise NodeError if conditions are met.
+
+        Assumption is only ArrowBackward and ArrowForward are subclasses
+        of LineArrow.
+
+        """
+        node = self.container.cursor
+        while node:
+            if isinstance(node, Line):
+                for child in node.children:
+                    if not child.is_parameter and not isinstance(
+                        child, self.__class__
+                    ):
+                        existing, current = (
+                            ("<--", "-->")
+                            if isinstance(self, ArrowForward)
+                            else ("-->", "<--")
+                        )
+                        raise basenode.NodeError(
+                            self.__class__.__name__
+                            + ": '"
+                            + current
+                            + "'"
+                            + " cannot be mixed with existing "
+                            + "'"
+                            + existing
+                            + "'s"
+                            + " in 'line' filter"
+                        )
+                break
+            node = node.parent
+
+    def is_parameter_accepted_by_filter(self):
+        """Return True if parent accepts self as a parameter."""
+        return is_line_arrow_parameter_accepted_by(self.parent)
 
 
 class ArrowBackward(LineArrow, structure.Argument):
@@ -958,26 +1005,6 @@ class ArrowBackward(LineArrow, structure.Argument):
     filter called a constituent.  The '<--' is validated like a parameter
     since it is allowed only in the 'line' filter.
     """
-
-    _precedence = cqltypes.Precedence.P10
-
-    def place_node_in_tree(self):
-        """Delegate then verify '<--' keyword and set cursor to self."""
-        super().place_node_in_tree()
-        self.raise_if_name_parameter_not_for_filters()
-        if len(self.parent.children) > 1:
-            if isinstance(self.parent.children[-2], ArrowForward):
-                raise basenode.NodeError(
-                    "'<--'"
-                    + ": cannot be mixed with existing "
-                    + "'-->'s"
-                    + " in 'line' filter"
-                )
-        self.container.cursor = self
-
-    def is_parameter_accepted_by_filter(self):
-        """Return True if parent accepts self as a parameter."""
-        return is_line_arrow_parameter_accepted_by(self.parent)
 
 
 def arrow_backward(match_=None, container=None):
@@ -1000,26 +1027,6 @@ class ArrowForward(LineArrow, structure.Argument):
     filter called a constituent.  The '-->' is validated like a parameter
     since it is allowed only in the 'line' filter.
     """
-
-    _precedence = cqltypes.Precedence.P10
-
-    def place_node_in_tree(self):
-        """Delegate then verify '-->' keyword and set cursor to self."""
-        super().place_node_in_tree()
-        self.raise_if_name_parameter_not_for_filters()
-        if len(self.parent.children) > 1:
-            if isinstance(self.parent.children[-2], ArrowBackward):
-                raise basenode.NodeError(
-                    "'-->'"
-                    + ": cannot be mixed with existing "
-                    + "'<--'s"
-                    + " in 'line' filter"
-                )
-        self.container.cursor = self
-
-    def is_parameter_accepted_by_filter(self):
-        """Return True if parent accepts self as a parameter."""
-        return is_line_arrow_parameter_accepted_by(self.parent)
 
 
 class AfterEq(structure.ComparePosition, structure.InfixRight):
@@ -3100,6 +3107,15 @@ class Line(structure.CompleteParameterArguments):
         super().place_node_in_tree()
         self.container.cursor = self
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        if len(self.children) == 0:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": must have at least one '<--' or '-->' component"
+            )
+        _raise_if_primary_and_secondary_parameter_present(self)
+
 
 class Local(structure.CQLObject):
     """Represent 'local' not caught elsewhere for specific purposes.
@@ -3345,6 +3361,7 @@ class Move(
                 + ": 'legal' or 'pseudolegal' parameter must be "
                 + "present with 'count' parameter "
             )
+        _raise_if_primary_and_secondary_parameter_present(self)
 
 
 def is_nestban_parameter_accepted_by(node):
@@ -3930,6 +3947,8 @@ def primary(match_=None, container=None):
             break
         node = node.parent
     if isinstance(node, Line):
+        if len(node.children) == 0:
+            return PrimaryParameter(match_=match_, container=container)
         if isinstance(node.children[-1], (ArrowBackward, ArrowForward)):
             return Primary(match_=match_, container=container)
     if len(node.children) == 0:
@@ -4197,6 +4216,8 @@ def secondary(match_=None, container=None):
             break
         node = node.parent
     if isinstance(node, Line):
+        if len(node.children) == 0:
+            return SecondaryParameter(match_=match_, container=container)
         if isinstance(node.children[-1], (ArrowBackward, ArrowForward)):
             return Secondary(match_=match_, container=container)
     if len(node.children) == 0:
@@ -5837,3 +5858,21 @@ def _string_or_parentheses_comment(match_, container, general, after_move):
             break
         node = node.parent
     return general(match_=match_, container=container)
+
+
+def _raise_if_primary_and_secondary_parameter_present(filter_):
+    """Return True if filter_ has 'primary' and 'secondary parameters."""
+    if (
+        len(
+            set(
+                c
+                for c in filter_.children
+                if c.__class__ in (PrimaryParameter, SecondaryParameter)
+            )
+        )
+        > 1
+    ):
+        raise basenode.NodeError(
+            filter_.__class__.__name__
+            + ": cannot have both 'primary' and 'secondary' parameters"
+        )

@@ -344,7 +344,7 @@ class PatternElement(unittest.TestCase):
     def test_regex_repeat(self):
         self.assertEqual(
             elements.REGEX_REPEAT,
-            r"(?P<regex_repeat>)\{(?:\d+(?:,(?:\d+)?)?)\}|(?:,(?:\d+))\}",
+            r"(?P<regex_repeat>)\{(?:(?:\d+(?:,(?:\d+)?)?)|(?:,(?:\d+)))\}",
         )
 
     def test_brace_left(self):
