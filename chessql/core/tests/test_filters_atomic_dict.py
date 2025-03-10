@@ -14,12 +14,6 @@ from . import verify
 
 class FiltersAtomicDict(verify.Verify):
 
-    def test_006_atomic_01(self):
-        self.verify("atomic X", [], returncode=1)
-
-    def test_006_atomic_02(self):  # Fails.
-        self.verify("atomic X=1", [(3, "Atomic"), (4, "Integer")])
-
     def test_027_dictionary(self):  # chessql gets this wrong.
         self.verify(
             'dictionary X["a"]="bc"',

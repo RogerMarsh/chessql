@@ -1520,13 +1520,24 @@ class Assert(structure.Argument):
 
 
 # Prefix to variable, 'atomic variables' in Table of Filters.
-class Atomic(structure.CQLObject):
+class Atomic(structure.Complete, structure.VariableName):
     """Represent variable with 'atomic' prefix."""
 
+    def __init__(self, match_=None, container=None):
+        """Delegate then register the variable name."""
+        super().__init__(match_=match_, container=container)
+        groupdict = match_.groupdict()
+        self.name = groupdict["atomic"]
+        self._register_variable_type(cqltypes.VariableType.ANY)
+
     def place_node_in_tree(self):
-        """Delegate then verify variable name is not a CQL keyword."""
+        """Delegate then set cursor to self."""
         super().place_node_in_tree()
-        cqltypes.variable(self.match_.groupdict()["atomic"], self.container)
+        self.container.cursor = self
+
+    def is_variable(self):
+        """Override and return True."""
+        return True
 
 
 class AttackedBy(structure.InfixLeft):
@@ -5491,6 +5502,7 @@ class Assign(structure.MoveInfix):
                 PersistentQuiet,
                 PieceVariable,
                 BracketLeft,  # For slices and dictionary keys.
+                Atomic,
             ),
             "lhs must be a",
         )

@@ -63,6 +63,15 @@ class Filters(verify.Verify):
     def test_005_assert(self):
         self.verify("assert 1", [(3, "Assert"), (4, "Integer")])
 
+    def test_006_atomic_01(self):
+        self.verify("atomic X", [], returncode=1)
+
+    def test_006_atomic_02(self):
+        self.verify(
+            "atomic X=1",
+            [(3, "Assign"), (4, "Atomic"), (4, "Integer")],
+        )
+
     def test_007_attackedby(self):
         self.verify(
             "_ attackedby k",
