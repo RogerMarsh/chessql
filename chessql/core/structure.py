@@ -446,6 +446,9 @@ class VariableName(Name):
     @property
     def filter_type(self):
         """Return filter_type from variable's entry in definitions."""
+        if self.container.function_body_count > 0:
+            if self.name not in self.container.definitions:
+                return cqltypes.FilterType.ANY
         try:
             return self.container.definitions[self.name].filter_type
         except KeyError as exc:
@@ -909,7 +912,10 @@ class Compare(CQLObject):
         ):
             return
         raise_if_not_same_filter_type(
-            self, "compare", filter_type=self._comparable_filter_types
+            self,
+            "compare",
+            filter_type=self._comparable_filter_types,
+            allowany=self.container.function_body_count > 0,
         )
 
 
