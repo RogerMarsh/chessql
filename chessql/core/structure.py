@@ -478,6 +478,9 @@ class VariableName(Name):
         )
         self._raise_if_wrong_variable_type(variable_type)
 
+    # Some of this should be delegated to class Name because it looks to
+    # be shared with classes for the 'function' and 'dictionary' filters.
+    # Initially just copy to Dictionary and adjust to fix that class.
     def set_types(self, variable_type, filter_type):
         """Set variable type and filter type of variable instance.
 

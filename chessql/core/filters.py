@@ -2051,6 +2051,96 @@ class Dictionary(structure.Complete, structure.Name):
         container.cursor = self
         return
 
+    # Copied from VariableName and adjusted to fix this class.
+    def set_types(self, key_filter_type, filter_type):
+        """Set filter type of dictionary instance.
+
+        The dictionary's name must have been registered by a prior call of
+        _register_variable_type.
+
+        variable type is ignored.
+
+        The variable's filter type is set to filter_type if it is
+        cqltypes.FilterType.ANY currently.
+
+        A NodeError exception is raised on attempting to change any other
+        filter type value.
+
+        Details for user defined items, variables and functions, are not
+        updated when encountered during collection of functions bodies.
+
+        """
+        container = self.container
+        if container.function_body_cursor is not None:
+            return
+        definitions = container.definitions
+        name = self.name
+        if name not in definitions:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": dictionary '"
+                + name
+                + "' has not been registered ("
+                + "by _register_variable_type)"
+            )
+        item = definitions[name]
+        if item.filter_type is cqltypes.FilterType.ANY:
+            item.filter_type = filter_type
+        if item.filter_type is not filter_type:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": dictionary '"
+                + name
+                + "' is a '"
+                + item.filter_type.name.lower()
+                + "' filter so item cannot be set as a '"
+                + filter_type.name.lower()
+                + "' filter"
+            )
+        if item.key_filter_type is cqltypes.FilterType.ANY:
+            item.key_filter_type = key_filter_type
+        if item.key_filter_type is not key_filter_type:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": existing keys in dictionary '"
+                + name
+                + "' are '"
+                + item.key_filter_type.name.lower()
+                + "' filters so cannot set key as a '"
+                + key_filter_type.name.lower()
+                + "' filter"
+            )
+        if self.match_.group().startswith("local"):
+            persistence_type = cqltypes.PersistenceType.LOCAL
+        elif self.match_.group().startswith("dictionary"):
+            persistence_type = cqltypes.PersistenceType.PERSISTENT
+        elif item.persistence_type is cqltypes.PersistenceType.ANY:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": dictionary '"
+                + name
+                + "' has not been declared '"
+                + cqltypes.PersistenceType.LOCAL
+                + "' or '"
+                + cqltypes.PersistenceType.PERSISTENT
+                + "' previously"
+            )
+        else:
+            persistence_type = item.persistence_type
+        if item.persistence_type is cqltypes.PersistenceType.ANY:
+            item.persistence_type = persistence_type
+        if item.persistence_type is not persistence_type:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": dictionary '"
+                + name
+                + "' is a '"
+                + item.persistence_type.name.lower()
+                + "' dictionary so cannot be set as a '"
+                + persistence_type.name.lower()
+                + "' dictionary"
+            )
+
 
 class Distance(structure.ParenthesizedArguments):
     """Represent 'distance' numeric filter."""
@@ -5125,6 +5215,51 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
 
     _precedence = cqltypes.Precedence.P220
 
+    @property
+    def filter_type(self):
+        """Return filter_type from variable's entry in definitions."""
+        name = self.children[0].name
+        if self.container.function_body_count > 0:
+            if name not in self.container.definitions:
+                return cqltypes.FilterType.ANY
+        try:
+            return self.container.definitions[name].filter_type
+        except KeyError as exc:
+            raise basenode.NodeError(
+                "Name definition '"
+                + str(name)
+                + "' referenced before it is set"
+            ) from exc
+
+    def set_types(self, variable_type, filter_type):
+        """Set filter type of self.children[0] instance.
+
+        This is assumed to be a Dictionary instance at present.
+
+        """
+        if isinstance(self.children[0], Dictionary):
+            self.children[0].set_types(
+                self.children[1].filter_type, filter_type
+            )
+        else:
+            self.children[0].set_types(variable_type, filter_type)
+
+    # Some verification done in Assign._verify_children can be moved here
+    # now this method exists.
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        lhs = self.children[0]
+        if isinstance(lhs, (structure.VariableName, Dictionary)):
+            if (
+                lhs.container.definitions[lhs.name].filter_type
+                is cqltypes.FilterType.ANY
+            ):
+                raise basenode.NodeError(
+                    lhs.__class__.__name__
+                    + ": cannot reference an undefined variable by "
+                    + "index (like V[1])"
+                )
+
 
 def bracket_left(match_=None, container=None):
     """Return Slice or Key instance, or raise NodeError.
@@ -5523,6 +5658,36 @@ class Assign(structure.MoveInfix):
                     + ": rhs must be a Set, Numeric, String,"
                     + " or Position, filter"
                 )
+            if isinstance(lhs, BracketLeft):
+                if (
+                    isinstance(lhs.children[0], structure.VariableName)
+                    and lhs.children[0].filter_type is cqltypes.FilterType.ANY
+                ):
+                    raise basenode.NodeError(
+                        self.__class__.__name__
+                        + ": cannot assign to an undefined variable by "
+                        + 'index (like V[1]="a")'
+                    )
+                if (
+                    rhs.filter_type is cqltypes.FilterType.POSITION
+                    and not _is_local_dictionary(lhs.children[0])
+                ):
+                    raise basenode.NodeError(
+                        self.__class__.__name__
+                        + ": lhs is a 'dictionary' but not 'local' so rhs "
+                        + "cannot be a Position filter"
+                    )
+                # This check on filter type of key is better placed in the
+                # BracketLeft, or perhaps BracketRight, class but that area
+                # may change because the BracketLeft Dictionary tree looks
+                # odd.
+                if lhs.children[1].filter_type is cqltypes.FilterType.LOGICAL:
+                    raise basenode.NodeError(
+                        self.__class__.__name__
+                        + ": lhs is a 'dictionary' and does not accept a '"
+                        + lhs.children[1].__class__.__name__
+                        + "' as a key"
+                    )
         if self.container.function_body_cursor is None or (
             not isinstance(lhs, structure.VariableName)
             and not isinstance(rhs, structure.VariableName)
@@ -5531,7 +5696,7 @@ class Assign(structure.MoveInfix):
                 self,
                 "assign",
                 allowany=(
-                    isinstance(lhs, structure.VariableName)
+                    isinstance(lhs, (structure.VariableName, BracketLeft))
                     and lhs.filter_type is cqltypes.FilterType.ANY
                 ),
             )
@@ -5888,3 +6053,12 @@ def _raise_if_primary_and_secondary_parameter_present(filter_):
             filter_.__class__.__name__
             + ": cannot have both 'primary' and 'secondary' parameters"
         )
+
+
+def _is_local_dictionary(filter_):
+    """Return True if filter_ class represents 'local dictionary' filter."""
+    if not isinstance(filter_, Dictionary):
+        return False
+    # name = filter_.name
+    # Dictionary definition does not yet have a 'local' attribute.
+    return "local" in filter_.match_.group()

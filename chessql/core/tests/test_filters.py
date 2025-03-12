@@ -8,10 +8,6 @@ See test_filter_captures for '[x]' filter tests.
 
 See test_filter_dash for '--' filter tests.
 
-See test_filters_atomic_dict for 'atomic' filter tests.
-
-See test_filters_atomic_dict for 'dictionary' filter tests.
-
 See test_filters_for_bind for 'isunbound' filter tests.
 
 See test_filter_path for 'path' filter tests.
@@ -405,6 +401,931 @@ class Filters(verify.Verify):
                 (4, "Variable"),
             ],
         )
+
+    def test_027_dictionary_01_bare(self):
+        self.verify("dictionary", [], returncode=1)
+
+    def test_027_dictionary_02_bad_name(self):
+        self.verify(" dictionary k", [], returncode=1)
+
+    def test_027_dictionary_03_good_name(self):
+        self.verify(" dictionary X", [(3, "Dictionary")])
+
+    def test_027_dictionary_04_string_string(self):
+        self.verify(
+            'dictionary X["a"]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_05_string_set_01_piecedesignator(self):
+        self.verify(
+            'dictionary X["a"]=k',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_05_string_set_02_some_other_set(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "ConnectedPawns"),
+            ],
+        )
+
+    def test_027_dictionary_06_string_integer(self):
+        self.verify(
+            'dictionary X["a"]=1',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_07_string_position(self):
+        self.verify('dictionary X["a"]=currentposition', [], returncode=1)
+
+    def test_027_dictionary_08_string_logical(self):
+        self.verify('dictionary X["a"]=false', [], returncode=1)
+
+    def test_027_dictionary_09_set_string(self):
+        self.verify(
+            'dictionary X[to]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_10_set_set_01_piece_designator(self):
+        self.verify(
+            "dictionary X[to]=k",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_10_set_set_02_some_other_set(self):
+        self.verify(
+            "dictionary X[to]=from",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "From"),
+            ],
+        )
+
+    def test_027_dictionary_11_set_integer(self):
+        self.verify(
+            "dictionary X[to]=3",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_12_set_position(self):
+        self.verify("dictionary X[to]=currentposition", [], returncode=1)
+
+    def test_027_dictionary_13_string_logical(self):
+        self.verify("dictionary X[to]=false", [], returncode=1)
+
+    def test_027_dictionary_14_integer_string(self):
+        self.verify(
+            'dictionary X[3]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_15_integer_set_01_piece_designator(self):
+        self.verify(
+            "dictionary X[3]=qa5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_15_integer_set_02_some_other_set(self):
+        self.verify(
+            "dictionary X[3]=from",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "From"),
+            ],
+        )
+
+    def test_027_dictionary_16_integer_integer(self):
+        self.verify(
+            "dictionary X[3]=3",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_17_integer_position(self):
+        self.verify("dictionary X[3]=currentposition", [], returncode=1)
+
+    def test_027_dictionary_18_integer_logical(self):
+        self.verify("dictionary X[3]=false", [], returncode=1)
+
+    def test_027_dictionary_19_bad_piecedesignator_string(self):
+        self.verify('dictionary X[a5]="bc"', [], returncode=1)
+
+    def test_027_dictionary_20_bad_piecedesignator_set_01_piece_designator(
+        self,
+    ):
+        self.verify("dictionary X[a5]=h2", [], returncode=1)
+
+    def test_027_dictionary_20_bad_piecedesignator_set_02_some_other_set(self):
+        self.verify("dictionary X[a5]=from", [], returncode=1)
+
+    def test_027_dictionary_21_bad_piecedesignator_integer(self):
+        self.verify("dictionary X[a5]=3", [], returncode=1)
+
+    def test_027_dictionary_22_bad_piecedesignator_position(self):
+        self.verify("dictionary X[a5]=currentposition", [], returncode=1)
+
+    def test_027_dictionary_23_bad_piecedesignator_logical(self):
+        self.verify("dictionary X[a5]=false", [], returncode=1)
+
+    def test_027_dictionary_24_piecedesignator_string(self):
+        self.verify(
+            'dictionary X[ a5 ]="bc"',  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_25_piecedesignator_set_01_piece_designator(self):
+        self.verify(
+            "dictionary X[ a5 ]=d7",  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_25_piecedesignator_set_02_some_other_set(self):
+        self.verify(
+            "dictionary X[ a5 ]=from",  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "From"),
+            ],
+        )
+
+    def test_027_dictionary_26_piecedesignator_integer(self):
+        self.verify(
+            "dictionary X[ a5 ]=3",  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_27_piecedesignator_position(self):
+        self.verify("dictionary X[ a5 ]=currentposition", [], returncode=1)
+
+    def test_027_dictionary_28_logical_string(self):
+        self.verify('dictionary X[true]="bc"', [], returncode=1)
+
+    def test_027_dictionary_29_logical_set_01_piece_designator(self):
+        self.verify("dictionary X[true]=k", [], returncode=1)
+
+    def test_027_dictionary_29_logical_set_02_some_other_set(self):
+        self.verify("dictionary X[true]=from", [], returncode=1)
+
+    def test_027_dictionary_30_logical_integer(self):
+        self.verify("dictionary X[true]=3", [], returncode=1)
+
+    def test_027_dictionary_31_logical_position(self):
+        self.verify("dictionary X[true]=currentposition", [], returncode=1)
+
+    def test_027_dictionary_32_logical_logical(self):
+        self.verify("dictionary X[true]=false", [], returncode=1)
+
+    def test_027_dictionary_33_piecedesignator_logical(self):
+        self.verify("dictionary X[ a5 ]=false", [], returncode=1)
+
+    def test_027_dictionary_34_string_string_01(self):
+        self.verify(
+            'dictionary X["a"]="bc" X["a"]="yz" X["b"]="ij"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_34_string_string_02(self):
+        self.verify('dictionary X["a"]="bc" X[to]="yz"', [], returncode=1)
+
+    def test_027_dictionary_34_string_string_03(self):
+        self.verify('dictionary X["a"]="bc" X[ k ]="yz"', [], returncode=1)
+
+    def test_027_dictionary_34_string_string_04(self):
+        self.verify('dictionary X["a"]="bc" X[1]="yz"', [], returncode=1)
+
+    def test_027_dictionary_34_string_string_05(self):
+        self.verify('dictionary X["a"]="bc" X["a"]=to', [], returncode=1)
+
+    def test_027_dictionary_34_string_string_06(self):
+        self.verify('dictionary X["a"]="bc" X["a"]=k', [], returncode=1)
+
+    def test_027_dictionary_34_string_string_07(self):
+        self.verify('dictionary X["a"]="bc" X["a"]=1', [], returncode=1)
+
+    def test_027_dictionary_35_string_set_01_piecedesignator_01(self):
+        self.verify(
+            'dictionary X["a"]=k X["a"]=Pa6 X["b"]=R',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_35_string_set_01_piecedesignator_02(self):
+        self.verify('dictionary X["a"]=k X[to]=k', [], returncode=1)
+
+    def test_027_dictionary_35_string_set_01_piecedesignator_03(self):
+        self.verify('dictionary X["a"]=k X[ k ]=k', [], returncode=1)
+
+    def test_027_dictionary_35_string_set_01_piecedesignator_04(self):
+        self.verify('dictionary X["a"]=k X[1]=k', [], returncode=1)
+
+    def test_027_dictionary_35_string_set_01_piecedesignator_05(self):
+        self.verify('dictionary X["a"]=k X["a"]=1', [], returncode=1)
+
+    def test_027_dictionary_35_string_set_01_piecedesignator_06(self):
+        self.verify('dictionary X["a"]=k X["a"]="a"', [], returncode=1)
+
+    def test_027_dictionary_35_string_set_02_some_other_set_01(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns X["a"]=to X["b"]=from',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "ConnectedPawns"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "To"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "From"),
+            ],
+        )
+
+    def test_027_dictionary_35_string_set_02_some_other_set_02(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns X[1]=connectedpawns',
+            [],
+            returncode=1,
+        )
+
+    def test_027_dictionary_35_string_set_02_some_other_set_03(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns X[ k ]=connectedpawns',
+            [],
+            returncode=1,
+        )
+
+    def test_027_dictionary_35_string_set_02_some_other_set_04(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns X[to]=connectedpawns',
+            [],
+            returncode=1,
+        )
+
+    def test_027_dictionary_35_string_set_02_some_other_set_05(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns X["a"]=1',
+            [],
+            returncode=1,
+        )
+
+    def test_027_dictionary_35_string_set_02_some_other_set_06(self):
+        self.verify(
+            'dictionary X["a"]=connectedpawns X["a"]="a"',
+            [],
+            returncode=1,
+        )
+
+    def test_027_dictionary_36_string_integer_01(self):
+        self.verify(
+            'dictionary X["a"]=1 X["a"]=7 X["b"]=4',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_36_string_integer_02(self):
+        self.verify('dictionary X["a"]=1 X[1]=1', [], returncode=1)
+
+    def test_027_dictionary_36_string_integer_03(self):
+        self.verify('dictionary X["a"]=1 X[ k ]=1', [], returncode=1)
+
+    def test_027_dictionary_36_string_integer_04(self):
+        self.verify('dictionary X["a"]=1 X[to]=1', [], returncode=1)
+
+    def test_027_dictionary_36_string_integer_05(self):
+        self.verify('dictionary X["a"]=1 X["a"]=k', [], returncode=1)
+
+    def test_027_dictionary_36_string_integer_06(self):
+        self.verify('dictionary X["a"]=1 X["a"]=to', [], returncode=1)
+
+    def test_027_dictionary_36_string_integer_07(self):
+        self.verify('dictionary X["a"]=1 X["a"]="a"', [], returncode=1)
+
+    def test_027_dictionary_37_set_string_01(self):
+        self.verify(
+            'dictionary X[to]="bc" X[to]="yz" X[from]="mn" X[ Q ]="kh"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_37_set_string_02(self):
+        self.verify('dictionary X[to]="bc" X[1]="bc"', [], returncode=1)
+
+    def test_027_dictionary_37_set_string_03(self):
+        self.verify('dictionary X[to]="bc" X["a"]="bc"', [], returncode=1)
+
+    def test_027_dictionary_37_set_string_04(self):
+        self.verify('dictionary X[to]="bc" X[to]=1', [], returncode=1)
+
+    def test_027_dictionary_37_set_string_05(self):
+        self.verify('dictionary X[to]="bc" X[to]=k', [], returncode=1)
+
+    def test_027_dictionary_37_set_string_06(self):
+        self.verify('dictionary X[to]="bc" X[to]=from', [], returncode=1)
+
+    def test_027_dictionary_38_set_set_01_piecedesignator_01(self):
+        self.verify(
+            "dictionary X[to]=k X[to]=R X[from]=Q X[ a5 ]=connectedpawns",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "ConnectedPawns"),
+            ],
+        )
+
+    def test_027_dictionary_38_set_set_01_piecedesignator_02(self):
+        self.verify("dictionary X[to]=k X[1]=k", [], returncode=1)
+
+    def test_027_dictionary_38_set_set_01_piecedesignator_03(self):
+        self.verify('dictionary X[to]=k X["a"]=k', [], returncode=1)
+
+    def test_027_dictionary_38_set_set_01_piecedesignator_04(self):
+        self.verify("dictionary X[to]=k X[to]=1", [], returncode=1)
+
+    def test_027_dictionary_38_set_set_01_piecedesignator_05(self):
+        self.verify('dictionary X[to]=k X[to]="a"', [], returncode=1)
+
+    def test_027_dictionary_38_set_set_01_piecedesignator_06(self):
+        self.verify("dictionary X[to]=k X[1]=2", [], returncode=1)
+
+    def test_027_dictionary_38_set_set_02_some_other_set_01(self):
+        self.verify(
+            "dictionary X[to]=from X[to]=to X[from]=to X[ b6 ]=c4",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "From"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "To"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "To"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_38_set_set_02_some_other_set_02(self):
+        self.verify("dictionary X[to]=from X[1]=from", [], returncode=1)
+
+    def test_027_dictionary_38_set_set_02_some_other_set_03(self):
+        self.verify('dictionary X[to]=from X["a"]=from', [], returncode=1)
+
+    def test_027_dictionary_38_set_set_02_some_other_set_04(self):
+        self.verify("dictionary X[to]=from X[to]=1", [], returncode=1)
+
+    def test_027_dictionary_38_set_set_02_some_other_set_05(self):
+        self.verify('dictionary X[to]=from X[to]="a"', [], returncode=1)
+
+    def test_027_dictionary_38_set_set_02_some_other_set_06(self):
+        self.verify('dictionary X[to]=from X[1]="a"', [], returncode=1)
+
+    def test_027_dictionary_39_set_integer_01(self):
+        self.verify(
+            "dictionary X[to]=3 X[to]=7 X[from]=4 X[ rh8 ]=1",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_39_set_integer_02(self):
+        self.verify("dictionary X[to]=3 X[1]=3", [], returncode=1)
+
+    def test_027_dictionary_39_set_integer_03(self):
+        self.verify('dictionary X[to]=3 X["a"]=3', [], returncode=1)
+
+    def test_027_dictionary_39_set_integer_04(self):
+        self.verify("dictionary X[to]=3 X[to]=k", [], returncode=1)
+
+    def test_027_dictionary_39_set_integer_05(self):
+        self.verify("dictionary X[to]=3 X[to]=from", [], returncode=1)
+
+    def test_027_dictionary_39_set_integer_06(self):
+        self.verify('dictionary X[to]=3 X[to]="a"', [], returncode=1)
+
+    def test_027_dictionary_39_set_integer_07(self):
+        self.verify("dictionary X[to]=3 X[1]=from", [], returncode=1)
+
+    def test_027_dictionary_40_integer_string_01(self):
+        self.verify(
+            'dictionary X[3]="bc" X[3]="xz" X[4]="mn"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_40_integer_string_02(self):
+        self.verify('dictionary X[3]="bc" X["a"]="bc"', [], returncode=1)
+
+    def test_027_dictionary_40_integer_string_03(self):
+        self.verify('dictionary X[3]="bc" X[ k ]="bc"', [], returncode=1)
+
+    def test_027_dictionary_40_integer_string_04(self):
+        self.verify('dictionary X[3]="bc" X[to]="bc"', [], returncode=1)
+
+    def test_027_dictionary_40_integer_string_05(self):
+        self.verify('dictionary X[3]="bc" X[3]=1', [], returncode=1)
+
+    def test_027_dictionary_40_integer_string_06(self):
+        self.verify('dictionary X[3]="bc" X[3]=k', [], returncode=1)
+
+    def test_027_dictionary_40_integer_string_07(self):
+        self.verify('dictionary X[3]="bc" X[3]=from', [], returncode=1)
+
+    def test_027_dictionary_41_integer_set_01_piecedesignator_01(self):
+        self.verify(
+            "dictionary X[3]=qa5 X[3]=g2 X[4]=[KQ]a5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_41_integer_set_01_piecedesignator_02(self):
+        self.verify('dictionary X[3]=qa5 X["a"]=qa5', [], returncode=1)
+
+    def test_027_dictionary_41_integer_set_01_piecedesignator_03(self):
+        self.verify("dictionary X[3]=qa5 X[ k ]=qa5", [], returncode=1)
+
+    def test_027_dictionary_41_integer_set_01_piecedesignator_04(self):
+        self.verify("dictionary X[3]=qa5 X[from]=qa5", [], returncode=1)
+
+    def test_027_dictionary_41_integer_set_01_piecedesignator_05(self):
+        self.verify("dictionary X[3]=qa5 X[3]=1", [], returncode=1)
+
+    def test_027_dictionary_41_integer_set_01_piecedesignator_06(self):
+        self.verify('dictionary X[3]=qa5 X[3]="a"', [], returncode=1)
+
+    def test_027_dictionary_42_integer_set_02_some_other_set_01(self):
+        self.verify(
+            "dictionary X[3]=from X[3]=to X[5]=connectedpawns",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "From"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "To"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "ConnectedPawns"),
+            ],
+        )
+
+    def test_027_dictionary_42_integer_set_02_some_other_set_02(self):
+        self.verify('dictionary X[3]=from X["a"]=from', [], returncode=1)
+
+    def test_027_dictionary_42_integer_set_02_some_other_set_03(self):
+        self.verify("dictionary X[3]=from X[ k ]=from", [], returncode=1)
+
+    def test_027_dictionary_42_integer_set_02_some_other_set_04(self):
+        self.verify("dictionary X[3]=from X[to]=from", [], returncode=1)
+
+    def test_027_dictionary_42_integer_set_02_some_other_set_05(self):
+        self.verify("dictionary X[3]=from X[3]=1", [], returncode=1)
+
+    def test_027_dictionary_42_integer_set_02_some_other_set_06(self):
+        self.verify('dictionary X[3]=from X[3]="a"', [], returncode=1)
+
+    def test_027_dictionary_43_integer_integer_01(self):
+        self.verify(
+            "dictionary X[3]=3 X[3]=6 X[7]=4",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_43_integer_integer_02(self):
+        self.verify('dictionary X[3]=3 X["a"]=3', [], returncode=1)
+
+    def test_027_dictionary_43_integer_integer_03(self):
+        self.verify("dictionary X[3]=3 X[ k ]=3", [], returncode=1)
+
+    def test_027_dictionary_43_integer_integer_04(self):
+        self.verify("dictionary X[3]=3 X[to]=3", [], returncode=1)
+
+    def test_027_dictionary_43_integer_integer_05(self):
+        self.verify('dictionary X[3]=3 X[3]="a"', [], returncode=1)
+
+    def test_027_dictionary_43_integer_integer_06(self):
+        self.verify("dictionary X[3]=3 X[3]=k", [], returncode=1)
+
+    def test_027_dictionary_43_integer_integer_07(self):
+        self.verify("dictionary X[3]=3 X[3]=to", [], returncode=1)
+
+    def test_027_dictionary_44_piecedesignator_string_01(self):
+        self.verify(  # chessql accepts '[ a5]' too.
+            'dictionary X[ a5 ]="bc" X[ a5 ]="xz" X[ R ]="mn" X[to]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "String"),
+            ],
+        )
+
+    def test_027_dictionary_44_piecedesignator_string_02(self):
+        self.verify('dictionary X[ a5 ]="bc" X[1]="bc"', [], returncode=1)
+
+    def test_027_dictionary_44_piecedesignator_string_03(self):
+        self.verify('dictionary X[ a5 ]="bc" X["a5"]="bc"', [], returncode=1)
+
+    def test_027_dictionary_44_piecedesignator_string_04(self):
+        self.verify('dictionary X[ a5 ]="bc" X[ a5 ]=1', [], returncode=1)
+
+    def test_027_dictionary_44_piecedesignator_string_05(self):
+        self.verify('dictionary X[ a5 ]="bc" X[ a5 ]=k', [], returncode=1)
+
+    def test_027_dictionary_44_piecedesignator_string_06(self):
+        self.verify('dictionary X[ a5 ]="bc" X[ a5 ]=to', [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_01_piecedesignator_01(self):
+        self.verify(  # chessql accepts '[ a5]' too.
+            "dictionary X[ a5 ]=d7 X[ a5 ]=K X[ k ]=Q X[ to ]=h7",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_027_dictionary_45_piecedesignator_set_01_piecedesignator_02(self):
+        self.verify("dictionary X[ a5 ]=d7 X[1]=d7", [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_01_piecedesignator_03(self):
+        self.verify('dictionary X[ a5 ]=d7 X["a5"]=d7', [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_01_piecedesignator_04(self):
+        self.verify("dictionary X[ a5 ]=d7 X[ a5 ]=1", [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_01_piecedesignator_05(self):
+        self.verify('dictionary X[ a5 ]=d7 X[ a5 ]="a"', [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_02_some_other_set_01(self):
+        self.verify(  # chessql accepts '[ a5]' too.
+            "dictionary X[ a5 ]=from X[ a5 ]=to X[ h5 ]=connectedpawns "
+            + "X[from]=to",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "From"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "To"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "ConnectedPawns"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "To"),
+            ],
+        )
+
+    def test_027_dictionary_45_piecedesignator_set_02_some_other_set_02(self):
+        self.verify("dictionary X[ a5 ]=from X[1]=from", [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_02_some_other_set_03(self):
+        self.verify('dictionary X[ a5 ]=from X["a5"]=from', [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_02_some_other_set_04(self):
+        self.verify("dictionary X[ a5 ]=from X[ a5 ]=1", [], returncode=1)
+
+    def test_027_dictionary_45_piecedesignator_set_02_some_other_set_05(self):
+        self.verify('dictionary X[ a5 ]=from X[ a5 ]="a"', [], returncode=1)
+
+    def test_027_dictionary_46_piecedesignator_integer_01(self):
+        self.verify(  # chessql accepts '[ a5]' too.
+            "dictionary X[ a5 ]=3 X[ a5 ]=4 X[ h2 ]=3 X[to]=8",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_027_dictionary_46_piecedesignator_integer_02(self):
+        self.verify("dictionary X[ a5 ]=3 X[1]=3", [], returncode=1)
+
+    def test_027_dictionary_46_piecedesignator_integer_03(self):
+        self.verify('dictionary X[ a5 ]=3 X["a5"]=3', [], returncode=1)
+
+    def test_027_dictionary_46_piecedesignator_integer_04(self):
+        self.verify("dictionary X[ a5 ]=3 X[ a5 ]=k", [], returncode=1)
+
+    def test_027_dictionary_46_piecedesignator_integer_05(self):
+        self.verify("dictionary X[ a5 ]=3 X[ a5 ]=to", [], returncode=1)
+
+    def test_027_dictionary_46_piecedesignator_integer_06(self):
+        self.verify('dictionary X[ a5 ]=3 X[ a5 ]="a"', [], returncode=1)
 
     def test_028_distance_01(self):
         self.verify(
@@ -1778,6 +2699,308 @@ class Filters(verify.Verify):
                 (5, "RegexRepeat"),
             ],
         )
+
+    def test_063_local_01(self):
+        self.verify("local", [], returncode=1)
+
+    def test_063_local_02_local_dictionary(self):
+        self.verify("local dictionary", [], returncode=1)
+
+    def test_063_local_03_bad_name(self):
+        self.verify("local dictionary k", [], returncode=1)
+
+    def test_063_local_04_good_name(self):
+        self.verify("local dictionary X", [(3, "Dictionary")])
+
+    def test_063_local_05_string_string(self):
+        self.verify(
+            'local dictionary X["a"]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_063_local_06_string_set_01_piecedesignator(self):
+        self.verify(
+            'local dictionary X["a"]=k',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_063_local_06_string_set_02_some_other_set(self):
+        self.verify(
+            'local dictionary X["a"]=connectedpawns',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "ConnectedPawns"),
+            ],
+        )
+
+    def test_063_local_07_string_integer(self):
+        self.verify(
+            'local dictionary X["a"]=1',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_063_local_08_local_string_position(self):
+        self.verify(
+            'local dictionary X["a"]=currentposition',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "CurrentPosition"),
+            ],
+        )
+
+    def test_063_local_09_string_logical(self):
+        self.verify('local dictionary X["a"]=false', [], returncode=1)
+
+    def test_063_local_10_set_string(self):
+        self.verify(
+            'local dictionary X[to]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "String"),
+            ],
+        )
+
+    def test_063_local_11_set_set_01_piece_designator(self):
+        self.verify(
+            "local dictionary X[to]=k",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_063_local_11_set_set_02_some_other_set(self):
+        self.verify(
+            "local dictionary X[to]=from",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "From"),
+            ],
+        )
+
+    def test_063_local_12_set_integer(self):
+        self.verify(
+            "local dictionary X[to]=3",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_063_local_13_local_set_position(self):
+        self.verify(
+            "local dictionary X[to]=currentposition",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "CurrentPosition"),
+            ],
+        )
+
+    def test_063_local_14_string_logical(self):
+        self.verify("local dictionary X[to]=false", [], returncode=1)
+
+    def test_063_local_15_integer_string(self):
+        self.verify(
+            'local dictionary X[3]="bc"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    def test_063_local_16_integer_set_01_piece_designator(self):
+        self.verify(
+            "local dictionary X[3]=qa5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_063_local_16_integer_set_02_some_other_set(self):
+        self.verify(
+            "local dictionary X[3]=from",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "From"),
+            ],
+        )
+
+    def test_063_local_17_integer_integer(self):
+        self.verify(
+            "local dictionary X[3]=3",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_063_local_18_integer_position(self):
+        self.verify(
+            "local dictionary X[3]=currentposition",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "CurrentPosition"),
+            ],
+        )
+
+    def test_063_local_19_integer_logical(self):
+        self.verify("local dictionary X[3]=false", [], returncode=1)
+
+    def test_063_local_20_bad_piecedesignator_string(self):
+        self.verify('local dictionary X[a5]="bc"', [], returncode=1)
+
+    def test_063_local_21_bad_piecedesignator_set_01_piece_designator(self):
+        self.verify("local dictionary X[a5]=h2", [], returncode=1)
+
+    def test_063_local_21_bad_piecedesignator_set_02_some_other_set(self):
+        self.verify("local dictionary X[a5]=from", [], returncode=1)
+
+    def test_063_local_22_bad_piecedesignator_integer(self):
+        self.verify("local dictionary X[a5]=3", [], returncode=1)
+
+    def test_063_local_23_bad_piecedesignator_position(self):
+        self.verify("local dictionary X[a5]=currentposition", [], returncode=1)
+
+    def test_063_local_24_bad_piecedesignator_logical(self):
+        self.verify("local dictionary X[a5]=false", [], returncode=1)
+
+    def test_063_local_25_piecedesignator_string(self):
+        self.verify(
+            'local dictionary X[ a5 ]="bc"',  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_063_local_26_piecedesignator_set_01_piece_designator(self):
+        self.verify(
+            "local dictionary X[ a5 ]=d7",  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_063_local_26_piecedesignator_set_02_some_other_set(self):
+        self.verify(
+            "local dictionary X[ a5 ]=from",  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "From"),
+            ],
+        )
+
+    def test_063_local_27_piecedesignator_integer(self):
+        self.verify(
+            "local dictionary X[ a5 ]=3",  # chessql accepts '[ a5]' too.
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_063_local_28_piecedesignator_position(self):
+        self.verify(  # chessql accepts '[ a5]' too.
+            "local dictionary X[ a5 ]=currentposition",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "CurrentPosition"),
+            ],
+        )
+
+    def test_063_local_29_logical_string(self):
+        self.verify('local dictionary X[true]="bc"', [], returncode=1)
+
+    def test_063_local_30_logical_set_01_piece_designator(self):
+        self.verify("local dictionary X[true]=k", [], returncode=1)
+
+    def test_063_local_30_logical_set_02_some_other_set(self):
+        self.verify("local dictionary X[true]=from", [], returncode=1)
+
+    def test_063_local_31_logical_integer(self):
+        self.verify("local dictionary X[true]=3", [], returncode=1)
+
+    def test_063_local_32_logical_position(self):
+        self.verify(
+            "local dictionary X[true]=currentposition", [], returncode=1
+        )
+
+    def test_063_local_33_logical_logical(self):
+        self.verify("local dictionary X[true]=false", [], returncode=1)
+
+    def test_063_local_34_piecedesignator_logical(self):
+        self.verify("local dictionary X[ a5 ]=false", [], returncode=1)
 
     def test_064_loop_01(self):
         self.verify("loop", [], returncode=1)
@@ -5951,6 +7174,120 @@ class Filters(verify.Verify):
 
     def test_199_assign_18_variable_02_piece_variable(self):
         self.verify("piece y=x", [], returncode=1)
+
+    def test_199_assign_19_name_integer(self):
+        self.verify("y[3]", [], returncode=1)
+
+    def test_199_assign_20_name_integer_assign(self):
+        self.verify("y[3]=", [], returncode=1)
+
+    def test_199_assign_21_name_integer_integer(self):
+        self.verify("y[3]=4", [], returncode=1)
+
+    def test_199_assign_22_name_integer_string(self):
+        self.verify('y[3]="a"', [], returncode=1)
+
+    def test_199_assign_23_name_integer_piecedesignator(self):
+        self.verify("y[3]=r", [], returncode=1)
+
+    def test_199_assign_24_name_integer_other_set(self):
+        self.verify("y[3]=from", [], returncode=1)
+
+    def test_199_assign_25_name_integer_position(self):
+        self.verify("y[3]=currentposition", [], returncode=1)
+
+    def test_199_assign_26_name_integer_logical(self):
+        self.verify("y[3]=true", [], returncode=1)
+
+    def test_199_assign_27_name_string_integer(self):
+        self.verify('y["here"]=4', [], returncode=1)
+
+    def test_199_assign_28_name_string_string(self):
+        self.verify('y["here"]="a"', [], returncode=1)
+
+    def test_199_assign_29_name_string_piecedesignator(self):
+        self.verify('y["here"]=r', [], returncode=1)
+
+    def test_199_assign_30_name_string_other_set(self):
+        self.verify('y["here"]=from', [], returncode=1)
+
+    def test_199_assign_31_name_string_position(self):
+        self.verify('y["here"]=currentposition', [], returncode=1)
+
+    def test_199_assign_32_name_string_logical(self):
+        self.verify('y["here"]=true', [], returncode=1)
+
+    def test_199_assign_33_name_bad_piecedesignator_integer(self):
+        self.verify("y[rc4]=4", [], returncode=1)
+
+    def test_199_assign_34_name_bad_piecedesignator_string(self):
+        self.verify('y[rc4]="a"', [], returncode=1)
+
+    def test_199_assign_35_name_bad_piecedesignator_piecedesignator(self):
+        self.verify("y[rc4]=r", [], returncode=1)
+
+    def test_199_assign_36_name_bad_piecedesignator_other_set(self):
+        self.verify("y[rc4]=from", [], returncode=1)
+
+    def test_199_assign_37_name_bad_piecedesignator_position(self):
+        self.verify("y[rc4]=currentposition", [], returncode=1)
+
+    def test_199_assign_38_name_bad_piecedesignator_logical(self):
+        self.verify("y[rc4]=true", [], returncode=1)
+
+    def test_199_assign_39_name_piecedesignator_integer(self):
+        self.verify("y[ rc4 ]=4", [], returncode=1)
+
+    def test_199_assign_40_name_piecedesignator_string(self):
+        self.verify('y[ rc4 ]="a"', [], returncode=1)
+
+    def test_199_assign_41_name_piecedesignator_piecedesignator(self):
+        self.verify("y[ rc4 ]=r", [], returncode=1)
+
+    def test_199_assign_42_name_piecedesignator_other_set(self):
+        self.verify("y[ rc4 ]=from", [], returncode=1)
+
+    def test_199_assign_43_name_piecedesignator_position(self):
+        self.verify("y[ rc4 ]=currentposition", [], returncode=1)
+
+    def test_199_assign_44_name_piecedesignator_logical(self):
+        self.verify("y[ rc4 ]=true", [], returncode=1)
+
+    def test_199_assign_45_name_position_integer(self):
+        self.verify("y[currentposition]=4", [], returncode=1)
+
+    def test_199_assign_46_name_position_string(self):
+        self.verify('y[currentposition]="a"', [], returncode=1)
+
+    def test_199_assign_47_name_position_piecedesignator(self):
+        self.verify("y[currentposition]=r", [], returncode=1)
+
+    def test_199_assign_48_name_position_other_set(self):
+        self.verify("y[currentposition]=from", [], returncode=1)
+
+    def test_199_assign_49_name_position_position(self):
+        self.verify("y[currentposition]=currentposition", [], returncode=1)
+
+    def test_199_assign_50_name_position_logical(self):
+        self.verify("y[currentposition]=true", [], returncode=1)
+
+    def test_199_assign_51_name_logical_integer(self):
+        self.verify("y[false]=4", [], returncode=1)
+
+    def test_199_assign_52_name_logical_string(self):
+        self.verify('y[false]="a"', [], returncode=1)
+
+    def test_199_assign_53_name_logical_piecedesignator(self):
+        self.verify("y[false]=r", [], returncode=1)
+
+    def test_199_assign_54_name_logical_other_set(self):
+        self.verify("y[false]=from", [], returncode=1)
+
+    def test_199_assign_55_name_logical_position(self):
+        self.verify("y[false]=currentposition", [], returncode=1)
+
+    def test_199_assign_56_name_logical_logical(self):
+        self.verify("y[false]=true", [], returncode=1)
 
     def test_200_assignif_01_bare(self):
         self.verify("=?", [], returncode=1)

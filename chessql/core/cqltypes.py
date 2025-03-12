@@ -70,6 +70,23 @@ class VariableType(enum.Flag):
     ANY = NUMERIC | SET | PIECE | STRING | POSITION
 
 
+class PersistenceType(enum.Flag):
+    """Define the persistence types for variables and dictionaries.
+
+    Dictionaries and variables are either persistent or local.  A persistent
+    item retains it's value between games.  A local item is initialized for
+    each game.
+
+    A PERSISTENT item may be QUIET too, but QUIET is not allowed otherwise.
+    """
+
+    ATOMIC = enum.auto()
+    LOCAL = enum.auto()
+    PERSISTENT = enum.auto()
+    QUIET = enum.auto()
+    ANY = ATOMIC | LOCAL | PERSISTENT | QUIET
+
+
 class DefinitionError(Exception):
     """Exception raised for problems in definition module."""
 
@@ -156,8 +173,64 @@ def function(name, container):
         _definition(name, container, Function)
 
 
-class Variable(_Definition):
-    """Set name of variable."""
+class _Variable(_Definition):
+    """Set filter and persistence types for Variable and Dictionary."""
+
+    def __init__(self, name):
+        """Delegate then set filter and persistence types to defaults."""
+        super().__init__(name)
+        self._filter_type = FilterType.ANY  # Should exclude LOGICAL.
+        self._persistence_type = PersistenceType.ANY
+
+    @property
+    def filter_type(self):
+        """Return self._filter_type."""
+        return self._filter_type
+
+    @filter_type.setter
+    def filter_type(self, value):
+        """Bind self._filter_type to value if current value is ANY."""
+        assert value in FilterType
+        if value is not FilterType.ANY:
+            if self._filter_type is not FilterType.ANY:
+                if self._filter_type is not value:
+                    raise DefinitionError(
+                        "'"
+                        + self._name
+                        + "' is already a '"
+                        + self._filter_type.name.lower()
+                        + "' filter so cannot be set as a '"
+                        + value.name.lower()
+                        + "' filter"
+                    )
+        self._filter_type = value
+
+    @property
+    def persistence_type(self):
+        """Return self._persistence_type."""
+        return self._persistence_type
+
+    @persistence_type.setter
+    def persistence_type(self, value):
+        """Bind self._persistence_type to value if current value is ANY."""
+        assert value in PersistenceType
+        if value is not PersistenceType.ANY:
+            if self._persistence_type is not PersistenceType.ANY:
+                if self._persistence_type is not value:
+                    raise DefinitionError(
+                        "'"
+                        + self._name
+                        + "' is already '"
+                        + self._persistence_type.name.lower()
+                        + "' so cannot be set as '"
+                        + value.name.lower()
+                        + "'"
+                    )
+        self._persistence_type = value
+
+
+class Variable(_Variable):
+    """Set filter, variable, and persistence types, and anme, of variable."""
 
     _definition_type = DefinitionType.VARIABLE
 
@@ -169,7 +242,6 @@ class Variable(_Definition):
         """Delegate then set self._variable_type to VariableType.ANY."""
         super().__init__(name)
         self._variable_type = VariableType.ANY
-        self._filter_type = FilterType.ANY
 
     @property
     def variable_type(self):
@@ -214,29 +286,6 @@ class Variable(_Definition):
         assert value in VariableType
         return value is self._variable_type or value in VariableType.ANY
 
-    @property
-    def filter_type(self):
-        """Return self._filter_type."""
-        return self._filter_type
-
-    @filter_type.setter
-    def filter_type(self, value):
-        """Bind self._filter_type to value if current value is ANY."""
-        assert value in FilterType
-        if value is not FilterType.ANY:
-            if self._filter_type is not FilterType.ANY:
-                if self._filter_type is not value:
-                    raise DefinitionError(
-                        "'"
-                        + self._name
-                        + "' is already a '"
-                        + self._filter_type.name.lower()
-                        + "' filter so cannot be set as a '"
-                        + value.name.lower()
-                        + "' filter"
-                    )
-        self._filter_type = value
-
 
 def variable(name, container):
     """Define name in container as a Variable.
@@ -249,10 +298,38 @@ def variable(name, container):
         _definition(name, container, Variable)
 
 
-class Dictionary(_Definition):
-    """Set name of dictionary."""
+class Dictionary(_Variable):
+    """Set filter, key, and persistence types, and anme, of dictionary."""
 
     _definition_type = DefinitionType.DICTIONARY
+
+    def __init__(self, name):
+        """Delegate then set self._key_filter_type to FilterType.ANY."""
+        super().__init__(name)
+        self._key_filter_type = FilterType.ANY  # Should exclude LOGICAL.
+
+    @property
+    def key_filter_type(self):
+        """Return self._key_filter_type."""
+        return self._key_filter_type
+
+    @key_filter_type.setter
+    def key_filter_type(self, value):
+        """Bind self._key_filter_type to value if current value is ANY."""
+        assert value in FilterType
+        if value is not FilterType.ANY:
+            if self._key_filter_type is not FilterType.ANY:
+                if self._key_filter_type is not value:
+                    raise DefinitionError(
+                        "'"
+                        + self._name
+                        + "' key is already a '"
+                        + self._key_filter_type.name.lower()
+                        + "' filter so cannot be a '"
+                        + value.name.lower()
+                        + "' filter"
+                    )
+        self._key_filter_type = value
 
 
 def dictionary(name, container):
