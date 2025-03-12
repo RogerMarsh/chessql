@@ -6059,6 +6059,13 @@ def _is_local_dictionary(filter_):
     """Return True if filter_ class represents 'local dictionary' filter."""
     if not isinstance(filter_, Dictionary):
         return False
-    # name = filter_.name
-    # Dictionary definition does not yet have a 'local' attribute.
-    return "local" in filter_.match_.group()
+    if (
+        "local" not in filter_.match_.group()
+        and cqltypes.PersistenceType.ANY
+        in filter_.container.definitions[filter_.name].persistence_type
+    ):
+        return False
+    return (
+        cqltypes.PersistenceType.LOCAL
+        in filter_.container.definitions[filter_.name].persistence_type
+    )
