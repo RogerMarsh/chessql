@@ -2120,9 +2120,9 @@ class Dictionary(structure.Complete, structure.Name):
                 + ": dictionary '"
                 + name
                 + "' has not been declared '"
-                + cqltypes.PersistenceType.LOCAL
+                + cqltypes.PersistenceType.LOCAL.name.lower()
                 + "' or '"
-                + cqltypes.PersistenceType.PERSISTENT
+                + cqltypes.PersistenceType.PERSISTENT.name.lower()
                 + "' previously"
             )
         else:
@@ -5875,7 +5875,7 @@ class CountFilter(structure.Argument):
         structure.raise_if_not_filter_type(
             self.children[0],
             self,
-            cqltypes.FilterType.SET,
+            (cqltypes.FilterType.SET | cqltypes.FilterType.STRING),
             "argument must be a",
         )
 

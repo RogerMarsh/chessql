@@ -8709,7 +8709,7 @@ class Filters(verify.Verify):
         self.verify("#3", [], returncode=1)
 
     def test_201_count_04_string(self):
-        self.verify_run_fail('#"str"')
+        self.verify('#"str"', [(3, "CountFilter"), (4, "String")])
 
     def test_201_count_05_logical(self):
         self.verify("#false", [], returncode=1)
