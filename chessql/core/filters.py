@@ -232,10 +232,10 @@ class RepeatConstituent(structure.Complete):
             node.parent.children.append(node.children.pop())
             node.verify_children_and_set_filter_type(set_node_completed=True)
             node = node.parent
-        if not isinstance(self.parent, LineArrow):
+        if not isinstance(self.parent, (LineArrow, Path)):
             raise basenode.NodeError(
                 self.__class__.__name__
-                + ": parent is not a '<--' or '-->' filter"
+                + ": parent is not a '<--', '-->', or 'path' filter"
             )
         self.container.cursor = self
 
