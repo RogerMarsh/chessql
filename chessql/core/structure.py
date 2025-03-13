@@ -557,6 +557,23 @@ class Argument(CQLObject):
         self.container.cursor = self
 
 
+class BindArgument(Argument):
+    """The variable argument for 'isbound', 'isunbound' and 'unbind'."""
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        child = self.children[0]
+        if not isinstance(child, Name):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": expects a variable name but got a '"
+                + child.__class__.__name__
+                + "'"
+            )
+
+
 class BlockLeft(CompleteBlock):
     """Subclass of CQLObject for keywords which start a block.
 

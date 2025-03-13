@@ -3042,10 +3042,8 @@ def in_(match_=None, container=None):
     return In(match_=match_, container=container)
 
 
-class IsBound(structure.NoArgumentsFilter):
+class IsBound(structure.BindArgument):
     """Represent 'isbound' logical filter."""
-
-    _filter_type = cqltypes.FilterType.LOGICAL
 
 
 class IsolatedPawns(structure.NoArgumentsFilter):
@@ -3054,10 +3052,8 @@ class IsolatedPawns(structure.NoArgumentsFilter):
     _filter_type = cqltypes.FilterType.SET
 
 
-class IsUnbound(structure.NoArgumentsFilter):
+class IsUnbound(structure.BindArgument):
     """Represent 'isunbound' logical filter."""
-
-    _filter_type = cqltypes.FilterType.LOGICAL
 
 
 def is_keepallbest_parameter_accepted_by(node):
@@ -4715,20 +4711,27 @@ class Type(structure.Argument):
     _precedence = cqltypes.Precedence.P150
 
 
-class Unbind(structure.Argument):
+class Unbind(structure.BindArgument):
     """Represent 'unbind' logical filter.
 
     'unbind' removes the value associated with a variable, dictionary or
     dictionary entry, but does not affect the variable or dictionary type.
     """
 
-    _filter_type = cqltypes.FilterType.LOGICAL
-
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
         child = self.children[0]
-        print(child.__class__.__name__)
+        if not isinstance(child, BracketLeft):
+            super()._verify_children()
+        else:
+            child = child.children[0]
+        name = child.name
+        if name not in self.container.definitions:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": expects the name of an existing dictionary, "
+                + "function, or variable"
+            )
 
 
 class UpperCase(structure.Argument):
@@ -5077,8 +5080,51 @@ class Variable(structure.Complete, structure.VariableName):
         return True
 
 
+class BindName(structure.Complete, structure.Name):
+    """Represent the name of a dictionary, function, or variable.
+
+    Intended to support the 'isbound', 'isunbound', and 'unbind' filters.
+
+    None of these filters cause the name to be registed, but 'unbind'
+    expects the name to be in the register.
+
+    """
+
+    def __init__(self, match_=None, container=None):
+        """Delegate then register the variable name."""
+        super().__init__(match_=match_, container=container)
+        groupdict = match_.groupdict()
+        # The "variable" reference must be first to allow for variables
+        # defined by 'echo' pattern.
+        self.name = groupdict["variable"] or groupdict["variable_assign"]
+
+    def place_node_in_tree(self):
+        """Delegate then set cursor to self."""
+        super().place_node_in_tree()
+        self.container.cursor = self
+
+
+def _numeric_variable(match_=None, container=None):
+    """Return Variable, or RangeVariable if collecting a range."""
+    node = container.cursor
+    while True:
+        if not node.is_parameter:
+            break
+        node = node.parent
+    if is_range_parameter_accepted_by(node):
+        if is_too_many_range_integers(container.cursor):
+            return Variable(match_=match_, container=container)
+        if is_range_start_or_continuation(container.cursor):
+            return RangeVariable(match_=match_, container=container)
+    return Variable(match_=match_, container=container)
+
+
 def variable(match_=None, container=None):
-    """Return Variable, RangeVariable, PieceVariable, or Dictionary instance.
+    """Return an instance of a class representing a variable name.
+
+    These are Variable, PieceVariable, Dictionary, BindName, and
+    HHDBToken.  The called function _numeric_variable adds RangeVariable
+    to the list.
 
     A Dictionary instance is returned only if the name is already defined
     as a dictionary.
@@ -5091,40 +5137,24 @@ def variable(match_=None, container=None):
 
     """
     name = match_.groupdict()["variable"]
-    if hhdb.is_hhdb_token_accepted_by(container.cursor):
-        if name in hhdb.KEYWORD_VARIABLES:
-            return hhdb.HHDBToken(match_=match_, container=container)
+    if (
+        hhdb.is_hhdb_token_accepted_by(container.cursor)
+        and name in hhdb.KEYWORD_VARIABLES
+    ):
+        return hhdb.HHDBToken(match_=match_, container=container)
     definitions = container.definitions
     if name in definitions:
         definition_type = definitions[name].definition_type
         if definition_type is cqltypes.DefinitionType.DICTIONARY:
             return Dictionary(match_=match_, container=container)
-        if definition_type is cqltypes.DefinitionType.FUNCTION:
-            # Problem is 'unbind x', 'isbound x' and 'isunbound x' are
-            # acceptable filters when 'x' is a function name.  None of
-            # classes Variable, Function, and FunctionCall, are
-            # appropriate for this reference to 'x'.
-            raise basenode.NodeError(
-                container.cursor.__class__.__name__
-                + ": attempting to use function name "
-                + name
-                + " as a variable name"
-            )
         assert definition_type is cqltypes.DefinitionType.VARIABLE
         variable_type = definitions[name].variable_type
         if variable_type is cqltypes.VariableType.NUMERIC:
-            node = container.cursor
-            while True:
-                if not node.is_parameter:
-                    break
-                node = node.parent
-            if is_range_parameter_accepted_by(node):
-                if is_too_many_range_integers(container.cursor):
-                    return Variable(match_=match_, container=container)
-                if is_range_start_or_continuation(container.cursor):
-                    return RangeVariable(match_=match_, container=container)
+            return _numeric_variable(match_=match_, container=container)
         if variable_type is cqltypes.VariableType.PIECE:
             return PieceVariable(match_=match_, container=container)
+    if isinstance(container.cursor, structure.BindArgument):
+        return BindName(match_=match_, container=container)
     return Variable(match_=match_, container=container)
 
 

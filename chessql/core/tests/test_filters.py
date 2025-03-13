@@ -2046,8 +2046,122 @@ class Filters(verify.Verify):
     def test_054_int_02(self):
         self.verify('int "64"', [(3, "Int"), (4, "String")])
 
+    def test_055_isbound_01(self):
+        self.verify("isbound", [], returncode=1)
+
+    def test_055_isbound_02(self):
+        con = self.verify("isbound x", [(3, "IsBound"), (4, "BindName")])
+        self.assertEqual("x" in con.definitions, False)
+
+    def test_055_isbound_03(self):
+        con = self.verify(
+            "x=0 isbound x",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "IsBound"),
+                (4, "Variable"),
+            ],
+        )
+        self.assertEqual("x" in con.definitions, True)
+
+    def test_055_isbound_04_key_no_dictionary(self):
+        self.verify('isbound v["key"]', [], returncode=1)
+
+    def test_055_isbound_05_dictionary(self):
+        con = self.verify(
+            "dictionary v isbound v",
+            [
+                (3, "Dictionary"),
+                (3, "IsBound"),
+                (4, "Dictionary"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
+
+    def test_055_isbound_06_dictionary_key_absent(self):
+        self.verify('dictionary v isbound v["key"]', [], returncode=1)
+
+    def test_055_isbound_07_dictionary_key(self):
+        self.verify(
+            'dictionary v["key"]="value" isbound v["key"]', [], returncode=1
+        )
+
+    def test_055_isbound_08_dictionary_key_present(self):
+        con = self.verify(
+            'dictionary v["key"]="value" isbound v',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+                (3, "IsBound"),
+                (4, "Dictionary"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
+
     def test_056_isolatedpwans(self):
         self.verify("isolatedpawns", [(3, "IsolatedPawns")])
+
+    def test_057_isunbound_01(self):
+        self.verify("isunbound", [], returncode=1)
+
+    def test_057_isunbound_02(self):
+        con = self.verify("isunbound x", [(3, "IsUnbound"), (4, "BindName")])
+        self.assertEqual("x" in con.definitions, False)
+
+    def test_057_isunbound_03(self):
+        con = self.verify(
+            "x=0 isunbound x",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "IsUnbound"),
+                (4, "Variable"),
+            ],
+        )
+        self.assertEqual("x" in con.definitions, True)
+
+    def test_057_isunbound_04_key_no_dictionary(self):
+        self.verify('isunbound v["key"]', [], returncode=1)
+
+    def test_057_isunbound_05_dictionary(self):
+        con = self.verify(
+            "dictionary v isunbound v",
+            [
+                (3, "Dictionary"),
+                (3, "IsUnbound"),
+                (4, "Dictionary"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
+
+    def test_057_isunbound_06_dictionary_key_absent(self):
+        self.verify('dictionary v isunbound v["key"]', [], returncode=1)
+
+    def test_057_isunbound_07_dictionary_key(self):
+        self.verify(
+            'dictionary v["key"]="value" isunbound v["key"]', [], returncode=1
+        )
+
+    def test_057_isunbound_08_dictionary_key_present(self):
+        con = self.verify(
+            'dictionary v["key"]="value" isunbound v',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+                (3, "IsUnbound"),
+                (4, "Dictionary"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
 
     def test_058_lastgamenumber_01_bare(self):
         self.verify_run(
@@ -5602,6 +5716,74 @@ class Filters(verify.Verify):
             "typename d4",
             [(3, "TypeName"), (4, "PieceDesignator")],
         )
+
+    def test_137_unbind_01(self):
+        self.verify("unbind", [], returncode=1)
+
+    def test_137_unbind_02_variable(self):
+        self.verify("unbind x", [], returncode=1)
+
+    def test_137_unbind_03_variable(self):
+        con = self.verify(
+            "x=1 unbind x",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Unbind"),
+                (4, "Variable"),
+            ],
+        )
+        self.assertEqual("x" in con.definitions, True)
+
+    def test_137_unbind_04_dictionary(self):
+        con = self.verify(
+            "dictionary v unbind v",
+            [
+                (3, "Dictionary"),
+                (3, "Unbind"),
+                (4, "Dictionary"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
+
+    def test_137_unbind_04_dictionary_key_01(self):
+        self.verify('dictionary v unbind v["key"]', [], returncode=1)
+
+    def test_137_unbind_04_dictionary_key_02(self):
+        con = self.verify(
+            'dictionary v["key"]="value" unbind v["key"]',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+                (3, "Unbind"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
+
+    def test_137_unbind_04_dictionary_key_03(self):
+        con = self.verify(
+            'dictionary v["key"]="value" unbind v',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "String"),
+                (4, "String"),
+                (3, "Unbind"),
+                (4, "Dictionary"),
+            ],
+        )
+        self.assertEqual("v" in con.definitions, True)
+
+    def test_137_unbind_04_dictionary_key_04(self):
+        self.verify('unbind v["key"]', [], returncode=1)
 
     def test_138_up_01(self):
         self.verify("up", [], returncode=1)
