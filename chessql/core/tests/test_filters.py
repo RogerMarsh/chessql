@@ -8529,6 +8529,64 @@ class Filters(verify.Verify):
     def test_196_minus_07_integer_02_position(self):
         self.verify("2-initialposition", [], returncode=1)
 
+    def test_196_minus_08_parenthesized_piecedesignator_integer(self):
+        self.verify("(q-2)", [], returncode=1)
+
+    def test_196_minus_09_parenthesized_rank_integer(self):
+        self.verify(
+            "(rank q-2)",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Minus"),
+                (5, "Rank"),
+                (6, "PieceDesignator"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_196_minus_10_parenthesized_unary(self):
+        self.verify(
+            "(-2)",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "UnaryMinus"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_196_minus_11_braced_piecedesignator_integer(self):
+        self.verify(
+            "{q-2}",
+            [
+                (3, "BraceLeft"),
+                (4, "PieceDesignator"),
+                (4, "UnaryMinus"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_196_minus_12_braced_rank_integer(self):
+        self.verify(
+            "{rank q-2}",
+            [
+                (3, "BraceLeft"),
+                (4, "Minus"),
+                (5, "Rank"),
+                (6, "PieceDesignator"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_196_minus_13_braced_unary(self):
+        self.verify(
+            "{-2}",
+            [
+                (3, "BraceLeft"),
+                (4, "UnaryMinus"),
+                (5, "Integer"),
+            ],
+        )
+
     def test_197_complement_01_bare(self):
         self.verify("~", [], returncode=1)
 

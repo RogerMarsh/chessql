@@ -761,14 +761,22 @@ class ParenthesisLeft(structure.BlockLeft):
 
         There will be only one child in the completed filter.
         """
-        if self.completed:
-            assert len(self.children) == 1  # Remove if moved to BlockLeft.
+        if self.completed and len(self.children) == 1:
             return self.children[-1].filter_type
         return super().filter_type
 
     def is_left_brace_or_parenthesis(self):
         """Override and return True."""
         return True
+
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        if len(self.children) != 1:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": expects one child filter but has "
+                + str(len(self.children))
+            )
 
 
 # There need to be three kinds of '(' apart from parenthesized arguments.
@@ -5594,7 +5602,14 @@ class UnaryMinus(structure.Argument):
 
 def minus(match_=None, container=None):
     """Return Minus or UnaryMinus instance."""
-    if container.cursor.filter_type is cqltypes.FilterType.NUMERIC:
+    node = container.cursor
+    while node and node.full():
+        if node.filter_type is cqltypes.FilterType.NUMERIC:
+            return Minus(match_=match_, container=container)
+        if isinstance(node, structure.BlockLeft):
+            return UnaryMinus(match_=match_, container=container)
+        node = node.parent
+    if node and node.filter_type is cqltypes.FilterType.NUMERIC:
         return Minus(match_=match_, container=container)
     return UnaryMinus(match_=match_, container=container)
 
