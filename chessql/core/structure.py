@@ -435,8 +435,107 @@ class Name(CQLObject):
             )
 
 
-class VariableName(Name):
-    """Subclass of Name for user defined variable names in CQL.
+class VariableTypeSetter(Name):
+    """Subclass of Name for setting properties of variable names in CQL.
+
+    The various types of variable have behaviour which differs from
+    function and dictionary in CQL.
+    """
+
+    # Some of this should be delegated to class Name because it looks to
+    # be shared with classes for the 'function' and 'dictionary' filters.
+    def _set_filter_type(self, filter_type, nametype="variable"):
+        """Set filter type of variable instance.
+
+        The variable's name must have been registered by a prior call of
+        _register_variable_type.
+
+        The variable's variable type is set to variable_type if it is
+        cqltypes.VariableType.ANY currently.
+
+        The variable's filter type is set to filter_type if it is
+        cqltypes.FilterType.ANY currently.
+
+        A NodeError exception is raised on attempting to change any other
+        variable type or filter type value.
+
+        Details for user defined items, variables and functions, are not
+        updated when encountered during collection of functions bodies.
+
+        """
+        container = self.container
+        if container.function_body_cursor is not None:
+            return
+        definitions = container.definitions
+        name = self.name
+        if name not in definitions:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": "
+                + nametype
+                + "'"
+                + name
+                + "' has not been registered ("
+                + "by _register_variable_type)"
+            )
+        item = definitions[name]
+        if item.filter_type is cqltypes.FilterType.ANY:
+            item.filter_type = filter_type
+        if item.filter_type is not filter_type:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": "
+                + nametype
+                + "'"
+                + name
+                + "' is a '"
+                + item.filter_type.name.lower()
+                + "' filter so cannot be set as a '"
+                + filter_type.name.lower()
+                + "' filter"
+            )
+
+    def _set_persistence_type(self, persistence_type, check_types=None):
+        """Register variable as persistence_type or validate existing entry.
+
+        Details for user defined items, variables and functions, are not
+        updated when encountered during collection of functions bodies.
+
+        """
+        definitions = self.container.definitions
+        name = self.name
+        if name not in definitions:
+            if self.container.function_body_cursor is not None:
+                return
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot set persistence type because '"
+                + name
+                + "' is not in definitions "
+                + "(has _register_variable_type been called?)"
+            )
+        item = definitions[name]
+        if item.persistence_type is cqltypes.PersistenceType.ANY:
+            item.persistence_type = persistence_type
+            return
+        if check_types is None:
+            check_types = persistence_type
+        for test in check_types:
+            if test in persistence_type and test not in item.persistence_type:
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + ": cannot set '"
+                    + name
+                    + "' as '"
+                    + test.name.lower()
+                    + "' because it is not already '"
+                    + test.name.lower()
+                    + "'"
+                )
+
+
+class VariableName(VariableTypeSetter):
+    """Subclass of VariableTypeSetter for user defined variable names in CQL.
 
     The various types of variable have behaviour which differs from
     function and dictionary in CQL.
@@ -478,45 +577,7 @@ class VariableName(Name):
         )
         self._raise_if_wrong_variable_type(variable_type)
 
-    def _set_persistence_type(self, persistence_type):
-        """Register variable as persistence_type or validate existing entry.
-
-        Details for user defined items, variables and functions, are not
-        updated when encountered during collection of functions bodies.
-
-        """
-        definitions = self.container.definitions
-        name = self.name
-        if name not in definitions:
-            if self.container.function_body_cursor is not None:
-                return
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot set persistence type because '"
-                + name
-                + "' is not in definitions "
-                + "(has _register_variable_type been called?)"
-            )
-        item = definitions[name]
-        if item.persistence_type is cqltypes.PersistenceType.ANY:
-            item.persistence_type = persistence_type
-            return
-        if (
-            cqltypes.PersistenceType.PERSISTENT in persistence_type
-            and cqltypes.PersistenceType.PERSISTENT
-            not in item.persistence_type
-        ):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot set '"
-                + name
-                + "' as 'persistent' because it is not already 'persistent'"
-            )
-
-    # Some of this should be delegated to class Name because it looks to
-    # be shared with classes for the 'function' and 'dictionary' filters.
-    # Initially just copy to Dictionary and adjust to fix that class.
-    def set_types(self, variable_type, filter_type):
+    def set_types(self, variable_type, filter_type, nametype="variable"):
         """Set variable type and filter type of variable instance.
 
         The variable's name must have been registered by a prior call of
@@ -535,45 +596,31 @@ class VariableName(Name):
         updated when encountered during collection of functions bodies.
 
         """
-        container = self.container
-        if container.function_body_cursor is not None:
+        if self.container.function_body_cursor is not None:
             return
-        definitions = container.definitions
-        name = self.name
-        if name not in definitions:
+        super()._set_filter_type(filter_type, nametype=nametype)
+        item = self.container.definitions[self.name]
+        if item.variable_type is cqltypes.VariableType.ANY:
+            item.variable_type = variable_type
+        if item.variable_type is not variable_type:
             raise basenode.NodeError(
                 self.__class__.__name__
-                + ": variable '"
-                + name
-                + "' has not been registered ("
-                + "by _register_variable_type)"
-            )
-        if definitions[name].variable_type is cqltypes.VariableType.ANY:
-            definitions[name].variable_type = variable_type
-        if definitions[name].filter_type is cqltypes.FilterType.ANY:
-            definitions[name].filter_type = filter_type
-        if definitions[name].variable_type is not variable_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": variable '"
-                + name
+                + ": "
+                + nametype
+                + "'"
+                + self.name
                 + "' is a '"
-                + definitions[name].variable_type.name.lower()
+                + item.variable_type.name.lower()
                 + "' variable so cannot be set as a '"
                 + variable_type.name.lower()
                 + "' variable"
             )
-        if definitions[name].filter_type is not filter_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": variable '"
-                + name
-                + "' is a '"
-                + definitions[name].filter_type.__name__.lower()
-                + "' filter so cannot be set as a '"
-                + filter_type.__name__.lower()
-                + "' filter"
-            )
+
+    def _set_persistence_type(self, persistence_type, check_types=None):
+        """Delegate, checking for 'PERSISTENT' persistence type only."""
+        super()._set_persistence_type(
+            persistence_type, check_types=cqltypes.PersistenceType.PERSISTENT
+        )
 
 
 class Argument(CQLObject):

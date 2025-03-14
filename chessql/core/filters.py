@@ -1530,7 +1530,8 @@ class Atomic(structure.Complete, structure.VariableName):
         self.name = groupdict["atomic"]
         self._register_variable_type(cqltypes.VariableType.ANY)
         self._set_persistence_type(
-            cqltypes.PersistenceType.ATOMIC | cqltypes.PersistenceType.LOCAL
+            cqltypes.PersistenceType.ATOMIC | cqltypes.PersistenceType.LOCAL,
+            check_types=cqltypes.PersistenceType.LOCAL,
         )
 
     def place_node_in_tree(self):
@@ -1988,7 +1989,7 @@ def diagonal(match_=None, container=None):
     return Diagonal(match_=match_, container=container)
 
 
-class Dictionary(structure.Complete, structure.Name):
+class Dictionary(structure.Complete, structure.VariableTypeSetter):
     """Represent 'dictionary' logical filter, and the 'local' variant.
 
     All keys in a dictionary must be one type, and all values too.  But
@@ -2036,7 +2037,11 @@ class Dictionary(structure.Complete, structure.Name):
             persistence_type = cqltypes.PersistenceType.LOCAL
         else:
             persistence_type = cqltypes.PersistenceType.PERSISTENT
-        self._set_persistence_type(persistence_type)
+        self._set_persistence_type(
+            persistence_type,
+            check_types=cqltypes.PersistenceType.PERSISTENT
+            | cqltypes.PersistenceType.LOCAL,
+        )
 
     @property
     def key_type(self):
@@ -2069,52 +2074,28 @@ class Dictionary(structure.Complete, structure.Name):
         container.cursor = self
         return
 
-    # Copied from VariableName and adjusted to fix this class.
-    def set_types(self, key_filter_type, filter_type):
-        """Set filter type of dictionary instance.
+    def set_types(self, key_filter_type, filter_type, nametype="dictionary"):
+        """Set key_filter_type and filter type of dictionary instance.
 
         The dictionary's name must have been registered by a prior call of
         _register_variable_type.
 
-        variable type is ignored.
-
-        The variable's filter type is set to filter_type if it is
-        cqltypes.FilterType.ANY currently.
-
         A NodeError exception is raised on attempting to change any other
         filter type value.
 
+        The dictionary persistence type is deduced from self's match_
+        attribute, the string may start with the keyword 'local', and
+        validated and applied.
+
         Details for user defined items, variables and functions, are not
-        updated when encountered during collection of functions bodies.
+        updated when encountered during collection of functions' bodies.
 
         """
-        container = self.container
-        if container.function_body_cursor is not None:
+        if self.container.function_body_cursor is not None:
             return
-        definitions = container.definitions
+        super()._set_filter_type(filter_type, nametype=nametype)
         name = self.name
-        if name not in definitions:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": dictionary '"
-                + name
-                + "' has not been registered ("
-                + "by _register_variable_type)"
-            )
-        item = definitions[name]
-        if item.filter_type is cqltypes.FilterType.ANY:
-            item.filter_type = filter_type
-        if item.filter_type is not filter_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": dictionary '"
-                + name
-                + "' is a '"
-                + item.filter_type.name.lower()
-                + "' filter so item cannot be set as a '"
-                + filter_type.name.lower()
-                + "' filter"
-            )
+        item = self.container.definitions[name]
         if item.key_filter_type is cqltypes.FilterType.ANY:
             item.key_filter_type = key_filter_type
         if item.key_filter_type is not key_filter_type:
@@ -2157,52 +2138,6 @@ class Dictionary(structure.Complete, structure.Name):
                 + "' dictionary so cannot be set as a '"
                 + persistence_type.name.lower()
                 + "' dictionary"
-            )
-
-    # Copied from VariableName and adjusted to fix this class.
-    def _set_persistence_type(self, persistence_type):
-        """Register variable as persistence_type or validate existing entry.
-
-        Details for user defined items, variables and functions, are not
-        updated when encountered during collection of functions bodies.
-
-        """
-        definitions = self.container.definitions
-        name = self.name
-        if name not in definitions:
-            if self.container.function_body_cursor is not None:
-                return
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot set persistence type because '"
-                + name
-                + "' is not in definitions "
-                + "(has _register_variable_type been called?)"
-            )
-        item = definitions[name]
-        if item.persistence_type is cqltypes.PersistenceType.ANY:
-            item.persistence_type = persistence_type
-            return
-        if (
-            cqltypes.PersistenceType.PERSISTENT in persistence_type
-            and cqltypes.PersistenceType.PERSISTENT
-            not in item.persistence_type
-        ):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot set '"
-                + name
-                + "' as 'persistent' because it is not already 'persistent'"
-            )
-        if (
-            cqltypes.PersistenceType.LOCAL in persistence_type
-            and cqltypes.PersistenceType.LOCAL not in item.persistence_type
-        ):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot set '"
-                + name
-                + "' as 'local' because it is not already 'local'"
             )
 
 
