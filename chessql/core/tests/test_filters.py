@@ -8,11 +8,9 @@ See test_filter_captures for '[x]' filter tests.
 
 See test_filter_dash for '--' filter tests.
 
-See test_filters_for_bind for 'isunbound' filter tests.
-
 See test_filter_path for 'path' filter tests.
 
-See test_filters_for_bind for 'unbind' filter tests.
+See test_filters_iteration for square and piece '<iteration>' filter tests.
 
 The verification methods are provided by the Verify superclass.
 
@@ -59,14 +57,96 @@ class Filters(verify.Verify):
     def test_005_assert(self):
         self.verify("assert 1", [(3, "Assert"), (4, "Integer")])
 
-    def test_006_atomic_01(self):
+    def test_006_atomic_01_bare(self):
+        self.verify("atomic", [], returncode=1)
+
+    def test_006_atomic_02_name(self):
         self.verify("atomic X", [], returncode=1)
 
-    def test_006_atomic_02(self):
+    def test_006_atomic_03_variable_integer(self):
         self.verify(
             "atomic X=1",
             [(3, "Assign"), (4, "Atomic"), (4, "Integer")],
         )
+
+    def test_006_atomic_04_variable_string(self):
+        self.verify(
+            'atomic X="a"',
+            [(3, "Assign"), (4, "Atomic"), (4, "String")],
+        )
+
+    def test_006_atomic_05_variable_set(self):
+        self.verify(
+            "atomic X=connectedpawns",
+            [(3, "Assign"), (4, "Atomic"), (4, "ConnectedPawns")],
+        )
+
+    def test_006_atomic_06_variable_piecedesignator(self):
+        self.verify(
+            "atomic X=q",
+            [(3, "Assign"), (4, "Atomic"), (4, "PieceDesignator")],
+        )
+
+    def test_006_atomic_07_variable_logical(self):
+        self.verify("atomic X=false", [], returncode=1)
+
+    def test_006_atomic_08_variable_position(self):
+        self.verify(
+            "atomic X=currentposition",
+            [(3, "Assign"), (4, "Atomic"), (4, "CurrentPosition")],
+        )
+
+    def test_006_atomic_09_atomic_first(self):
+        con = self.verify(
+            "atomic X=1 X=2",
+            [
+                (3, "Assign"),
+                (4, "Atomic"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type,
+            cqltypes.PersistenceType.ATOMIC | cqltypes.PersistenceType.LOCAL,
+        )
+
+    def test_006_atomic_10_atomic_second(self):
+        con = self.verify(
+            "X=1 atomic X=2",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "Atomic"),
+                (4, "Integer"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type,
+            cqltypes.PersistenceType.LOCAL,
+        )
+
+    def test_006_atomic_11_atomic_persistent(self):
+        self.verify("atomic X=1 persistent X=2", [], returncode=1)
+
+    def test_006_atomic_12_variable_plus_equal(self):
+        self.verify("atomic X+=1", [], returncode=1)
+
+    def test_006_atomic_13_variable_minus_equal(self):
+        self.verify("atomic X-=1", [], returncode=1)
+
+    def test_006_atomic_14_variable_multiply_equal(self):
+        self.verify("atomic X*=1", [], returncode=1)
+
+    def test_006_atomic_15_variable_divide_equal(self):
+        self.verify("atomic X/=1", [], returncode=1)
+
+    def test_006_atomic_16_variable_modulus_equal(self):
+        self.verify("atomic X%=1", [], returncode=1)
 
     def test_007_attackedby(self):
         self.verify(
@@ -4433,6 +4513,24 @@ class Filters(verify.Verify):
             returncode=1,
         )
 
+    def test_063_local_53_variable_integer(self):
+        self.verify("local X=1", [], returncode=1)
+
+    def test_063_local_54_variable_string(self):
+        self.verify('local X="a"', [], returncode=1)
+
+    def test_063_local_55_variable_set(self):
+        self.verify("local X=connectedpawns", [], returncode=1)
+
+    def test_063_local_56_variable_piecedesignator(self):
+        self.verify("local X=q", [], returncode=1)
+
+    def test_063_local_57_variable_logical(self):
+        self.verify("local X=true", [], returncode=1)
+
+    def test_063_local_58_variable_position(self):
+        self.verify("local X=currentposition", [], returncode=1)
+
     def test_064_loop_01(self):
         self.verify("loop", [], returncode=1)
 
@@ -4991,16 +5089,106 @@ class Filters(verify.Verify):
     def test_092_persistent_06_quiet_variable_equal(self):
         self.verify("persistent quiet x=", [], returncode=1)
 
-    def test_092_persistent_07_variable_equal_2(self):
+    def test_092_persistent_07_variable_equal_01_integer(self):
         self.verify(
             "persistent x=2",
             [(3, "Assign"), (4, "Persistent"), (4, "Integer")],
         )
 
-    def test_092_persistent_08_quiet_variable_equal_2(self):
+    def test_092_persistent_07_variable_equal_02_string(self):
+        self.verify(
+            'persistent x="a"',
+            [(3, "Assign"), (4, "Persistent"), (4, "String")],
+        )
+
+    def test_092_persistent_07_variable_equal_03_set(self):
+        self.verify(
+            "persistent x=connectedpawns",
+            [(3, "Assign"), (4, "Persistent"), (4, "ConnectedPawns")],
+        )
+
+    def test_092_persistent_07_variable_equal_04_piecedesignator(self):
+        self.verify(
+            "persistent x=q",
+            [(3, "Assign"), (4, "Persistent"), (4, "PieceDesignator")],
+        )
+
+    def test_092_persistent_07_variable_equal_05_logical(self):
+        self.verify("persistent x=false", [], returncode=1)
+
+    def test_092_persistent_07_variable_equal_06_position(self):
+        self.verify("persistent x=currentposition", [], returncode=1)
+
+    def test_092_persistent_08_quiet_variable_equal_01_integer(self):
         self.verify(
             "persistent quiet x=2",
             [(3, "Assign"), (4, "PersistentQuiet"), (4, "Integer")],
+        )
+
+    def test_092_persistent_08_quiet_variable_equal_02_string(self):
+        self.verify(
+            'persistent quiet x="a"',
+            [(3, "Assign"), (4, "PersistentQuiet"), (4, "String")],
+        )
+
+    def test_092_persistent_08_quiet_variable_equal_03_set(self):
+        self.verify(
+            "persistent quiet x=connectedpawns",
+            [(3, "Assign"), (4, "PersistentQuiet"), (4, "ConnectedPawns")],
+        )
+
+    def test_092_persistent_08_quiet_variable_equal_04_piecedesignator(self):
+        self.verify(
+            "persistent quiet x=q",
+            [(3, "Assign"), (4, "PersistentQuiet"), (4, "PieceDesignator")],
+        )
+
+    def test_092_persistent_08_quiet_variable_equal_05_logical(self):
+        self.verify("persistent quiet x=false", [], returncode=1)
+
+    def test_092_persistent_08_quiet_variable_equal_06_position(self):
+        self.verify("persistent quiet x=currentposition", [], returncode=1)
+
+    def test_092_persistent_09_persistent_first(self):
+        self.verify(
+            "persistent X=1 X=2",
+            [
+                (3, "Assign"),
+                (4, "Persistent"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_092_persistent_10_persistent_second(self):
+        self.verify("X=1 persistent X=2", [], returncode=1)
+
+    def test_092_persistent_11_persistent_both(self):
+        self.verify(
+            "persistent X=1 persistent X=2",
+            [
+                (3, "Assign"),
+                (4, "Persistent"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "Persistent"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_092_persistent_12_persistent_atomic(self):
+        self.verify(
+            "persistent X=1 atomic X=2",
+            [
+                (3, "Assign"),
+                (4, "Persistent"),
+                (4, "Integer"),
+                (3, "Assign"),
+                (4, "Atomic"),
+                (4, "Integer"),
+            ],
         )
 
     def test_093_piece_01(self):

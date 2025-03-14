@@ -1130,8 +1130,8 @@ class PatternElement(unittest.TestCase):
             elements.PERSISTENT_QUIET,
             r"".join(
                 (
-                    r"persistent\s+quiet\s+(?P<persistent_quiet>\w+)",
-                    r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+                    r"persistent\s+quiet\s+(?P<persistent_quiet>",
+                    r"[a-zA-Z0-9_$]+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
                 )
             ),
         )
@@ -1139,7 +1139,12 @@ class PatternElement(unittest.TestCase):
     def test_persistent(self):
         self.assertEqual(
             elements.PERSISTENT,
-            r"persistent\s+(?P<persistent>\w+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+            r"".join(
+                (
+                    r"persistent\s+(?P<persistent>[a-zA-Z0-9_$]+)",
+                    r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+                )
+            ),
         )
 
     def test_piece(self):
@@ -1439,7 +1444,7 @@ class PatternElement(unittest.TestCase):
             r"".join(
                 (
                     r"atomic\s+(?P<atomic>[a-zA-Z0-9_$]+)",
-                    r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+                    r"(?=\s*(?:=))",
                 )
             ),
         )

@@ -1529,6 +1529,9 @@ class Atomic(structure.Complete, structure.VariableName):
         groupdict = match_.groupdict()
         self.name = groupdict["atomic"]
         self._register_variable_type(cqltypes.VariableType.ANY)
+        self._set_persistence_type(
+            cqltypes.PersistenceType.ATOMIC | cqltypes.PersistenceType.LOCAL
+        )
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -2019,6 +2022,21 @@ class Dictionary(structure.Complete, structure.Name):
             cqltypes.DefinitionType.ANY ^ cqltypes.DefinitionType.DICTIONARY,
             cqltypes.DefinitionType.DICTIONARY,
         )
+        if match_.group().split()[0] == "local":
+            persistence_type = cqltypes.PersistenceType.LOCAL
+        elif (
+            cqltypes.PersistenceType.ANY
+            in container.definitions[self.name].persistence_type
+        ):
+            persistence_type = cqltypes.PersistenceType.PERSISTENT
+        elif (
+            cqltypes.PersistenceType.LOCAL
+            in container.definitions[self.name].persistence_type
+        ):
+            persistence_type = cqltypes.PersistenceType.LOCAL
+        else:
+            persistence_type = cqltypes.PersistenceType.PERSISTENT
+        self._set_persistence_type(persistence_type)
 
     @property
     def key_type(self):
@@ -2139,6 +2157,52 @@ class Dictionary(structure.Complete, structure.Name):
                 + "' dictionary so cannot be set as a '"
                 + persistence_type.name.lower()
                 + "' dictionary"
+            )
+
+    # Copied from VariableName and adjusted to fix this class.
+    def _set_persistence_type(self, persistence_type):
+        """Register variable as persistence_type or validate existing entry.
+
+        Details for user defined items, variables and functions, are not
+        updated when encountered during collection of functions bodies.
+
+        """
+        definitions = self.container.definitions
+        name = self.name
+        if name not in definitions:
+            if self.container.function_body_cursor is not None:
+                return
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot set persistence type because '"
+                + name
+                + "' is not in definitions "
+                + "(has _register_variable_type been called?)"
+            )
+        item = definitions[name]
+        if item.persistence_type is cqltypes.PersistenceType.ANY:
+            item.persistence_type = persistence_type
+            return
+        if (
+            cqltypes.PersistenceType.PERSISTENT in persistence_type
+            and cqltypes.PersistenceType.PERSISTENT
+            not in item.persistence_type
+        ):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot set '"
+                + name
+                + "' as 'persistent' because it is not already 'persistent'"
+            )
+        if (
+            cqltypes.PersistenceType.LOCAL in persistence_type
+            and cqltypes.PersistenceType.LOCAL not in item.persistence_type
+        ):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot set '"
+                + name
+                + "' as 'local' because it is not already 'local'"
             )
 
 
@@ -2553,6 +2617,7 @@ class ExistentialSquareVariable(structure.Complete, structure.VariableName):
         self.name = match_.groupdict()["existential_square_variable"]
         self._register_variable_type(cqltypes.VariableType.SET)
         self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -2596,6 +2661,7 @@ class ExistentialPieceVariable(structure.Complete, structure.VariableName):
         self.name = match_.groupdict()["existential_piece_variable"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
         self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -2638,6 +2704,7 @@ class UniversalSquareVariable(structure.Complete, structure.VariableName):
         self.name = match_.groupdict()["universal_square_variable"]
         self._register_variable_type(cqltypes.VariableType.SET)
         self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -2680,6 +2747,7 @@ class UniversalPieceVariable(structure.Complete, structure.VariableName):
         self.name = match_.groupdict()["universal_piece_variable"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
         self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -3769,7 +3837,7 @@ class PersistentQuiet(structure.Complete, structure.VariableName):
     'persistent quiet' must be first use of variable name.
 
     The value of a persistent quiet variable is a Numeric, Set, or String,
-    filter.
+    filter.  The Position filter is included too because CQL-6.2 accepts it.
     """
 
     def __init__(self, match_=None, container=None):
@@ -3777,14 +3845,11 @@ class PersistentQuiet(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         groupdict = match_.groupdict()
         self.name = groupdict["persistent_quiet"]
-        if self.name in self.container.definitions:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + self.name
-                + "' is already defined and cannot be set persistent"
-            )
         self._register_variable_type(cqltypes.VariableType.ANY)
+        self._set_persistence_type(
+            cqltypes.PersistenceType.PERSISTENT
+            | cqltypes.PersistenceType.QUIET
+        )
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -3798,7 +3863,7 @@ class Persistent(structure.Complete, structure.VariableName):
     'persistent' must be first use of variable name.
 
     The value of a persistent quiet variable is a Numeric, Set, or String,
-    filter.
+    filter.  The Position filter is included too because CQL-6.2 accepts it.
     """
 
     def __init__(self, match_=None, container=None):
@@ -3806,14 +3871,8 @@ class Persistent(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         groupdict = match_.groupdict()
         self.name = groupdict["persistent"]
-        if self.name in self.container.definitions:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + self.name
-                + "' is already defined and cannot be set persistent"
-            )
         self._register_variable_type(cqltypes.VariableType.ANY)
+        self._set_persistence_type(cqltypes.PersistenceType.PERSISTENT)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -3864,6 +3923,7 @@ class Piece(structure.VariableName, structure.Argument):
         self.name = match_.groupdict()["piece"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
         self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
 class PieceAll(structure.VariableName, structure.Argument):
@@ -3883,6 +3943,7 @@ class PieceAll(structure.VariableName, structure.Argument):
         self.name = match_.groupdict()["piece"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
         self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
 def piece(match_=None, container=None):
@@ -3910,6 +3971,7 @@ class PieceVariable(structure.Complete, structure.VariableName):
         self.name = groupdict["piece_variable"] or groupdict["variable"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
         self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self after checking tree structure.
@@ -4493,6 +4555,7 @@ class Square(structure.VariableName, structure.Argument):
         self.name = match_.groupdict()["square"]
         self._register_variable_type(cqltypes.VariableType.SET)
         self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
 class SquareAll(structure.VariableName, structure.Argument):
@@ -4512,6 +4575,7 @@ class SquareAll(structure.VariableName, structure.Argument):
         self.name = match_.groupdict()["square"]
         self._register_variable_type(cqltypes.VariableType.SET)
         self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
 def square(match_=None, container=None):
@@ -5033,6 +5097,7 @@ class RangeVariable(structure.Complete, structure.VariableName):
         self.set_types(
             cqltypes.VariableType.NUMERIC, cqltypes.FilterType.NUMERIC
         )
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def is_parameter_accepted_by_filter(self):
         """Return True if parent accepts self as a parameter."""
@@ -5069,6 +5134,7 @@ class Variable(structure.Complete, structure.VariableName):
         # defined by 'echo' pattern.
         self.name = groupdict["variable"] or groupdict["variable_assign"]
         self._register_variable_type(cqltypes.VariableType.ANY)
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
         """Delegate then set cursor to self."""
@@ -5718,6 +5784,16 @@ class Assign(structure.MoveInfix):
                         + lhs.children[1].__class__.__name__
                         + "' as a key"
                     )
+            elif (  # Must be a VariableName instance.
+                rhs.filter_type is cqltypes.FilterType.POSITION
+                and cqltypes.PersistenceType.PERSISTENT
+                in self.container.definitions[lhs.name].persistence_type
+            ):
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + ": lhs is a persistent variable and cannot be "
+                    + "assigned a position filter"
+                )
         if self.container.function_body_cursor is None or (
             not isinstance(lhs, structure.VariableName)
             and not isinstance(rhs, structure.VariableName)

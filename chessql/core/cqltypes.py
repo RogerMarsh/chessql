@@ -213,7 +213,7 @@ class _Variable(_Definition):
     @persistence_type.setter
     def persistence_type(self, value):
         """Bind self._persistence_type to value if current value is ANY."""
-        assert value in PersistenceType
+        assert value & PersistenceType.ANY == value
         if value is not PersistenceType.ANY:
             if self._persistence_type is not PersistenceType.ANY:
                 if self._persistence_type is not value:

@@ -478,6 +478,41 @@ class VariableName(Name):
         )
         self._raise_if_wrong_variable_type(variable_type)
 
+    def _set_persistence_type(self, persistence_type):
+        """Register variable as persistence_type or validate existing entry.
+
+        Details for user defined items, variables and functions, are not
+        updated when encountered during collection of functions bodies.
+
+        """
+        definitions = self.container.definitions
+        name = self.name
+        if name not in definitions:
+            if self.container.function_body_cursor is not None:
+                return
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot set persistence type because '"
+                + name
+                + "' is not in definitions "
+                + "(has _register_variable_type been called?)"
+            )
+        item = definitions[name]
+        if item.persistence_type is cqltypes.PersistenceType.ANY:
+            item.persistence_type = persistence_type
+            return
+        if (
+            cqltypes.PersistenceType.PERSISTENT in persistence_type
+            and cqltypes.PersistenceType.PERSISTENT
+            not in item.persistence_type
+        ):
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cannot set '"
+                + name
+                + "' as 'persistent' because it is not already 'persistent'"
+            )
+
     # Some of this should be delegated to class Name because it looks to
     # be shared with classes for the 'function' and 'dictionary' filters.
     # Initially just copy to Dictionary and adjust to fix that class.

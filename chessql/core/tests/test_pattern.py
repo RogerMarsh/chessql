@@ -224,7 +224,7 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     # ATOMIC
                     r"atomic\s+(?P<atomic>[a-zA-Z0-9_$]+)",
-                    r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+                    r"(?=\s*(?:=))",
                     r")|(",
                     r"(?P<attackedby>)attackedby(?![\w$])",  # ATTACKEDBY
                     r")|(",
@@ -486,11 +486,11 @@ class Pattern(unittest.TestCase):
                     r"(?P<path>)(?:path(?![\w$])|\u22a2)",  # PATH
                     r")|(",
                     # PERSISTENT_QUIET
-                    r"persistent\s+quiet\s+(?P<persistent_quiet>\w+)",
-                    r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+                    r"persistent\s+quiet\s+(?P<persistent_quiet>",
+                    r"[a-zA-Z0-9_$]+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
                     r")|(",
                     # PERSISTENT
-                    r"persistent\s+(?P<persistent>\w+)",
+                    r"persistent\s+(?P<persistent>[a-zA-Z0-9_$]+)",
                     r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
                     r")|(",
                     r"(?P<pieceid>)pieceid(?![\w$])",  # PIECEID

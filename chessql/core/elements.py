@@ -464,13 +464,15 @@ PARENT = r"(?P<parent>)parent(?![\w$])"  # 6.0.4 table of filters.
 PASSEDPAWNS = r"(?P<passedpawns>)passedpawns(?![\w$])"
 
 # 6.0.4 table of filters, with and without quiet parameter.
-PERSISTENT_QUIET = r"".join(
+PERSISTENT_QUIET = constants.VARIABLE_NAME_CHARS.join(
     (
-        r"persistent\s+quiet\s+(?P<persistent_quiet>\w+)",
-        r"(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
+        r"persistent\s+quiet\s+(?P<persistent_quiet>",
+        r"+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
     )
 )
-PERSISTENT = r"persistent\s+(?P<persistent>\w+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))"
+PERSISTENT = constants.VARIABLE_NAME_CHARS.join(
+    (r"persistent\s+(?P<persistent>", r"+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))")
+)
 
 # 6.0.4 table of filters.
 # Piece in filter with or without all parameter.
@@ -672,10 +674,7 @@ WRITEFILE = r"(?P<writefile>)writefile\s*\("  # 6.1 table of filters.
 
 # 6.2 table of filters.  Entry is atomic variables but keyword is atomic.
 ATOMIC = constants.VARIABLE_NAME_CHARS.join(
-    (
-        r"atomic\s+(?P<atomic>",
-        r"+)(?=\s*(?:=|\+=|-=|\*=|/=|%=))",
-    )
+    (r"atomic\s+(?P<atomic>", r"+)(?=\s*(?:=))")
 )
 
 COUNTMOVES = r"(?P<countmoves>)countmoves(?![\w$])"  # 6.2 table of filters.
