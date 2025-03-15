@@ -2015,6 +2015,207 @@ class Filters(verify.Verify):
     def test_044_function_15_body_position(self):
         self.verify("function fn(){initialposition}", [(3, "Function")])
 
+    # Tests for multiply like plus below are at 'test_190_star_12_function_*'.
+
+    def test_044_function_16_plus_integer_01_base(self):
+        self.verify(
+            "I=3 I+I",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Plus"),
+                (4, "Variable"),
+                (4, "Variable"),
+            ],
+        )
+
+    def test_044_function_16_plus_integer_02_braced_base(self):
+        self.verify(
+            "{I=3 I+I}",
+            [
+                (3, "BraceLeft"),
+                (4, "Assign"),
+                (5, "Variable"),
+                (5, "Integer"),
+                (4, "Plus"),
+                (5, "Variable"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_044_function_16_plus_integer_03_body_base(self):
+        self.verify("function F(){I=3 I+I}", [(3, "Function")])
+
+    def test_044_function_16_plus_integer_04_call_base(self):
+        self.verify(
+            "function F(){I=3 I+I}F()",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "BraceLeft"),
+                (6, "Assign"),
+                (7, "Variable"),
+                (7, "Integer"),
+                (6, "Plus"),
+                (7, "Variable"),
+                (7, "Variable"),
+            ],
+        )
+
+    def test_044_function_16_plus_integer_05_body_base_invalid(self):
+        self.verify("function F(){I=q I+I}", [(3, "Function")])
+
+    def test_044_function_16_plus_06_integer_call_base_invalid(self):
+        self.verify("function F(){I=q I+I}F()", [], returncode=1)
+
+    def test_044_function_17_plus_string_01_base(self):
+        self.verify(
+            'I="v" I+I',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Plus"),
+                (4, "Variable"),
+                (4, "Variable"),
+            ],
+        )
+
+    def test_044_function_17_plus_string_02_braced_base(self):
+        self.verify(
+            '{I="v" I+I}',
+            [
+                (3, "BraceLeft"),
+                (4, "Assign"),
+                (5, "Variable"),
+                (5, "String"),
+                (4, "Plus"),
+                (5, "Variable"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_044_function_17_plus_string_03_body_base(self):
+        self.verify('function F(){I="v" I+I}', [(3, "Function")])
+
+    def test_044_function_17_plus_string_04_call_base(self):
+        self.verify(
+            'function F(){I="v" I+I}F()',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "BraceLeft"),
+                (6, "Assign"),
+                (7, "Variable"),
+                (7, "String"),
+                (6, "Plus"),
+                (7, "Variable"),
+                (7, "Variable"),
+            ],
+        )
+
+    def test_044_function_17_plus_string_05_body_base_invalid(self):
+        self.verify("function F(){I=q I+I}", [(3, "Function")])
+
+    def test_044_function_17_plus_string_06_call_base_invalid(self):
+        self.verify("function F(){I=q I+I}F()", [], returncode=1)
+
+    def test_044_function_18_minus_01_base(self):
+        self.verify(
+            "I=3 I-I",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Minus"),
+                (4, "Variable"),
+                (4, "Variable"),
+            ],
+        )
+
+    def test_044_function_18_minus_02_braced_base(self):
+        self.verify(
+            "{I=3 I-I}",
+            [
+                (3, "BraceLeft"),
+                (4, "Assign"),
+                (5, "Variable"),
+                (5, "Integer"),
+                (4, "Minus"),
+                (5, "Variable"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_044_function_18_minus_03_body_base(self):
+        self.verify("function F(){I=3 I-I}", [(3, "Function")])
+
+    def test_044_function_18_minus_04_call_base(self):
+        self.verify(
+            "function F(){I=3 I-I}F()",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "BraceLeft"),
+                (6, "Assign"),
+                (7, "Variable"),
+                (7, "Integer"),
+                (6, "Minus"),
+                (7, "Variable"),
+                (7, "Variable"),
+            ],
+        )
+
+    def test_044_function_18_minus_05_body_base_invalid(self):
+        self.verify("function F(){I=q I-I}", [(3, "Function")])
+
+    def test_044_function_18_minus_06_call_base_invalid(self):
+        self.verify("function F(){I=q I-I}F()", [], returncode=1)
+
+    def test_044_function_19_xray_01_body_base_no_variable(self):
+        self.verify("function F(){xray(x k)}", [(3, "Function")])
+
+    def test_044_function_19_xray_02_call_base_no_variable(self):
+        self.verify("function F(){xray(x k)}F()", [], returncode=1)
+
+    def test_044_function_19_xray_03_body_base_unassigned_parameter(self):
+        self.verify("function F(x){xray(x k)}", [(3, "Function")])
+
+    def test_044_function_19_xray_04_call_base_unassigned_parameter(self):
+        self.verify("function F(x){xray(x k)}F(y)", [], returncode=1)
+
+    def test_044_function_19_xray_05_call_base_set_variable(self):
+        self.verify(
+            "function F(x){xray(x k)}y=r F(y)",
+            [
+                (3, "Function"),
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "PieceDesignator"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "BraceLeft"),
+                (6, "XRay"),
+                (7, "Variable"),
+                (7, "PieceDesignator"),
+            ],
+        )
+
+    def test_044_function_19_xray_06_call_base_integer_variable(self):
+        self.verify("function F(x){xray(x k)}y=3 F(y)", [], returncode=1)
+
+    def test_044_function_19_xray_07_call_base_sring_variable(self):
+        self.verify('function F(x){xray(x k)}y="w" F(y)', [], returncode=1)
+
+    def test_044_function_19_xray_08_call_base_position_variable(self):
+        self.verify(
+            "function F(x){xray(x k)}y=currentposition F(y)", [], returncode=1
+        )
+
     def test_045_gamenumber(self):
         self.verify("gamenumber", [(3, "GameNumber")])
 
@@ -6103,6 +6304,18 @@ class Filters(verify.Verify):
             [(3, "XRay"), (4, "PieceDesignator"), (4, "PieceDesignator")],
         )
 
+    def test_145_xray_04_unassigned_variable(self):
+        self.verify("xray (r v)", [], returncode=1)
+
+    def test_145_xray_05_integer_variable(self):
+        self.verify("v=3 xray (r v)", [], returncode=1)
+
+    def test_145_xray_06_string_variable(self):
+        self.verify('v="w" xray (r v)', [], returncode=1)
+
+    def test_145_xray_07_position_variable(self):
+        self.verify("v=currentposition xray (r v)", [], returncode=1)
+
     def test_146_year(self):
         self.verify("year", [(3, "Year")])
 
@@ -8372,6 +8585,59 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_190_star_11_function_01_base(self):
+        self.verify(
+            "I=3 I*I",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Star"),
+                (4, "Variable"),
+                (4, "Variable"),
+            ],
+        )
+
+    def test_190_star_11_function_02_braced_base(self):
+        self.verify(
+            "{I=3 I*I}",
+            [
+                (3, "BraceLeft"),
+                (4, "Assign"),
+                (5, "Variable"),
+                (5, "Integer"),
+                (4, "Star"),
+                (5, "Variable"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_190_star_12_function_03_body_base(self):
+        self.verify("function F(){I=3 I*I}", [(3, "Function")])
+
+    def test_190_star_12_function_04_call_base(self):
+        self.verify(
+            "function F(){I=3 I*I}F()",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "BraceLeft"),
+                (6, "Assign"),
+                (7, "Variable"),
+                (7, "Integer"),
+                (6, "Star"),
+                (7, "Variable"),
+                (7, "Variable"),
+            ],
+        )
+
+    def test_190_star_12_function_05_body_base_invalid(self):
+        self.verify("function F(){I=q I*I}", [(3, "Function")])
+
+    def test_190_star_12_function_06_call_base_invalid(self):
+        self.verify("function F(){I=q I*I}F()", [], returncode=1)
+
     def test_191_modulus_01_bare(self):
         self.verify("%", [], returncode=1)
 
@@ -8586,6 +8852,21 @@ class Filters(verify.Verify):
                 (5, "Integer"),
             ],
         )
+
+    def test_196_minus_14_unary_non_integer_01_set(self):
+        self.verify("-to", [], returncode=1)
+
+    def test_196_minus_14_unary_non_integer_02_piecedesignator(self):
+        self.verify("-qa5", [], returncode=1)
+
+    def test_196_minus_14_unary_non_integer_03_string(self):
+        self.verify('-"v"', [], returncode=1)
+
+    def test_196_minus_14_unary_non_integer_04_logical(self):
+        self.verify("-true", [], returncode=1)
+
+    def test_196_minus_14_unary_non_integer_05_position(self):
+        self.verify("-currentposition", [], returncode=1)
 
     def test_197_complement_01_bare(self):
         self.verify("~", [], returncode=1)

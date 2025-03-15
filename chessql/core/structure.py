@@ -701,7 +701,6 @@ class MaxOrMin(ParenthesizedArguments):
                 child,
                 self,
                 cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING,
-                "argument must be a",
             )
             filter_types.add(child.filter_type)
         if len(filter_types) != 1:
@@ -1138,21 +1137,22 @@ def raise_if_not_instance(child, parent, instance, msg):
         )
 
 
-def raise_if_not_filter_type(child, parent, filter_type, msg):
+def raise_if_not_filter_type(child, parent, filter_type):
     """Raise NodeError if child of parent is not a filter type.
 
     filter_type is the union of the allowed filter types.
 
     """
+    if parent.container.function_body_cursor is not None:
+        return
     if child.filter_type not in filter_type:
         raise basenode.NodeError(
             parent.__class__.__name__
-            + ": "
-            + msg
-            + " "
-            + filter_type.name
-            + ": not a "
-            + child.filter_type.name
+            + ": expects a '"
+            + filter_type.name.lower()
+            + "' argument but got a '"
+            + child.filter_type.name.lower()
+            + "'"
         )
 
 
@@ -1170,6 +1170,8 @@ def raise_if_not_same_filter_type(
     and any allowed rhs filter type is acceptable.
 
     """
+    if parent.container.function_body_cursor is not None:
+        return
     lhs = parent.children[0]
     rhs = parent.children[1]
     if filter_type is not None and rhs.filter_type not in filter_type:

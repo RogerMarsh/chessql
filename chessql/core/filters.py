@@ -3307,7 +3307,7 @@ class MakeSquareParentheses(structure.ParenthesizedArguments):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
             structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.NUMERIC, "component is"
+                child, self, cqltypes.FilterType.NUMERIC
             )
         if len(self.children) != 2:
             raise basenode.NodeError(
@@ -4196,7 +4196,7 @@ class Ray(structure.ParenthesizedArguments):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
             structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.SET, "component is"
+                child, self, cqltypes.FilterType.SET
             )
         if len(self.children) < 2:
             raise basenode.NodeError(
@@ -4344,7 +4344,7 @@ class SetTag(structure.ParenthesizedArguments):
             )
         for child in self.children:
             structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.STRING, "argument must be a"
+                child, self, cqltypes.FilterType.STRING
             )
 
 
@@ -4860,7 +4860,7 @@ class WriteFile(structure.ParenthesizedArguments):
             )
         for child in self.children:
             structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.STRING, "component must be a"
+                child, self, cqltypes.FilterType.STRING
             )
 
 
@@ -4879,7 +4879,7 @@ class XRay(structure.ParenthesizedArguments):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
             structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.SET, "component is"
+                child, self, cqltypes.FilterType.SET
             )
         if len(self.children) < 2:
             raise basenode.NodeError(
@@ -5599,6 +5599,19 @@ class UnaryMinus(structure.Argument):
     _filter_type = cqltypes.FilterType.NUMERIC
     _precedence = cqltypes.Precedence.P130
 
+    def _verify_children(self):
+        """Override, raise NodeError if children verification fails."""
+        assert len(self.children) == 1
+        if self.container.function_body_cursor is not None:
+            return
+        if self.children[0].filter_type is not cqltypes.FilterType.NUMERIC:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": expects a numeric argument but got a '"
+                + self.children[0].filter_type.name.lower()
+                + "'"
+            )
+
 
 def minus(match_=None, container=None):
     """Return Minus or UnaryMinus instance."""
@@ -5627,7 +5640,6 @@ class Complement(structure.Argument):
             self.children[0],
             self,
             cqltypes.FilterType.SET,
-            "argument must be a",
         )
 
 
@@ -5831,16 +5843,12 @@ class AssignIf(structure.MoveInfix):
             "lhs must be a",
         )
         rhs = self.children[1]
-        if self.container.function_body_cursor is None or not isinstance(
+        if not isinstance(rhs, structure.VariableName):
+            structure.raise_if_not_filter_type(
+                rhs, self, cqltypes.FilterType.SET
+            )
+        if not isinstance(lhs, structure.VariableName) and not isinstance(
             rhs, structure.VariableName
-        ):
-            if rhs.filter_type is not cqltypes.FilterType.SET:
-                raise basenode.NodeError(
-                    self.__class__.__name__ + ": rhs must be a Set filter"
-                )
-        if self.container.function_body_cursor is None or (
-            not isinstance(lhs, structure.VariableName)
-            and not isinstance(rhs, structure.VariableName)
         ):
             structure.raise_if_not_same_filter_type(
                 self,
@@ -5866,6 +5874,8 @@ class AssignIf(structure.MoveInfix):
         The rhs must be a set filter.
 
         """
+        if self.container.function_body_cursor is not None:
+            return
         if rhs.is_set_filter:
             # Probably incomplete because of piece and square variables.
             lhs.set_types(
@@ -5931,8 +5941,7 @@ class CountFilter(structure.Argument):
         structure.raise_if_not_filter_type(
             self.children[0],
             self,
-            (cqltypes.FilterType.SET | cqltypes.FilterType.STRING),
-            "argument must be a",
+            cqltypes.FilterType.SET | cqltypes.FilterType.STRING,
         )
 
 
