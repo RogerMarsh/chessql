@@ -23,6 +23,7 @@ import unittest
 
 from . import verify
 from .. import cqltypes
+from .. import filters
 
 
 class Filters(verify.Verify):
@@ -8490,7 +8491,10 @@ class Filters(verify.Verify):
         self.verify("+3", [], returncode=1)
 
     def test_189_plus_03_integer(self):
-        self.verify("2+3", [(3, "Plus"), (4, "Integer"), (4, "Integer")])
+        con = self.verify("2+3", [(3, "Plus"), (4, "Integer"), (4, "Integer")])
+        plus = con.children[0].children[0]
+        self.assertEqual(isinstance(plus, filters.Plus), True)
+        self.assertEqual(plus.filter_type is cqltypes.FilterType.NUMERIC, True)
 
     def test_189_plus_04_string_01(self):
         self.verify('"x"+', [], returncode=1)
@@ -8499,7 +8503,12 @@ class Filters(verify.Verify):
         self.verify('+"y"', [], returncode=1)
 
     def test_189_plus_05_string(self):
-        self.verify('"x"+"y"', [(3, "Plus"), (4, "String"), (4, "String")])
+        con = self.verify(
+            '"x"+"y"', [(3, "Plus"), (4, "String"), (4, "String")]
+        )
+        plus = con.children[0].children[0]
+        self.assertEqual(isinstance(plus, filters.Plus), True)
+        self.assertEqual(plus.filter_type is cqltypes.FilterType.STRING, True)
 
     def test_189_plus_06_integer_string(self):
         self.verify('2+"y"', [], returncode=1)

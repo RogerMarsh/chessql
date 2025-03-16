@@ -5539,6 +5539,8 @@ class Plus(structure.Numeric):
             filter_type=cqltypes.FilterType.NUMERIC
             | cqltypes.FilterType.STRING,
         )
+        if self.container.function_body_cursor is None:
+            self.filter_type = self.children[0].filter_type
 
 
 def plus(match_=None, container=None):
