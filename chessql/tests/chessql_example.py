@@ -40,6 +40,4 @@ if __name__ == "__main__":
         print()
         print("\n".join(container.parse_parameter_trace()))
         print()
-        tree_trace = []
-        container.parse_tree_trace(trace=tree_trace)
-        print("\n".join(tree_trace))
+        container.print_parse_tree_trace()

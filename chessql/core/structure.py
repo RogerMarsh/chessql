@@ -622,6 +622,12 @@ class VariableName(VariableTypeSetter):
             persistence_type, check_types=cqltypes.PersistenceType.PERSISTENT
         )
 
+    # This method exists to allow BaseNode and VariableName classes to
+    # be in separate modules.
+    def is_node_variablename_instance(self):
+        """Return True."""
+        return True
+
 
 class Argument(CQLObject):
     """Subclass of CQLObject for keywords with unparenthesized argument.

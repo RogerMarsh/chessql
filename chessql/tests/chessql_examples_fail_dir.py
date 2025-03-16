@@ -34,6 +34,4 @@ if __name__ == "__main__":
             with open(querypath, mode="r", encoding="utf-8") as queryfile:
                 container = parser.parse(queryfile.read())
                 if not files_only:
-                    tree_trace = []
-                    container.parse_tree_trace(trace=tree_trace)
-                    print("\n".join(tree_trace))
+                    container.print_parse_tree_trace()

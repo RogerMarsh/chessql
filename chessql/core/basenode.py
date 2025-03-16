@@ -293,10 +293,44 @@ class BaseNode:
         return (self.__class__.__name__, len(stack), stack)
 
     def _str_filter_type(self):
-        """Return str of filter type or an error report."""
+        """Return name of filter type or an error report."""
         try:
-            return str(self.filter_type)
+            filter_type = self.filter_type
+            name = filter_type.name
+            if name is None:
+                name = str(None)
+            return "f: " + name
         except NodeError as exc:
+            return str(exc)
+
+    def _str_variable_type(self):
+        """Return name of variable type or an error report."""
+        try:
+            item = self.container.definitions.get(self.name)
+            if item is None:
+                return "v: " + str(None)
+            return "v: " + item.variable_type.name
+        except AttributeError as exc:
+            return str(exc)
+
+    def _str_key_filter_type(self):
+        """Return name of dictionary key filter type or an error report."""
+        try:
+            item = self.container.definitions.get(self.name)
+            if item is None:
+                return "k: " + str(None)
+            return "k: " + item.key_filter_type.name
+        except AttributeError as exc:
+            return str(exc)
+
+    def _str_persistence_type(self):
+        """Return name of persistence type or an error report."""
+        try:
+            item = self.container.definitions.get(self.name)
+            if item is None:
+                return "p: " + str(None)
+            return "p: " + item.persistence_type.name
+        except AttributeError as exc:
             return str(exc)
 
     def parse_tree_trace(self, trace=None):
@@ -351,6 +385,14 @@ class BaseNode:
             )
         else:
             match_ = self._match_string()
+        type_strings = []
+        type_strings.append(self._str_filter_type())
+        if self.is_node_dictionary_instance():
+            type_strings.append(self._str_key_filter_type())
+            type_strings.append(self._str_persistence_type())
+        if self.is_node_variablename_instance():
+            type_strings.append(self._str_variable_type())
+            type_strings.append(self._str_persistence_type())
         # pylint C0209 consider-using-f-string.  f"{depth:>3}" not used
         # because 'depth' gets coloured as a "string" (typically green)
         # rather than as a local attribute (typically black).
@@ -365,12 +407,22 @@ class BaseNode:
                     " " * depth,
                     self.__class__.__name__,
                     match_,
-                    self._str_filter_type(),
+                    " ".join(type_strings),
                 )
             )
         )
         for node in self._children:
             node.parse_tree_trace(trace=trace)
+
+    def print_parse_tree_trace(self):
+        """Print the parse tree rooted at self.
+
+        Convenient for print debugging just before a raise statement.
+
+        """
+        tree_trace = []
+        self.parse_tree_trace(trace=tree_trace)
+        print("\n".join(tree_trace))
 
     def parse_tree_node(self, trace=None):
         """Return trace with parse tree for node.
@@ -404,12 +456,30 @@ class BaseNode:
 
     # This method exists to allow BaseNode and FunctionCall classes to be in
     # separate modules.
-    # Reimplement parse_tree_trace() to do this? or
-    # Map reserved variable names to function call names?
     def is_node_functioncall_instance(self):
         """Return False.
 
         The FunctionCall subclass overrides to return True.
+
+        """
+        return False
+
+    # This method exists to allow BaseNode and Dictionary classes to be in
+    # separate modules.
+    def is_node_dictionary_instance(self):
+        """Return False.
+
+        The Dictionary subclass overrides to return True.
+
+        """
+        return False
+
+    # This method exists to allow BaseNode and VariableName classes to be in
+    # separate modules.
+    def is_node_variablename_instance(self):
+        """Return False.
+
+        The VariableName subclass overrides to return True.
 
         """
         return False

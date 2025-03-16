@@ -2148,6 +2148,12 @@ class Dictionary(structure.Complete, structure.VariableTypeSetter):
                 + "' dictionary"
             )
 
+    # This method exists to allow BaseNode and Dictionary classes to be in
+    # separate modules.
+    def is_node_dictionary_instance(self):
+        """Return True."""
+        return True
+
 
 class Distance(structure.ParenthesizedArguments):
     """Represent 'distance' numeric filter."""
@@ -2845,8 +2851,6 @@ class FunctionCall(structure.Name, structure.ParenthesizedArguments):
 
     # This method exists to allow BaseNode and FunctionCall classes to be in
     # separate modules.
-    # Reimplement parse_tree_trace() to do this? or
-    # Map reserved variable names to function call names?
     def is_node_functioncall_instance(self):
         """Return True."""
         return True
