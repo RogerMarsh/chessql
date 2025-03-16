@@ -224,16 +224,7 @@ class BaseNode:
         self._verify_children()
 
     # An isinstance solution is preferred.
-    def is_left_brace_or_parenthesis(self):
-        """Return True if token is one of '({' in a '()' or '{}' construct.
-
-        Subclasses should override and return True if appropriate.
-
-        """
-        return False
-
-    # An isinstance solution is preferred.
-    def is_variable(self):
+    def _is_variable(self):
         """Return True if token is a Variable instance.
 
         Subclasses should override and return True if appropriate.
@@ -348,7 +339,7 @@ class BaseNode:
         while node:
             depth += 1
             node = node.parent
-        if self.is_variable() and self._name.startswith(
+        if self._is_variable() and self._name.startswith(
             constants.LOWER_CASE_CQL_PREFIX
         ):
             node = self
@@ -387,10 +378,10 @@ class BaseNode:
             match_ = self._match_string()
         type_strings = []
         type_strings.append(self._str_filter_type())
-        if self.is_node_dictionary_instance():
+        if self._is_node_dictionary_instance():
             type_strings.append(self._str_key_filter_type())
             type_strings.append(self._str_persistence_type())
-        if self.is_node_variablename_instance():
+        if self._is_node_variablename_instance():
             type_strings.append(self._str_variable_type())
             type_strings.append(self._str_persistence_type())
         # pylint C0209 consider-using-f-string.  f"{depth:>3}" not used
@@ -466,7 +457,7 @@ class BaseNode:
 
     # This method exists to allow BaseNode and Dictionary classes to be in
     # separate modules.
-    def is_node_dictionary_instance(self):
+    def _is_node_dictionary_instance(self):
         """Return False.
 
         The Dictionary subclass overrides to return True.
@@ -476,7 +467,7 @@ class BaseNode:
 
     # This method exists to allow BaseNode and VariableName classes to be in
     # separate modules.
-    def is_node_variablename_instance(self):
+    def _is_node_variablename_instance(self):
         """Return False.
 
         The VariableName subclass overrides to return True.

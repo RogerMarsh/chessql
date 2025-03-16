@@ -624,7 +624,7 @@ class VariableName(VariableTypeSetter):
 
     # This method exists to allow BaseNode and VariableName classes to
     # be in separate modules.
-    def is_node_variablename_instance(self):
+    def _is_node_variablename_instance(self):
         """Return True."""
         return True
 

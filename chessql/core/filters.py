@@ -2150,7 +2150,7 @@ class Dictionary(structure.Complete, structure.VariableTypeSetter):
 
     # This method exists to allow BaseNode and Dictionary classes to be in
     # separate modules.
-    def is_node_dictionary_instance(self):
+    def _is_node_dictionary_instance(self):
         """Return True."""
         return True
 
