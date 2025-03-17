@@ -84,6 +84,10 @@ _comment_re = re.compile(
 )
 
 
+class TokenError(Exception):
+    """Exception raised for problems in deducing tokens from query."""
+
+
 def populate_container(container, string, *args):
     """Populate container instance from parsed query in string."""
     container.place_node_in_tree()
@@ -94,9 +98,7 @@ def populate_container(container, string, *args):
             for key, value in token.groupdict().items()
             if value is not None
         }
-        # pylint R0801 duplicate code.  Ignored.
-        # See cql.CQL.parse().
-        assert len(classes) == 1
+        raise_if_not_single_match_groupdict_entry(token, classes)
         for value in classes.values():
             value(
                 match_=token,
@@ -163,7 +165,7 @@ def parse_debug(string, tree_only=False, tokens_only=False):
             for key, value in token.groupdict().items()
             if value is not None
         }
-        assert len(classes) == 1
+        raise_if_not_single_match_groupdict_entry(token, classes)
         for value in classes.values():
             if not tree_only:
                 if not tokens_only:
@@ -236,3 +238,14 @@ def _remove_comments(string, container):
         else:
             no_comments.append(group())
     return "".join(no_comments)
+
+
+def raise_if_not_single_match_groupdict_entry(token, entries):
+    """Raise TokenError if entries has more than one item for token."""
+    if len(entries) != 1:
+        raise TokenError(
+            "A single groupdict entry is expected frpm match on '"
+            + token.group()
+            + "' but got "
+            + str(len(entries))
+        )

@@ -124,10 +124,16 @@ class FunctionCallEnd(filters.RightCompoundPlace):
             for token in body:
                 classes = {
                     key: class_from_token_name[key]
+                    # pylint R0801 duplicate code.  Ignored.
+                    # See cql.CQL.place_node_in_tree().
+                    # Shortening the 'raise_...' function name enough would
+                    # remove the pylint report after black reformatting.
                     for key, value in token.groupdict().items()
                     if value is not None
                 }
-                assert len(classes) == 1
+                structure.raise_if_not_single_match_groupdict_entry(
+                    self, token, classes
+                )
                 for value in classes.values():
                     # Rename formal variable instances as they appear.
                     body_item = value(match_=token, container=container)

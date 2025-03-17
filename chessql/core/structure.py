@@ -757,8 +757,20 @@ class Infix(CQLObject):
                 + ": cannot apply this operator to incomplete "
                 + container.cursor.__class__.__name__
             )
-        assert len(container.cursor.parent.children) > 0
-        assert container.cursor is container.cursor.parent.children[-1]
+        if len(container.cursor.parent.children) == 0:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cursor's parent (a "
+                + container.cursor.parent.__class__.__name__
+                + ") should have at least one child but has none"
+            )
+        if container.cursor is not container.cursor.parent.children[-1]:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + ": cursor (a "
+                + container.cursor.__class__.__name__
+                + ") is not the last child of it's parent"
+            )
         super().__init__(match_=match_, container=container)
 
     def _swap_tree_position(self, ancestor):
@@ -906,7 +918,7 @@ class Numeric(InfixLeft):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        raise_if_not_number_of_children(self, 2)
         raise_if_not_same_filter_type(
             self,
             "apply arithmetic operation",
@@ -936,7 +948,7 @@ class ComparePosition(CQLObject):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        raise_if_not_number_of_children(self, 2)
         raise_if_not_same_filter_type(
             self, "compare", filter_type=cqltypes.FilterType.POSITION
         )
@@ -1012,7 +1024,7 @@ class Compare(CQLObject):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        raise_if_not_number_of_children(self, 2)
         if (
             self.children[0].filter_type | self.children[1].filter_type
             == self._coerce_to_numeric
@@ -1197,4 +1209,28 @@ def raise_if_not_same_filter_type(
             + str(lhs.filter_type)
             + " and rhs is "
             + str(rhs.filter_type)
+        )
+
+
+def raise_if_not_number_of_children(parent, number):
+    """Raise NodeError if parent does not have number children."""
+    if len(parent.children) != number:
+        raise basenode.NodeError(
+            parent.__class__.__name__
+            + ": expects "
+            + str(number)
+            + " children but got "
+            + str(len(parent.children))
+        )
+
+
+def raise_if_not_single_match_groupdict_entry(node, token, entries):
+    """Raise NodeError if entries has more than one item for token."""
+    if len(entries) != 1:
+        raise basenode.NodeError(
+            node.__class__.__name__
+            + ": a single groupdict entry is expected frpm match on '"
+            + token.group()
+            + "' but got "
+            + str(len(entries))
         )

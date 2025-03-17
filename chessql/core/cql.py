@@ -106,12 +106,16 @@ class CQL(structure.CompleteBlock):
         for token in _parameters_re.finditer(string):
             classes = {
                 key: parameters.class_from_token_name[key]
+                # pylint R0801 duplicate code.  Ignored.
+                # See tokenmap.FunctionCallEnd.place_node_in_tree().
+                # Shortening the 'raise_...' function name enough would
+                # remove the pylint report after black reformatting.
                 for key, value in token.groupdict().items()
                 if value is not None
             }
-            # pylint R0801 duplicate code.  Ignored.
-            # See parser.parse().
-            assert len(classes) == 1
+            structure.raise_if_not_single_match_groupdict_entry(
+                self, token, classes
+            )
             for value in classes.values():
                 value(
                     match_=token,

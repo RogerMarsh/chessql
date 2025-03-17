@@ -1295,7 +1295,7 @@ class RegexMatch(structure.InfixLeft):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
             self,
             "match pattern",
@@ -1888,7 +1888,7 @@ class CountMoves(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         child = self.children[0]
         if not _is_dash_or_capture(child) and not isinstance(
             child, (Legal, Pseudolegal)
@@ -1909,7 +1909,7 @@ class CurrentMove(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         if not _is_dash_or_capture(self.children[0]):
             raise basenode.NodeError(
                 self.__class__.__name__
@@ -3024,7 +3024,7 @@ class In(structure.InfixLeft):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
             self,
             "apply intersection operation",
@@ -3147,7 +3147,7 @@ class Legal(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         if not _is_dash(self.children[0]):
             raise basenode.NodeError(
                 self.__class__.__name__
@@ -4081,7 +4081,7 @@ class Pseudolegal(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         if not _is_dash(self.children[0]):
             raise basenode.NodeError(
                 self.__class__.__name__
@@ -5465,7 +5465,7 @@ class Intersection(structure.InfixLeft):
     # _verify_children method gets called before accessing the property.
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
             self,
             "apply intersection operation",
@@ -5536,7 +5536,7 @@ class Plus(structure.Numeric):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
             self,
             "apply arithmetic or string concatenation operation",
@@ -5607,7 +5607,7 @@ class UnaryMinus(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         if self.container.function_body_cursor is not None:
             return
         if self.children[0].filter_type is not cqltypes.FilterType.NUMERIC:
@@ -5641,7 +5641,7 @@ class Complement(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         structure.raise_if_not_filter_type(
             self.children[0],
             self,
@@ -5657,7 +5657,7 @@ class Union(structure.InfixLeft):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 2
+        structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
             self,
             "apply union operation",
@@ -5943,7 +5943,7 @@ class CountFilter(structure.Argument):
 
     def _verify_children(self):
         """Override, raise NodeError if children verification fails."""
-        assert len(self.children) == 1
+        structure.raise_if_not_number_of_children(self, 1)
         structure.raise_if_not_filter_type(
             self.children[0],
             self,
