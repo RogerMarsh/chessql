@@ -1126,11 +1126,30 @@ class ModifyAssign(CQLObject):
                 raise basenode.NodeError(
                     self.__class__.__name__ + ": rhs must be a Numeric filter"
                 )
-        if self.container.function_body_cursor is None or (
-            not isinstance(lhs, VariableName)
-            and not isinstance(rhs, VariableName)
+        set_persistent_variable_filter_type(lhs, rhs)
+        if self.container.function_body_cursor is None or not isinstance(
+            rhs, VariableName
         ):
             raise_if_not_same_filter_type(self, "assign")
+
+
+def set_persistent_variable_filter_type(lhs, rhs):
+    """Set filter type of lhs from rhs if not already set.
+
+    This function is intended for calling by filters.AssignPlus and
+    ModifyAssign only.
+
+    Validation and raise are assumed to be done by caller.
+
+    """
+    container = lhs.container
+    if container.function_body_cursor is not None:
+        return
+    definition = container.definitions[lhs.name]
+    if definition.filter_type is not cqltypes.FilterType.ANY:
+        return
+    if definition.persistence_type is cqltypes.PersistenceType.PERSISTENT:
+        definition.filter_type = rhs.filter_type
 
 
 def raise_if_not_instance(child, parent, instance, msg):

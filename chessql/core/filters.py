@@ -1462,9 +1462,9 @@ class AssignPlus(structure.InfixLeft):
                     self.__class__.__name__
                     + ": rhs must be a Numeric or String filter"
                 )
-        if self.container.function_body_cursor is None or (
-            not isinstance(lhs, structure.VariableName)
-            and not isinstance(rhs, structure.VariableName)
+        structure.set_persistent_variable_filter_type(lhs, rhs)
+        if self.container.function_body_cursor is None or not isinstance(
+            rhs, structure.VariableName
         ):
             structure.raise_if_not_same_filter_type(self, "assign")
 

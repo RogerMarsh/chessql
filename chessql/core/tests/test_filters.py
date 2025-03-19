@@ -10513,6 +10513,139 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_211_persistent_assign_01_plus_01_bare(self):
+        self.verify("persistent y+=", [], returncode=1)
+
+    def test_211_persistent_assign_01_plus_02_integer(self):
+        self.verify(
+            "persistent y+=2",
+            [(3, "AssignPlus"), (4, "Persistent"), (4, "Integer")],
+        )
+
+    def test_211_persistent_assign_01_plus_03_move_count(self):
+        self.verify(
+            "persistent y+=move from . count legal",
+            [
+                (3, "AssignPlus"),
+                (4, "Persistent"),
+                (4, "Move"),
+                (5, "FromParameter"),
+                (6, "AnySquare"),
+                (5, "Count"),
+                (5, "LegalParameter"),
+            ],
+        )
+
+    def test_211_persistent_assign_01_plus_04_string(self):
+        self.verify(
+            'persistent y+="a"',
+            [(3, "AssignPlus"), (4, "Persistent"), (4, "String")],
+        )
+
+    def test_211_persistent_assign_02_star_01_bare(self):
+        self.verify("persistent y*=", [], returncode=1)
+
+    def test_211_persistent_assign_02_star_02_integer(self):
+        self.verify(
+            "persistent y*=2",
+            [(3, "AssignMultiply"), (4, "Persistent"), (4, "Integer")],
+        )
+
+    def test_211_persistent_assign_02_star_03_move_count(self):
+        self.verify(
+            "persistent y*=move from . count legal",
+            [
+                (3, "AssignMultiply"),
+                (4, "Persistent"),
+                (4, "Move"),
+                (5, "FromParameter"),
+                (6, "AnySquare"),
+                (5, "Count"),
+                (5, "LegalParameter"),
+            ],
+        )
+
+    def test_211_persistent_assign_02_star_04_string(self):
+        self.verify('persistent y*="a"', [], returncode=1)
+
+    def test_211_persistent_assign_03_divide_01_bare(self):
+        self.verify("persistent y/=", [], returncode=1)
+
+    def test_211_persistent_assign_03_divide_02_integer(self):
+        self.verify(
+            "persistent y/=2",
+            [(3, "AssignDivide"), (4, "Persistent"), (4, "Integer")],
+        )
+
+    def test_211_persistent_assign_03_divide_03_move_count(self):
+        self.verify(
+            "persistent y/=move from . count legal",
+            [
+                (3, "AssignDivide"),
+                (4, "Persistent"),
+                (4, "Move"),
+                (5, "FromParameter"),
+                (6, "AnySquare"),
+                (5, "Count"),
+                (5, "LegalParameter"),
+            ],
+        )
+
+    def test_211_persistent_assign_03_divide_04_string(self):
+        self.verify('persistent y/="a"', [], returncode=1)
+
+    def test_211_persistent_assign_04_minus_01_bare(self):
+        self.verify("persistent y-=", [], returncode=1)
+
+    def test_211_persistent_assign_04_minus_02_integer(self):
+        self.verify(
+            "persistent y-=2",
+            [(3, "AssignMinus"), (4, "Persistent"), (4, "Integer")],
+        )
+
+    def test_211_persistent_assign_04_minus_03_move_count(self):
+        self.verify(
+            "persistent y-=move from . count legal",
+            [
+                (3, "AssignMinus"),
+                (4, "Persistent"),
+                (4, "Move"),
+                (5, "FromParameter"),
+                (6, "AnySquare"),
+                (5, "Count"),
+                (5, "LegalParameter"),
+            ],
+        )
+
+    def test_211_persistent_assign_04_minus_04_string(self):
+        self.verify('persistent y-="a"', [], returncode=1)
+
+    def test_211_persistent_assign_05_modulus_01_bare(self):
+        self.verify("persistent y%=", [], returncode=1)
+
+    def test_211_persistent_assign_05_modulus_02_integer(self):
+        self.verify(
+            "persistent y%=2",
+            [(3, "AssignModulus"), (4, "Persistent"), (4, "Integer")],
+        )
+
+    def test_211_persistent_assign_05_modulus_03_move_count(self):
+        self.verify(
+            "persistent y%=move from . count legal",
+            [
+                (3, "AssignModulus"),
+                (4, "Persistent"),
+                (4, "Move"),
+                (5, "FromParameter"),
+                (6, "AnySquare"),
+                (5, "Count"),
+                (5, "LegalParameter"),
+            ],
+        )
+
+    def test_211_persistent_assign_05_modulus_04_string(self):
+        self.verify('persistent y%="a"', [], returncode=1)
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner
