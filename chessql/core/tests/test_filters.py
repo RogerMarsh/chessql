@@ -9599,6 +9599,24 @@ class Filters(verify.Verify):
     def test_196_minus_14_unary_non_integer_05_position(self):
         self.verify("-currentposition", [], returncode=1)
 
+    def test_196_minus_15_unary_compare_01_equal_integer(self):
+        self.verify(
+            "2==-1",
+            [(3, "Eq"), (4, "Integer"), (4, "UnaryMinus"), (5, "Integer")],
+        )
+
+    def test_196_minus_15_unary_compare_02_equal_colortype(self):
+        self.verify(
+            "2==-colortype a5",
+            [
+                (3, "Eq"),
+                (4, "Integer"),
+                (4, "UnaryMinus"),
+                (5, "ColorType"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
     def test_197_complement_01_bare(self):
         self.verify("~", [], returncode=1)
 

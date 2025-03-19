@@ -5737,6 +5737,8 @@ def minus(match_=None, container=None):
         if isinstance(node, structure.BlockLeft):
             return UnaryMinus(match_=match_, container=container)
         node = node.parent
+    if isinstance(node, structure.Compare):
+        return UnaryMinus(match_=match_, container=container)
     if node and node.filter_type is cqltypes.FilterType.NUMERIC:
         return Minus(match_=match_, container=container)
     return UnaryMinus(match_=match_, container=container)
