@@ -3519,7 +3519,21 @@ class MoveNumber(structure.NoArgumentsFilter):
 class Move(
     structure.PrecedenceFromChild, structure.CompleteParameterArguments
 ):
-    """Represent 'move' set, logical, or numeric, filter."""
+    """Represent 'move' set, logical, or numeric, filter.
+
+    Copy-typed from CQLi-1.0.4 manual:
+
+    The result type of the 'move' filter is either Boolean, Set, or
+    Numeric depending on the parameters used.  If the 'count' parameter
+    is specified, the result is a Numeric value indicating the number
+    of matching moves at the current position.  Otherwise, if the first
+    parameter is 'from', 'to', or 'capture', the result has type Set.
+    Otherwise the result is Boolean and matches the position only if
+    there are any matching moves at the position.
+
+    CQL calls Boolean filters Logical filters.
+
+    """
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
@@ -3532,6 +3546,7 @@ class Move(
         """Override, raise NodeError if children verification fails."""
         count_allowed = False
         count_present = False
+        from_to_capture_present = False
         for item, child in enumerate(self.children):
             if isinstance(child, CommentParenthesesParameter):
                 if item != len(self.children) - 1:
@@ -3543,6 +3558,8 @@ class Move(
                 count_allowed = True
             if isinstance(child, Count):
                 count_present = True
+            if isinstance(child, (FromParameter, ToParameter, Capture)):
+                from_to_capture_present = True
         if count_present and not count_allowed:
             raise basenode.NodeError(
                 self.__class__.__name__
@@ -3550,6 +3567,10 @@ class Move(
                 + "present with 'count' parameter "
             )
         _raise_if_primary_and_secondary_parameter_present(self)
+        if count_present:
+            self.filter_type = cqltypes.FilterType.NUMERIC
+        elif from_to_capture_present:
+            self.filter_type = cqltypes.FilterType.SET
 
 
 def is_nestban_parameter_accepted_by(node):
@@ -6135,42 +6156,16 @@ def _set_or_parameter(
     the effect of 'pin' and 'move' keywords.
 
     """
-    cursor = container.cursor
-    if is_parameter_accepted_by(cursor):
-        return parameter(match_=match_, container=container)
-    node = cursor
+    node = container.cursor
     while True:
         if node is None:
             break
+        if node.is_parameter and not node.full():
+            return set_(match_=match_, container=container)
+        if isinstance(node, (CommentParameter, CommentParenthesesParameter)):
+            return set_(match_=match_, container=container)
         if is_parameter_accepted_by(node):
-            if isinstance(node, Pin):
-                parameters = (FromParameter, ToParameter, Through)
-            else:
-                parameters = (
-                    FromParameter,
-                    ToParameter,
-                    Capture,
-                    Promote,
-                    EnPassantSquareParameter,
-                    PseudolegalParameter,
-                    LegalParameter,
-                    Count,
-                    CommentParenthesesParameter,
-                    SecondaryParameter,
-                    PrimaryParameter,
-                    Previous,
-                    OOOParameter,
-                    OOParameter,
-                    Null,
-                    EnPassantParameter,
-                    CastleParameter,
-                )
-            if (
-                cursor.filter_type in cqltypes.FilterType.SET
-                and isinstance(cursor.parent, parameters)
-                and is_parameter_accepted_by(cursor.parent.parent)
-            ):
-                return parameter(match_=match_, container=container)
+            return parameter(match_=match_, container=container)
         node = node.parent
     return set_(match_=match_, container=container)
 

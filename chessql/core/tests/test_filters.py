@@ -3775,6 +3775,37 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_062_line_54_cql_6_1_examples_parallelpaths_simple(self):
+        # Further simplification usually causes query to pass parsing
+        # before fix applied.
+        self.verify(
+            "line-->x=?move to .-->y=?move to ~x from k-->z=?move to .",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "AssignIf"),
+                (6, "Variable"),
+                (6, "Move"),
+                (7, "ToParameter"),
+                (8, "AnySquare"),
+                (4, "ArrowForward"),
+                (5, "AssignIf"),
+                (6, "Variable"),
+                (6, "Move"),
+                (7, "ToParameter"),
+                (8, "Complement"),
+                (9, "Variable"),
+                (7, "FromParameter"),
+                (8, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "AssignIf"),
+                (6, "Variable"),
+                (6, "Move"),
+                (7, "ToParameter"),
+                (8, "AnySquare"),
+            ],
+        )
+
     def test_063_local_01(self):
         self.verify("local", [], returncode=1)
 
@@ -5587,13 +5618,19 @@ class Filters(verify.Verify):
         self.verify("modelstalemate", [(3, "ModelStalemate")])
 
     def test_074_move_01(self):
-        self.verify("move", [(3, "Move")])
+        con = self.verify("move", [(3, "Move")])
+        move = con.children[0].children[0]
+        self.assertEqual(move.__class__, filters.Move)
+        self.assertEqual(move.filter_type, cqltypes.FilterType.LOGICAL)
 
     def test_074_move_02(self):
         self.verify("move capture", [], returncode=1)
 
     def test_074_move_03(self):
-        self.verify("move castle", [(3, "Move"), (4, "CastleParameter")])
+        con = self.verify("move castle", [(3, "Move"), (4, "CastleParameter")])
+        move = con.children[0].children[0]
+        self.assertEqual(move.__class__, filters.Move)
+        self.assertEqual(move.filter_type, cqltypes.FilterType.LOGICAL)
 
     def test_074_move_04(self):
         self.verify("move comment", [], returncode=1)
@@ -5643,10 +5680,13 @@ class Filters(verify.Verify):
         self.verify("move to", [], returncode=1)
 
     def test_074_move_19(self):
-        self.verify(
+        con = self.verify(
             "move capture P",
             [(3, "Move"), (4, "Capture"), (5, "PieceDesignator")],
         )
+        move = con.children[0].children[0]
+        self.assertEqual(move.__class__, filters.Move)
+        self.assertEqual(move.filter_type, cqltypes.FilterType.SET)
 
     def test_074_move_20(self):
         self.verify(
@@ -5699,10 +5739,13 @@ class Filters(verify.Verify):
         )
 
     def test_074_move_23(self):
-        self.verify(
+        con = self.verify(
             "move count legal",
             [(3, "Move"), (4, "Count"), (4, "LegalParameter")],
         )
+        move = con.children[0].children[0]
+        self.assertEqual(move.__class__, filters.Move)
+        self.assertEqual(move.filter_type, cqltypes.FilterType.NUMERIC)
 
     def test_074_move_24(self):
         self.verify(
