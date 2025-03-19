@@ -68,7 +68,6 @@ class Verify(unittest.TestCase):
         trace = []
         container.parse_tree_node(trace=trace)
         trace = [(e, n.__class__.__name__) for e, n in trace]
-        # print(trace)
         self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
         return container
 
@@ -96,7 +95,6 @@ class Verify(unittest.TestCase):
         trace = []
         container.parse_tree_node(trace=trace)
         trace = [(e, n.__class__.__name__) for e, n in trace]
-        # print(trace)
         self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
         return container
 
@@ -151,7 +149,6 @@ class Verify(unittest.TestCase):
         trace = []
         container.parse_tree_node(trace=trace)
         trace = [(e, n.__class__.__name__) for e, n in trace]
-        # print(trace)
         self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
         return container
 
@@ -173,6 +170,47 @@ class Verify(unittest.TestCase):
         self.assertEqual(variable.name, name)
         self.assertEqual(variable.variable_type, variable_type)
         self.assertEqual(variable.filter_type, filter_type)
+
+    def verify_capture_cql_output(
+        self, string, classname_structure, cql_output, returncode=0
+    ):
+        """Verify string produces tokens and names for tokens.
+
+        This method is very sensistive to changes in the output produced
+        by the unsupported '-parse' option when running CQL.
+
+        The CQL subprocess is run with 'stdout=subprocess.PIPE' so tests
+        can be done on the result of the 'cql ... -parse ...' run against
+        the cql_output argument.  The test is that cql_output is in the
+        stdout of subprocess.
+
+        Run 'cql' in a subprocess to verify the string is accepted by cql.
+
+        Run the string through the chessql parser to verify the expected
+        tree structure is produced.
+
+        """
+        process = subprocess.run(
+            shlex.split(_CQL_PREFIX) + [string],
+            stdout=subprocess.PIPE,
+            encoding="utf8",
+        )
+        self.assertEqual(process.returncode, returncode)
+        if returncode != 0:
+            self.assertRaisesRegex(
+                NodeError,
+                ".*$",
+                parser.parse,
+                *(_CHESSQL_PREFIX + string,),
+            )
+            return None
+        self.assertEqual(cql_output in process.stdout, True)
+        container = parser.parse(_CHESSQL_PREFIX + string)
+        trace = []
+        container.parse_tree_node(trace=trace)
+        trace = [(e, n.__class__.__name__) for e, n in trace]
+        self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
+        return container
 
 
 if __name__ == "__main__":
@@ -213,6 +251,20 @@ if __name__ == "__main__":
                 "v",
                 cqltypes.VariableType.SET,
                 cqltypes.FilterType.SET,
+            )
+
+        def test_verify_capture_cql_output(self):
+            """Unittest for returncode 0 from cql job."""
+            self.verify_capture_cql_output(
+                "line --> ka5{2 }",
+                [
+                    (3, "Line"),
+                    (4, "ArrowForward"),
+                    (5, "PieceDesignator"),
+                    (3, "BraceLeft"),
+                    (4, "Integer"),
+                ],
+                "<NumberNode:",
             )
 
     runner = unittest.TextTestRunner

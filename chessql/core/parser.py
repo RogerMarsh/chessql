@@ -69,7 +69,6 @@ from . import tokenmap
 from . import querycontainer
 from . import options
 
-_cql_re = re.compile(pattern.CQL_TOKENS)
 _comment_re = re.compile(
     r"|".join(
         (
@@ -91,7 +90,9 @@ class TokenError(Exception):
 def populate_container(container, string, *args):
     """Populate container instance from parsed query in string."""
     container.place_node_in_tree()
-    for token in _cql_re.finditer(_remove_comments(string, container), *args):
+    for token in pattern.cql_re.finditer(
+        _remove_comments(string, container), *args
+    ):
         container.current_token = token
         classes = {
             key: tokenmap.class_from_token_name[key]
@@ -159,7 +160,7 @@ def parse_debug(string, tree_only=False, tokens_only=False):
         tokens_only = False
     container = querycontainer.QueryContainer()
     container.place_node_in_tree()
-    for token in _cql_re.finditer(_remove_comments(string, container)):
+    for token in pattern.cql_re.finditer(_remove_comments(string, container)):
         classes = {
             key: tokenmap.class_from_token_name[key]
             for key, value in token.groupdict().items()

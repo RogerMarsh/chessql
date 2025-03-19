@@ -301,7 +301,7 @@ class CompleteParameterArguments(CQLObject):
         if len(self.children) == 0:
             return True
         if self.children[-1].is_parameter:
-            if not self.children[-1].completed:
+            if not self.children[-1].full():
                 return False
         return True
 

@@ -11,6 +11,8 @@ combined to form the pattern for the regular expression applied to the
 text of a CQL statement.
 
 """
+import re
+
 from . import elements
 
 # Pattern for regular expression to parse CQL query files (*.cql).
@@ -325,3 +327,4 @@ CQL_TOKENS = r")|(".join(
         elements.END_OF_STREAM + r")",  # 6.0.4
     )
 )
+cql_re = re.compile(CQL_TOKENS)

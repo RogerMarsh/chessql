@@ -1929,9 +1929,24 @@ class Filters(verify.Verify):
         )
 
     def test_044_function_08_body_integer_call_01_bare(self):
-        self.verify("function fn(){1} fn()", [], returncode=1)
+        # Choose to allow this use of '{<digits>}' unlike CQL which
+        # declares the construct invalid despite the CQL parser passing
+        # the construct (actually the explicit statement of legality is
+        # for 'fn(){2+3}' or any arithemic operation).
+        self.verify_declare_fail(
+            "function fn(){1} fn()",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "BraceLeft"),
+                (6, "Integer"),
+            ],
+        )
 
     def test_044_function_08_body_integer_call_02_parentheses(self):
+        # If something like 'fn(){1}' really must be said to CQL it is done
+        # by saying 'fn(){(1)}'.
         self.verify(
             "function fn(){(1)} fn()",
             [
@@ -1996,7 +2011,7 @@ class Filters(verify.Verify):
         )
 
     def test_044_function_12_body_integer_01_bare(self):
-        self.verify("function fn(){1}", [], returncode=1)
+        self.verify_declare_fail("function fn(){1}", [(3, "Function")])
 
     def test_044_function_12_body_integer_02_parentheses(self):
         self.verify("function fn(){(1)}", [(3, "Function")])
@@ -3055,7 +3070,7 @@ class Filters(verify.Verify):
         )
 
     def test_062_line_44_regex_line_arrow_06_arrow_closed_range(self):
-        self.verify(
+        self.verify_capture_cql_output(
             "line --> (check --> mate){2,4}",
             [
                 (3, "Line"),
@@ -3066,10 +3081,11 @@ class Filters(verify.Verify):
                 (7, "Mate"),
                 (5, "RegexRepeat"),
             ],
+            "<RepeatConstituent \n    <VectorConstituent ",
         )
 
     def test_062_line_44_regex_line_arrow_07_arrow_closed_range_high(self):
-        self.verify(
+        self.verify_capture_cql_output(
             "line --> (check --> mate){,4}",
             [
                 (3, "Line"),
@@ -3080,10 +3096,11 @@ class Filters(verify.Verify):
                 (7, "Mate"),
                 (5, "RegexRepeat"),
             ],
+            "<RepeatConstituent \n    <VectorConstituent ",
         )
 
     def test_062_line_44_regex_line_arrow_08_arrow_closed_range_low(self):
-        self.verify(
+        self.verify_capture_cql_output(
             "line --> (check --> mate){2,}",
             [
                 (3, "Line"),
@@ -3093,6 +3110,668 @@ class Filters(verify.Verify):
                 (6, "ArrowForward"),
                 (7, "Mate"),
                 (5, "RegexRepeat"),
+            ],
+            "<RepeatConstituent \n    <VectorConstituent ",
+        )
+
+    def test_062_line_45_regex_line_arrow_08_space_start_repeat_number(self):
+        self.verify_capture_cql_output(
+            "line --> check{ 2}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+            "<NumberNode:",
+        )
+
+    def test_062_line_45_regex_line_arrow_09_space_end_repeat_number(self):
+        self.verify_capture_cql_output(
+            "line --> check{2 }",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+            "<NumberNode:",
+        )
+
+    def test_062_line_45_regex_line_arrow_10_space_around_repeat_number(self):
+        self.verify_capture_cql_output(
+            "line --> check{ 2 }",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Check"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+            "<NumberNode:",
+        )
+
+    def test_062_line_45_regex_line_arrow_11_space_start_repeat_range(self):
+        self.verify("line --> check{ 2,}", [], returncode=1)
+
+    def test_062_line_45_regex_line_arrow_12_space_end_repeat_range(self):
+        self.verify("line --> check{2, }", [], returncode=1)
+
+    def test_062_line_45_regex_line_arrow_13_space_around_repeat_range(self):
+        self.verify("line --> check{ 2, }", [], returncode=1)
+
+    def test_062_line_45_regex_line_arrow_14_space_within_range_01(self):
+        self.verify("line --> check{2 ,}", [], returncode=1)
+
+    def test_062_line_45_regex_line_arrow_14_space_within_range_02(self):
+        self.verify("line --> check{, 4}", [], returncode=1)
+
+    def test_062_line_45_regex_line_arrow_14_space_within_range_03(self):
+        self.verify("line --> check{2 , 4}", [], returncode=1)
+
+    def test_062_line_46_integer_01_bare(self):
+        self.verify_declare_fail(
+            "line --> 3", [(3, "Line"), (4, "ArrowForward"), (5, "Integer")]
+        )
+
+    def test_062_line_46_integer_02_hide_in_parentheses(self):
+        self.verify_declare_fail(
+            "line --> (3)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_03_hide_in_braces(self):
+        self.verify_declare_fail(
+            "line --> {3}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_04_bare_plus(self):  # '+' is add.
+        self.verify_declare_fail(
+            "line --> 3+4",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Plus"),
+                (6, "Integer"),
+                (6, "Integer"),
+            ],
+        )
+
+    # '(3)+' is constituent of 'line'. '(4)' is new filter after 'line'.
+    def xtest_062_line_46_integer_05_hide_in_parentheses_plus_01(self):
+        self.verify_declare_fail(
+            "line --> (3)+(4)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (5, "PlusRepeat"),
+                (3, "ParenthesisLeft"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_05_hide_in_parentheses_plus_02(self):
+        self.verify_declare_fail(
+            "line --> (3+4)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Plus"),
+                (7, "Integer"),
+                (7, "Integer"),
+            ],
+        )
+
+    # The constituent of '-->' is the '+' filter adding two compound filters.
+    def test_062_line_46_integer_06_hide_in_braces_plus_01(self):
+        self.verify_declare_fail(
+            "line --> {3}+{4}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Plus"),
+                (6, "BraceLeft"),
+                (7, "Integer"),
+                (6, "BraceLeft"),
+                (7, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_06_hide_in_braces_plus_02(self):
+        self.verify_declare_fail(
+            "line --> {3+4}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Plus"),
+                (7, "Integer"),
+                (7, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_07_bare_star(self):  # '*' is multiply.
+        self.verify_declare_fail(
+            "line --> 3*4",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Star"),
+                (6, "Integer"),
+                (6, "Integer"),
+            ],
+        )
+
+    # '(3)*' is constituent of 'line'. '(4)' is new filter after 'line'.
+    def test_062_line_46_integer_08_hide_in_parentheses_star_01(self):
+        self.verify_declare_fail(
+            "line --> (3)*(4)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (5, "StarRepeat"),
+                (3, "ParenthesisLeft"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_08_hide_in_parentheses_star_02(self):
+        self.verify_declare_fail(
+            "line --> (3*4)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Star"),
+                (7, "Integer"),
+                (7, "Integer"),
+            ],
+        )
+
+    # The constituent of '-->' is the '*' filter multiplying two compound
+    # filters.
+    def test_062_line_46_integer_09_hide_in_braces_star_01(self):
+        self.verify_declare_fail(
+            "line --> {3}*{4}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Star"),
+                (6, "BraceLeft"),
+                (7, "Integer"),
+                (6, "BraceLeft"),
+                (7, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_09_hide_in_braces_star_02(self):
+        self.verify_declare_fail(
+            "line --> {3*4}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Star"),
+                (7, "Integer"),
+                (7, "Integer"),
+            ],
+        )
+
+    def test_062_line_46_integer_10_bare_plus_repeat(self):
+        self.verify_declare_fail(
+            "line --> 3+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_46_integer_11_hide_in_parentheses_plus_repeat(self):
+        self.verify_declare_fail(
+            "line --> (3)+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_46_integer_12_hide_in_braces_plus_repeat(self):
+        self.verify_declare_fail(
+            "line --> {3}+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Integer"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_46_integer_13_bare_star_repeat(self):
+        self.verify_declare_fail(
+            "line --> 3*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_46_integer_14_hide_in_parentheses_star_repeat(self):
+        self.verify_declare_fail(
+            "line --> (3)*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_46_integer_15_hide_in_braces_star_repeat(self):
+        self.verify_declare_fail(
+            "line --> {3}*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Integer"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_46_integer_16_bare_optional(self):
+        self.verify_declare_fail(
+            "line --> 3?",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
+                (5, "RepeatZeroOrOne"),
+            ],
+        )
+
+    def test_062_line_46_integer_17_hide_in_parentheses_optional(self):
+        self.verify_declare_fail(
+            "line --> (3)?",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (5, "RepeatZeroOrOne"),
+            ],
+        )
+
+    def test_062_line_46_integer_18_hide_in_braces_optional(self):
+        self.verify_declare_fail(
+            "line --> {3}?",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Integer"),
+                (5, "RepeatZeroOrOne"),
+            ],
+        )
+
+    def test_062_line_46_string_01_bare(self):
+        self.verify(
+            'line --> "a"', [(3, "Line"), (4, "ArrowForward"), (5, "String")]
+        )
+
+    def test_062_line_46_string_02_hide_in_parentheses(self):
+        self.verify(
+            'line --> ("a")',
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "String"),
+            ],
+        )
+
+    def test_062_line_47_string_03_hide_in_braces(self):
+        self.verify(
+            'line --> {"a"}',
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "String"),
+            ],
+        )
+
+    def test_062_line_48_integer_variable_01_bare(self):
+        self.verify_declare_fail(
+            "v=3 line --> v",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_062_line_48_integer_variable_02_hide_in_parentheses(self):
+        self.verify_declare_fail(
+            "v=3 line --> (v)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Variable"),
+            ],
+        )
+
+    def test_062_line_48_integer_variable_03_hide_in_braces(self):
+        self.verify(
+            "v=3 line --> {v}",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Variable"),
+            ],
+        )
+
+    def test_062_line_49_string_variable_01_bare(self):
+        self.verify(
+            'v="a" line --> v',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_062_line_49_string_variable_02_hide_in_parentheses(self):
+        self.verify(
+            'v="a" line --> (v)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Variable"),
+            ],
+        )
+
+    def test_062_line_49_string_variable_03_hide_in_braces(self):
+        self.verify(
+            'v="a" line --> {v}',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "BraceLeft"),
+                (6, "Variable"),
+            ],
+        )
+
+    def test_062_line_50_cql_6_1_examples_long_sacrifice_plus_01(self):
+        self.verify(
+            "{line-->7>=9+}",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_50_cql_6_1_examples_long_sacrifice_plus_02(self):
+        self.verify(
+            "(line-->7>=9+)",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_50_cql_6_1_examples_long_sacrifice_plus_03(self):
+        # The 'wildcard plus' test at *_062_*_50_*_04 is fine.
+        self.verify_declare_fail(
+            'v="s"v[line-->7>=9+]',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "BracketLeft"),
+                (4, "Variable"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_50_cql_6_1_examples_long_sacrifice_plus_04(self):
+        self.verify(
+            'v="s"v[line-->7>=9{+}]',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "BracketLeft"),
+                (4, "Variable"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "WildcardPlus"),
+            ],
+        )
+
+    def test_062_line_51_cql_6_1_examples_long_sacrifice_plus_01_star(self):
+        self.verify(
+            "{line-->7>=9*}",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_51_cql_6_1_examples_long_sacrifice_plus_02_star(self):
+        self.verify(
+            "(line-->7>=9*)",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_51_cql_6_1_examples_long_sacrifice_plus_03_star(self):
+        # The 'wildcard star' test at *_062_*_51_*_04_star is fine.
+        self.verify_declare_fail(
+            'v="s"v[line-->7>=9*]',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "BracketLeft"),
+                (4, "Variable"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_51_cql_6_1_examples_long_sacrifice_plus_04_star(self):
+        self.verify(
+            'v="s"v[line-->7>=9{*}]',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "BracketLeft"),
+                (4, "Variable"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "GE"),
+                (7, "Integer"),
+                (7, "Integer"),
+                (6, "WildcardStar"),
+            ],
+        )
+
+    def test_062_line_52_cql_6_1_examples_turton_01(self):
+        self.verify(
+            "line -->  move from k *",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (6, "FromParameter"),
+                (7, "PieceDesignator"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_52_cql_6_1_examples_turton_02(self):
+        self.verify(
+            "line -->  move from k {*}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (6, "FromParameter"),
+                (7, "PieceDesignator"),
+                (5, "WildcardStar"),
+            ],
+        )
+
+    def test_062_line_52_cql_6_1_examples_turton_03(self):
+        self.verify(
+            "line -->  move *",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_52_cql_6_1_examples_turton_04(self):
+        self.verify(
+            "line -->  move {*}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (5, "WildcardStar"),
+            ],
+        )
+
+    def test_062_line_53_cql_6_1_examples_turton_01_plus(self):
+        self.verify(
+            "line -->  move from k +",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (6, "FromParameter"),
+                (7, "PieceDesignator"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_53_cql_6_1_examples_turton_02_plus(self):
+        self.verify(
+            "line -->  move from k {+}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (6, "FromParameter"),
+                (7, "PieceDesignator"),
+                (5, "WildcardPlus"),
+            ],
+        )
+
+    def test_062_line_53_cql_6_1_examples_turton_03_plus(self):
+        self.verify(
+            "line -->  move +",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_53_cql_6_1_examples_turton_04_plus(self):
+        self.verify(
+            "line -->  move {+}",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Move"),
+                (5, "WildcardPlus"),
             ],
         )
 
