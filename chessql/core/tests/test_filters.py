@@ -5561,6 +5561,30 @@ class Filters(verify.Verify):
             [(3, "Max"), (4, "Integer"), (4, "Integer"), (4, "Integer")],
         )
 
+    def test_069_max_07_compare_01_rhs(self):
+        self.verify(
+            "2==max(2 5)",
+            [
+                (3, "Eq"),
+                (4, "Integer"),
+                (4, "Max"),
+                (5, "Integer"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_069_max_07_compare_02_lhs(self):
+        self.verify(
+            "max(2 5)==2",
+            [
+                (3, "Eq"),
+                (4, "Max"),
+                (5, "Integer"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
     def test_070_message_01(self):
         self.verify(
             'message("x is" A)',
@@ -5609,6 +5633,30 @@ class Filters(verify.Verify):
         self.verify(
             "min(2 5 1)",  # Any number of integers.
             [(3, "Min"), (4, "Integer"), (4, "Integer"), (4, "Integer")],
+        )
+
+    def test_071_min_07_compare_01_rhs(self):
+        self.verify(
+            "2==min(2 5)",
+            [
+                (3, "Eq"),
+                (4, "Integer"),
+                (4, "Min"),
+                (5, "Integer"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_071_min_07_compare_02_lhs(self):
+        self.verify(
+            "min(2 5)==2",
+            [
+                (3, "Eq"),
+                (4, "Min"),
+                (5, "Integer"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
         )
 
     def test_072_modelmate(self):

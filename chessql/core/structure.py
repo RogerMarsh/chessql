@@ -714,6 +714,9 @@ class MaxOrMin(ParenthesizedArguments):
                 self.__class__.__name__
                 + ": arguments must be all string or all numeric"
             )
+        if self.container.function_body_cursor is not None:
+            return
+        self.filter_type = self.children[-1].filter_type
 
 
 # An infix operator is first encountered in the sequence 'G P I' where
