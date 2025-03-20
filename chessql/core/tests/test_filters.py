@@ -10694,6 +10694,500 @@ class Filters(verify.Verify):
     def test_211_persistent_assign_05_modulus_04_string(self):
         self.verify('persistent y%="a"', [], returncode=1)
 
+    def test_212_hhdb_something(self):
+        self.verify("hddb", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_01_ASCII_01_numeric(self):
+        self.verify(
+            'ascii 4=="a"',
+            [
+                (3, "Eq"),
+                (4, "ASCII"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_01_ASCII_02_string(self):
+        self.verify(
+            'ascii "a"=="b"',
+            [
+                (3, "Eq"),
+                (4, "ASCII"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_02_element_01_set(self):
+        self.verify(
+            "x∊._==3",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_03_sort_01_numeric_01(self):
+        self.verify(
+            "sort 3==4",
+            [
+                (3, "Sort"),
+                (4, "Eq"),
+                (5, "Integer"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_03_sort_01_numeric_02(self):
+        self.verify(
+            'sort "e" 3==4',
+            [
+                (3, "Sort"),
+                (4, "Documentation"),
+                (4, "Eq"),
+                (5, "Integer"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_03_sort_02_string_01(self):
+        self.verify(
+            'sort player=="w"',
+            [
+                (3, "Sort"),
+                (4, "Eq"),
+                (5, "Player"),
+                (5, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_03_sort_02_string_02(self):
+        self.verify('sort "e"=="w"', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_03_sort_02_string_03(self):
+        self.verify(
+            'sort "e" "f"=="w"',
+            [
+                (3, "Sort"),
+                (4, "Documentation"),
+                (4, "Eq"),
+                (5, "String"),
+                (5, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_04_colon_01_numeric(self):
+        self.verify(
+            "currentposition:1==3",
+            [
+                (3, "Eq"),
+                (4, "Colon"),
+                (5, "CurrentPosition"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_04_colon_02_string(self):
+        self.verify(
+            'currentposition:"alpha"=="w"',
+            [
+                (3, "Eq"),
+                (4, "Colon"),
+                (5, "CurrentPosition"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_04_colon_03_logical(self):
+        self.verify("currentposition:true==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_04_colon_04_set(self):
+        self.verify(
+            "currentposition:k==3",
+            [
+                (3, "Eq"),
+                (4, "Colon"),
+                (5, "CurrentPosition"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_04_colon_05_position(self):
+        self.verify("currentposition:initialposition==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_05_plus_01_numeric(self):
+        self.verify(
+            "7+3==4",
+            [
+                (3, "Eq"),
+                (4, "Plus"),
+                (5, "Integer"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_05_plus_02_string(self):
+        self.verify(
+            '"x"+"y"=="z"',
+            [
+                (3, "Eq"),
+                (4, "Plus"),
+                (5, "String"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_06_move_01_logical(self):
+        self.verify("move==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_06_move_02_no_legal(self):
+        self.verify("move count==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_06_move_03_logical(self):
+        self.verify("move legal==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_06_move_04_numeric(self):
+        self.verify(
+            "move legal count==3",
+            [
+                (3, "Eq"),
+                (4, "Move"),
+                (5, "LegalParameter"),
+                (5, "Count"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_06_move_05_set(self):
+        self.verify(
+            "move to k==3",
+            [
+                (3, "Eq"),
+                (4, "Move"),
+                (5, "ToParameter"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_06_move_06_numeric(self):
+        self.verify(
+            "move to k count pseudolegal==3",
+            [
+                (3, "Eq"),
+                (4, "Move"),
+                (5, "ToParameter"),
+                (6, "PieceDesignator"),
+                (5, "Count"),
+                (5, "PseudolegalParameter"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_07_compound_01_numeric(self):
+        self.verify(
+            "{k 1}==3",
+            [
+                (3, "Eq"),
+                (4, "BraceLeft"),
+                (5, "PieceDesignator"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_07_compound_02_string(self):
+        self.verify(
+            '{k "a"}=="w"',
+            [
+                (3, "Eq"),
+                (4, "BraceLeft"),
+                (5, "PieceDesignator"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_07_compound_03_set(self):
+        self.verify(
+            "{k q}==3",
+            [
+                (3, "Eq"),
+                (4, "BraceLeft"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_07_compound_04_logical(self):
+        self.verify("[k true}==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_07_compound_05_position(self):
+        self.verify("{k currentposition}==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_08_parentheses_01_numeric(self):
+        self.verify(
+            "(1)==3",
+            [
+                (3, "Eq"),
+                (4, "ParenthesisLeft"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_08_parentheses_02_string(self):
+        self.verify(
+            '("a")=="w"',
+            [
+                (3, "Eq"),
+                (4, "ParenthesisLeft"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_08_parentheses_03_set(self):
+        self.verify(
+            "(q)==3",
+            [
+                (3, "Eq"),
+                (4, "ParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_08_parentheses_04_logical(self):
+        self.verify("(true)==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_08_parentheses_05_position(self):
+        self.verify("(currentposition)==3", [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_09_brackets_01_numeric(self):
+        self.verify(
+            'v="a" v[1]=="w"',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Variable"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_213_compare_lhs_filter_type_09_brackets_02_string(self):
+        self.verify('v="a" v["b"]=="w"', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_09_brackets_03_set_01(self):
+        self.verify(
+            'v="a" v[q]==3',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Variable"),
+                (3, "Eq"),
+                (4, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_09_brackets_03_set_02(self):
+        self.verify('v="a" v[qa5]==3', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_09_brackets_04_logical(self):
+        self.verify('v="a" v[true]==3', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_09_brackets_05_position(self):
+        self.verify('v="a" v[currentposition]==3', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_10_dict_01_numeric_01_numeric(self):
+        self.verify(
+            "dictionary v[3]=4 v[2]==5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_01_numeric_02_string(self):
+        self.verify(
+            'dictionary v[3]="u" v[2]=="w"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_02_string_01_numeric(self):
+        self.verify(
+            "dictionary v[3]=4 v[2]==5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_02_string_02_string(self):
+        self.verify(
+            'dictionary v[3]="u" v[2]=="w"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_03_set_01_numeric(self):
+        self.verify(
+            "dictionary v[to]=4 v[from]==5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "Integer"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_03_set_02_string(self):
+        self.verify(
+            'dictionary v[to]="u" v[from]=="w"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "To"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "From"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_04_pd_01_numeric(self):
+        self.verify(
+            "dictionary v[ a3 ]=4 v[ a4 ]==5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_04_pd_02_string(self):
+        self.verify(
+            'dictionary v[ a3 ]="u" v[ a4 ]=="w"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_05_position_01_numeric(self):
+        self.verify(
+            "local dictionary v[currentposition]=4 v[initialposition]==5",
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "CurrentPosition"),
+                (4, "Integer"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "InitialPosition"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_213_compare_lhs_filter_type_10_dict_05_position_02_string(self):
+        self.verify(
+            'local dictionary v[currentposition]="u" v[initialposition]=="w"',
+            [
+                (3, "Assign"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "CurrentPosition"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Dictionary"),
+                (5, "InitialPosition"),
+                (4, "String"),
+            ],
+        )
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner
