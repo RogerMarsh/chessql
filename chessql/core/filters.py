@@ -1585,6 +1585,27 @@ class ASCII(structure.Argument):
     _filter_type = cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING
     _precedence = cqltypes.Precedence.P100
 
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        if self.container.function_body_cursor is not None:
+            # Maybe see if argument is a variable too.
+            return
+        child_filter_type = self.children[0].filter_type
+        if child_filter_type is cqltypes.FilterType.NUMERIC:
+            self.filter_type = cqltypes.FilterType.STRING
+            return
+        if child_filter_type is cqltypes.FilterType.STRING:
+            self.filter_type = cqltypes.FilterType.NUMERIC
+            return
+        raise basenode.NodeError(
+            self.__class__.__name__
+            + ": expects a '"
+            + self.__class__._filter_type.name.lower()
+            + "' argument but got a '"
+            + child_filter_type.name.lower()
+            + "'"
+        )
+
 
 class Assert(structure.Argument):
     """Represent 'assert' logical filter."""

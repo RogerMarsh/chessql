@@ -10710,12 +10710,12 @@ class Filters(verify.Verify):
 
     def test_213_compare_lhs_filter_type_01_ASCII_02_string(self):
         self.verify(
-            'ascii "a"=="b"',
+            'ascii "a"==3',
             [
                 (3, "Eq"),
                 (4, "ASCII"),
                 (5, "String"),
-                (4, "String"),
+                (4, "Integer"),
             ],
         )
 
