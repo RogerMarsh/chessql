@@ -159,12 +159,7 @@ class RightCompoundPlace(structure.CQLObject):
 
         """
         while True:
-            node = self.parent
-            while node and node.complete():
-                node.children[-1].parent = node.parent
-                node.parent.children.append(node.children.pop())
-                node.verify_children_and_set_types(set_node_completed=True)
-                node = node.parent
+            node = super().place_node_in_tree()
             if not isinstance(node, Path):
                 break
             node.children[-1].parent = node.parent

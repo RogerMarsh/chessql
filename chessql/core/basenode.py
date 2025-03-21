@@ -266,6 +266,7 @@ class BaseNode:
             node.parent.children.append(node.children.pop())
             node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
+        return node
 
     def parent_match_trace(self):
         """Return match trace for node through parents to root node."""
