@@ -10991,9 +10991,27 @@ class Filters(verify.Verify):
             ],
         )
 
-    # chessql wrong.
-    def test_213_compare_lhs_filter_type_09_brackets_02_string(self):
+    def test_213_compare_lhs_filter_type_09_brackets_02_string_01_index(self):
         self.verify('v="a" v["b"]=="w"', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_09_brackets_02_string_02_slice(self):
+        self.verify('v="a" v[2:"b"]=="w"', [], returncode=1)
+
+    def test_213_compare_lhs_filter_type_09_brackets_02_string_03_slice(self):
+        self.verify(
+            'v="a" v[2:4]=="w"',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Eq"),
+                (4, "BracketLeft"),
+                (5, "Variable"),
+                (5, "Integer"),
+                (5, "Integer"),
+                (4, "String"),
+            ],
+        )
 
     def test_213_compare_lhs_filter_type_09_brackets_03_set_01(self):
         self.verify(

@@ -5465,6 +5465,19 @@ def bracket_right(match_=None, container=None):
     node = container.cursor
     while node:
         if isinstance(node, BracketLeft):
+            if len(node.children) > 1 and isinstance(
+                node.children[0], structure.VariableName
+            ):
+                for item, child in enumerate(node.children[1:]):
+                    if child.filter_type is cqltypes.FilterType.STRING:
+                        raise basenode.NodeError(
+                            node.__class__.__name__
+                            + ": cannot index a '"
+                            + node.children[0].__class__.__name__
+                            + "' by a '"
+                            + node.children[item + 1].__class__.__name__
+                            + "'"
+                        )
             return BracketRight(match_=match_, container=container)
         if isinstance(node, ParenthesisLeft):
             raise basenode.NodeError(
