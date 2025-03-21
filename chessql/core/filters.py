@@ -2179,7 +2179,7 @@ class Dictionary(structure.Complete, structure.VariableTypeSetter):
         """
         if self.container.function_body_cursor is not None:
             return
-        super()._set_filter_type(filter_type, nametype=nametype)
+        super()._set_variable_filter_type(filter_type, nametype=nametype)
         name = self.name
         item = self.container.definitions[name]
         if item.key_filter_type is cqltypes.FilterType.ANY:

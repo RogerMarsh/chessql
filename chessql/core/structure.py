@@ -444,7 +444,7 @@ class VariableTypeSetter(Name):
 
     # Some of this should be delegated to class Name because it looks to
     # be shared with classes for the 'function' and 'dictionary' filters.
-    def _set_filter_type(self, filter_type, nametype="variable"):
+    def _set_variable_filter_type(self, filter_type, nametype="variable"):
         """Set filter type of variable instance.
 
         The variable's name must have been registered by a prior call of
@@ -600,7 +600,7 @@ class VariableName(VariableTypeSetter):
         """
         if self.container.function_body_cursor is not None:
             return
-        super()._set_filter_type(filter_type, nametype=nametype)
+        super()._set_variable_filter_type(filter_type, nametype=nametype)
         item = self.container.definitions[self.name]
         if item.variable_type is cqltypes.VariableType.ANY:
             item.variable_type = variable_type
