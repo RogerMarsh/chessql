@@ -2158,7 +2158,9 @@ class Dictionary(structure.Complete, structure.VariableTypeSetter):
         container.cursor = self
         return
 
-    def set_types(self, key_filter_type, filter_type, nametype="dictionary"):
+    def set_variable_types(
+        self, key_filter_type, filter_type, nametype="dictionary"
+    ):
         """Set key_filter_type and filter type of dictionary instance.
 
         The dictionary's name must have been registered by a prior call of
@@ -2311,7 +2313,7 @@ class Echo(structure.Argument):
                 container=container,
             )
             echovariable.place_node_in_tree()
-            echovariable.set_types(
+            echovariable.set_variable_types(
                 cqltypes.VariableType.POSITION,
                 cqltypes.FilterType.POSITION,
             )
@@ -2641,7 +2643,9 @@ class ExistentialSquareVariable(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["existential_square_variable"]
         self._register_variable_type(cqltypes.VariableType.SET)
-        self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.SET, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
@@ -2685,7 +2689,9 @@ class ExistentialPieceVariable(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["existential_piece_variable"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
-        self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.PIECE, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
@@ -2728,7 +2734,9 @@ class UniversalSquareVariable(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["universal_square_variable"]
         self._register_variable_type(cqltypes.VariableType.SET)
-        self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.SET, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
@@ -2771,7 +2779,9 @@ class UniversalPieceVariable(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["universal_piece_variable"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
-        self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.PIECE, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
@@ -3966,7 +3976,9 @@ class Piece(structure.VariableName, structure.Argument):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["piece"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
-        self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.PIECE, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
@@ -3986,7 +3998,9 @@ class PieceAll(structure.VariableName, structure.Argument):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["piece"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
-        self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.PIECE, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
@@ -4014,7 +4028,9 @@ class PieceVariable(structure.Complete, structure.VariableName):
         groupdict = match_.groupdict()
         self.name = groupdict["piece_variable"] or groupdict["variable"]
         self._register_variable_type(cqltypes.VariableType.PIECE)
-        self.set_types(cqltypes.VariableType.PIECE, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.PIECE, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
     def place_node_in_tree(self):
@@ -4598,7 +4614,9 @@ class Square(structure.VariableName, structure.Argument):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["square"]
         self._register_variable_type(cqltypes.VariableType.SET)
-        self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.SET, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
@@ -4618,7 +4636,9 @@ class SquareAll(structure.VariableName, structure.Argument):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["square"]
         self._register_variable_type(cqltypes.VariableType.SET)
-        self.set_types(cqltypes.VariableType.SET, cqltypes.FilterType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.SET, cqltypes.FilterType.SET
+        )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 
 
@@ -5138,7 +5158,7 @@ class RangeVariable(structure.Complete, structure.VariableName):
         super().__init__(match_=match_, container=container)
         self.name = match_.groupdict()["variable"]
         self._register_variable_type(cqltypes.VariableType.NUMERIC)
-        self.set_types(
+        self.set_variable_types(
             cqltypes.VariableType.NUMERIC, cqltypes.FilterType.NUMERIC
         )
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
@@ -5371,18 +5391,18 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
                 + "' referenced before it is set"
             ) from exc
 
-    def set_types(self, variable_type, filter_type):
+    def set_variable_types(self, variable_type, filter_type):
         """Set filter type of self.children[0] instance.
 
         This is assumed to be a Dictionary instance at present.
 
         """
         if isinstance(self.children[0], Dictionary):
-            self.children[0].set_types(
+            self.children[0].set_variable_types(
                 self.children[1].filter_type, filter_type
             )
         else:
-            self.children[0].set_types(variable_type, filter_type)
+            self.children[0].set_variable_types(variable_type, filter_type)
 
     # Some verification done in Assign._verify_children can be moved here
     # now this method exists.
@@ -5902,7 +5922,7 @@ class Assign(structure.MoveInfix):
 
         """
         if rhs.is_set_filter:
-            lhs.set_types(
+            lhs.set_variable_types(
                 (
                     cqltypes.VariableType.PIECE
                     if isinstance(lhs, PieceVariable)
@@ -5912,19 +5932,19 @@ class Assign(structure.MoveInfix):
             )
             return
         if rhs.is_numeric_filter:
-            lhs.set_types(
+            lhs.set_variable_types(
                 cqltypes.VariableType.NUMERIC,
                 cqltypes.FilterType.NUMERIC,
             )
             return
         if rhs.is_string_filter:
-            lhs.set_types(
+            lhs.set_variable_types(
                 cqltypes.VariableType.STRING,
                 cqltypes.FilterType.STRING,
             )
             return
         if rhs.is_position_filter:
-            lhs.set_types(
+            lhs.set_variable_types(
                 cqltypes.VariableType.POSITION,
                 cqltypes.FilterType.POSITION,
             )
@@ -5995,7 +6015,7 @@ class AssignIf(structure.MoveInfix):
             return
         if rhs.is_set_filter:
             # Probably incomplete because of piece and square variables.
-            lhs.set_types(
+            lhs.set_variable_types(
                 cqltypes.VariableType.SET,
                 cqltypes.FilterType.SET,
             )

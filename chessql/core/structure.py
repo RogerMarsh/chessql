@@ -577,7 +577,9 @@ class VariableName(VariableTypeSetter):
         )
         self._raise_if_wrong_variable_type(variable_type)
 
-    def set_types(self, variable_type, filter_type, nametype="variable"):
+    def set_variable_types(
+        self, variable_type, filter_type, nametype="variable"
+    ):
         """Set variable type and filter type of variable instance.
 
         The variable's name must have been registered by a prior call of
