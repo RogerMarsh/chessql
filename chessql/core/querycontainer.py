@@ -97,7 +97,7 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
         # specified.
         self._target_move_interrupt = True
 
-        # Nodes whose verify_children_and_set_filter_type() method has
+        # Nodes whose verify_children_and_set_types() method has
         # been called.
         self._verified = set()
 

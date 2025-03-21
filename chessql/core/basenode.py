@@ -205,23 +205,27 @@ class BaseNode:
             >= self._child_count
         )
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Do nothing: subclasses should override as necessary."""
 
-    def verify_children_and_set_filter_type(self, set_node_completed=False):
-        """Verify children and adjust filter type if complete or full.
+    def verify_children_and_set_types(self, set_node_completed=False):
+        """Verify children and adjust types if complete or full.
 
-        This method should be called only from a place_node_in_tree method.
+        This method is usually called from a place_node_in_tree method.
 
-        Not adjusting filter type is correct for most filters: subclasses
-        should override if appropriate.
+        Except for CQL user-defined variables this is filter type.  For
+        variables the persistence and variable types may need adjusting
+        too.
+
+        This method checks the object has not already been verified and
+        calls _verify_children_and_set_own_types to do the task.
         """
         verified = self.container.verified
         assert self not in verified
         verified.add(self)
         if set_node_completed:
             self.completed = True
-        self._verify_children()
+        self._verify_children_and_set_own_types()
 
     # An isinstance solution is preferred.
     def _is_variable(self):
@@ -260,7 +264,7 @@ class BaseNode:
         while node and node.complete():
             node.children[-1].parent = node.parent
             node.parent.children.append(node.children.pop())
-            node.verify_children_and_set_filter_type(set_node_completed=True)
+            node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
 
     def parent_match_trace(self):

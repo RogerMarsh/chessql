@@ -163,15 +163,13 @@ class RightCompoundPlace(structure.CQLObject):
             while node and node.complete():
                 node.children[-1].parent = node.parent
                 node.parent.children.append(node.children.pop())
-                node.verify_children_and_set_filter_type(
-                    set_node_completed=True
-                )
+                node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, Path):
                 break
             node.children[-1].parent = node.parent
             node.parent.children.append(node.children.pop())
-            node.verify_children_and_set_filter_type()
+            node.verify_children_and_set_types()
         container = self.container
         container.whitespace.append(self)
         del self.parent.children[-1]
@@ -244,7 +242,7 @@ class RepeatConstituent(structure.Complete):
         ):
             node.children[-1].parent = node.parent
             node.parent.children.append(node.children.pop())
-            node.verify_children_and_set_filter_type(set_node_completed=True)
+            node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
         if not isinstance(self.parent, (LineArrow, Path)):
             raise basenode.NodeError(
@@ -370,9 +368,7 @@ class EndCommentSymbol(structure.CQLObject):
         node = self.parent
         while True:
             while node and node.full():
-                node.verify_children_and_set_filter_type(
-                    set_node_completed=True
-                )
+                node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, (Path, CommentSymbol)):
                 raise basenode.NodeError(
@@ -380,7 +376,7 @@ class EndCommentSymbol(structure.CQLObject):
                     + ": not complete while handing "
                     + self.__class__.__name__
                 )
-            node.verify_children_and_set_filter_type()
+            node.verify_children_and_set_types()
             node.completed = True
             if isinstance(node, CommentSymbol):
                 break
@@ -413,9 +409,7 @@ class EndPaths(structure.CQLObject):
         node = self.parent
         while True:
             while node and node.full():
-                node.verify_children_and_set_filter_type(
-                    set_node_completed=True
-                )
+                node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, (Path, CommentSymbol)):
                 raise basenode.NodeError(
@@ -423,7 +417,7 @@ class EndPaths(structure.CQLObject):
                     + ": not complete while handing "
                     + self.__class__.__name__
                 )
-            node.verify_children_and_set_filter_type()
+            node.verify_children_and_set_types()
             node.completed = True
             p_node = node.parent
             while p_node:
@@ -841,7 +835,7 @@ class ParenthesisLeft(structure.BlockLeft):
         """Override and return True."""
         return True
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) != 1:
             raise basenode.NodeError(
@@ -1037,7 +1031,7 @@ class LineArrow(structure.CQLObject):
                 break
             node.children[-1].parent = node.parent
             node.parent.children.append(node.children.pop())
-            node.verify_children_and_set_filter_type(set_node_completed=True)
+            node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
         self.raise_if_name_parameter_not_for_filters()
         self._raise_if_other_line_arrow_present()
@@ -1240,7 +1234,7 @@ class CommentSymbol(structure.BlockLeft):
             node = node.parent
         super().__init__(match_=match_, container=container)
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if not self.children or isinstance(
             self.children[0], (EndPaths, EndCommentSymbol)
@@ -1369,7 +1363,7 @@ class RegexMatch(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.STRING
     _precedence = cqltypes.Precedence.P220
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
@@ -1444,7 +1438,7 @@ class AssignPlus(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.LOGICAL
     _precedence = cqltypes.Precedence.P90
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
         structure.raise_if_not_instance(
@@ -1880,7 +1874,7 @@ class ConsecutiveMoves(structure.ParenthesizedArguments):
             range_item.place_node_in_tree()
             container.cursor = self
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         components = [c for c in self.children if not c.is_parameter]
         if len(components) != 2:
@@ -1962,7 +1956,7 @@ class CountMoves(structure.Argument):
 
     _filter_type = cqltypes.FilterType.NUMERIC
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         child = self.children[0]
@@ -1983,7 +1977,7 @@ class CurrentMove(structure.Argument):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         if not _is_dash_or_capture(self.children[0]):
@@ -2543,7 +2537,7 @@ class Find(structure.Argument):
     _filter_type = cqltypes.FilterType.POSITION
     _precedence = cqltypes.Precedence.P30
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         filters = set(
             f.__class__
@@ -3108,7 +3102,7 @@ class In(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.LOGICAL
     _precedence = cqltypes.Precedence.P70
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
@@ -3231,7 +3225,7 @@ class Legal(structure.Argument):
 
     _filter_type = cqltypes.FilterType.SET
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         if not _is_dash(self.children[0]):
@@ -3305,7 +3299,7 @@ class Line(structure.CompleteParameterArguments):
         super().place_node_in_tree()
         self.container.cursor = self
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) == 0:
             raise basenode.NodeError(
@@ -3393,7 +3387,7 @@ class MakeSquareParentheses(structure.ParenthesizedArguments):
     # Treated as 'makesquare (' not 'makesquare' then '(' and ... ')'.
     # _precedence = cqltypes.Precedence.P90
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
             structure.raise_if_not_filter_type(
@@ -3552,7 +3546,7 @@ class Move(
         super().place_node_in_tree()
         self.container.cursor = self
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         count_allowed = False
         count_present = False
@@ -4192,7 +4186,7 @@ class Pseudolegal(structure.Argument):
 
     _filter_type = cqltypes.FilterType.SET
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         if not _is_dash(self.children[0]):
@@ -4309,7 +4303,7 @@ class Ray(structure.ParenthesizedArguments):
                 + " ".join(match_.group().split()[1:-1])
             )
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
             structure.raise_if_not_filter_type(
@@ -4453,7 +4447,7 @@ class SetTag(structure.ParenthesizedArguments):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) != 2:
             raise basenode.NodeError(
@@ -4846,11 +4840,11 @@ class Unbind(structure.BindArgument):
     dictionary entry, but does not affect the variable or dictionary type.
     """
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         child = self.children[0]
         if not isinstance(child, BracketLeft):
-            super()._verify_children()
+            super()._verify_children_and_set_own_types()
         else:
             child = child.children[0]
         name = child.name
@@ -4973,7 +4967,7 @@ class WriteFile(structure.ParenthesizedArguments):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) != 2:
             raise basenode.NodeError(
@@ -4996,7 +4990,7 @@ class XRay(structure.ParenthesizedArguments):
 
     _filter_type = cqltypes.FilterType.SET
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
             structure.raise_if_not_filter_type(
@@ -5404,9 +5398,9 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
         else:
             self.children[0].set_variable_types(variable_type, filter_type)
 
-    # Some verification done in Assign._verify_children can be moved here
-    # now this method exists.
-    def _verify_children(self):
+    # Some verification done in Assign._verify_children_and_set_own_types can
+    # be moved here now this method exists.
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
         if isinstance(lhs, (structure.VariableName, Dictionary)):
@@ -5496,7 +5490,7 @@ class Colon(structure.InfixRight):
     _filter_type = cqltypes.FilterType.ANY
     _precedence = cqltypes.Precedence.P230  # Reference says ':', no context.
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if self.container.function_body_cursor is not None:
             return
@@ -5571,16 +5565,17 @@ class Intersection(structure.InfixLeft):
     _precedence = cqltypes.Precedence.P170
 
     # It did not seem possible to do the children verification in
-    # verify_children_and_set_filter_type() method for BraceLeft so
+    # verify_children_and_set_types() method for BraceLeft so
     # switch to verifying in the filter_type property.  At time of writing
     # the 'BraceLeft' parsing failures are fixed but others, where
     # filter type is not yet handled, still fail parsing with the addition
     # of child verification.  It is assumed possible the children of a node
     # may not be in their completed configuration if verification is done
-    # in verify_children_and_set_filter_type().
+    # in verify_children_and_set_types().
     # The override of filter_type property should not be needed if this
-    # _verify_children method gets called before accessing the property.
-    def _verify_children(self):
+    # _verify_children_and_set_own_types method gets called before accessing
+    # the property.
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
@@ -5657,7 +5652,7 @@ class Plus(structure.Numeric):
     _filter_type = cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING
     _precedence = cqltypes.Precedence.P110
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
@@ -5734,7 +5729,7 @@ class UnaryMinus(structure.Argument):
     _filter_type = cqltypes.FilterType.NUMERIC
     _precedence = cqltypes.Precedence.P130
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         if self.container.function_body_cursor is not None:
@@ -5770,7 +5765,7 @@ class Complement(structure.Argument):
     _filter_type = cqltypes.FilterType.SET
     _precedence = cqltypes.Precedence.P180
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         structure.raise_if_not_filter_type(
@@ -5786,7 +5781,7 @@ class Union(structure.InfixLeft):
     _filter_type = cqltypes.FilterType.SET
     _precedence = cqltypes.Precedence.P160
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 2)
         structure.raise_if_not_same_filter_type(
@@ -5820,7 +5815,7 @@ class Assign(structure.MoveInfix):
     # but no precedence is given in CQL's Table of Precedence.
     # _precedence = cqltypes.Precedence.P30
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
         structure.raise_if_not_instance(
@@ -5970,7 +5965,7 @@ class AssignIf(structure.MoveInfix):
     # '<operatore>=' filters, according to CQLi but no precedence is given
     # in CQL's Table of Precedence.
     # _precedence = cqltypes.Precedence.P30
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
         structure.raise_if_not_instance(
@@ -6072,7 +6067,7 @@ class CountFilter(structure.Argument):
     _filter_type = cqltypes.FilterType.NUMERIC
     _precedence = cqltypes.Precedence.P100
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         structure.raise_if_not_number_of_children(self, 1)
         structure.raise_if_not_filter_type(

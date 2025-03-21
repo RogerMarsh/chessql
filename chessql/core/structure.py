@@ -652,7 +652,7 @@ class BindArgument(Argument):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         child = self.children[0]
         if not isinstance(child, Name):
@@ -697,7 +697,7 @@ class ParenthesizedArguments(BlockLeft):
 class MaxOrMin(ParenthesizedArguments):
     """Subclass of ParenthesizedArguments for 'min' and 'max' filters."""
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) < 2:
             raise basenode.NodeError(
@@ -801,7 +801,7 @@ class Infix(CQLObject):
             if not node.full():
                 if not isinstance(node, CompleteParameterArguments):
                     break
-            node.verify_children_and_set_filter_type(set_node_completed=True)
+            node.verify_children_and_set_types(set_node_completed=True)
 
 
 class InfixLeft(Infix):
@@ -921,7 +921,7 @@ class MoveInfix(Infix):
 class Numeric(InfixLeft):
     """Subclass of InfixLeft for numeric operators."""
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         raise_if_not_number_of_children(self, 2)
         raise_if_not_same_filter_type(
@@ -951,7 +951,7 @@ class ComparePosition(CQLObject):
             return filtertype.POSITION
         return super().filter_type
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         raise_if_not_number_of_children(self, 2)
         raise_if_not_same_filter_type(
@@ -1027,7 +1027,7 @@ class Compare(CQLObject):
             return filtertype.NUMERIC
         return super().filter_type
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         raise_if_not_number_of_children(self, 2)
         if (
@@ -1119,7 +1119,7 @@ class ImplicitSearchFilter(NoArgumentsFilter):
 class ModifyAssign(CQLObject):
     """Shared behaviour of '<operator>=' filters which have numeric rhs."""
 
-    def _verify_children(self):
+    def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
         raise_if_not_instance(lhs, self, VariableName, "lhs must be a")
