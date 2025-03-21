@@ -11188,6 +11188,18 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_213_compare_lhs_filter_type_11_lca(self):
+        self.verify(
+            "lca(currentposition initialposition)==initialposition",
+            [
+                (3, "Eq"),
+                (4, "LCA"),
+                (5, "CurrentPosition"),
+                (5, "InitialPosition"),
+                (4, "InitialPosition"),
+            ],
+        )
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner

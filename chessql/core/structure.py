@@ -826,9 +826,9 @@ class InfixLeft(Infix):
         if ancestor.precedence is None:
             if not isinstance(ancestor, CompleteParameterArguments):
                 self._swap_tree_position(ancestor)
-                self._verify_and_set_filter_type(parent)
-                return
-            self._swap_tree_position(ancestor.parent.parent)
+            else:
+                self._swap_tree_position(ancestor.parent.parent)
+            parent.verify_children_and_set_types(set_node_completed=True)
             self._verify_and_set_filter_type(parent)
             return
         # For 'if 1 + 2 then k' (legal nonsense left association in 'if').
@@ -869,9 +869,9 @@ class InfixRight(Infix):
         if ancestor.precedence is None:
             if not isinstance(ancestor, CompleteParameterArguments):
                 self._swap_tree_position(ancestor)
-                self._verify_and_set_filter_type(parent)
-                return
-            self._swap_tree_position(ancestor.parent)
+            else:
+                self._swap_tree_position(ancestor.parent)
+            parent.verify_children_and_set_types(set_node_completed=True)
             self._verify_and_set_filter_type(parent)
             return
         # For 'if 1 > 2 then k' (legal nonsense right association in 'if').

@@ -1600,7 +1600,7 @@ class ASCII(structure.Argument):
         raise basenode.NodeError(
             self.__class__.__name__
             + ": expects a '"
-            + self.__class__._filter_type.name.lower()
+            + self.filter_type.name.lower()
             + "' argument but got a '"
             + child_filter_type.name.lower()
             + "'"
