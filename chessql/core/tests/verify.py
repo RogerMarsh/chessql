@@ -42,13 +42,31 @@ _TRACE_PREFIX = [(1, "QueryContainer"), (2, "CQL")]
 class Verify(unittest.TestCase):
     """Implement verify() method for many unittests."""
 
+    def verify_chessql(self, string, classname_structure):
+        """Verify string produces tokens and names for tokens.
+
+        Run the string through the chessql parser to verify the expected
+        tree structure is produced.
+
+        This method can be used on it's own, but it exists to provide
+        chessql parsing tests for the other verify_* methods.
+
+        """
+        container = parser.parse(_CHESSQL_PREFIX + string)
+        trace = []
+        container.parse_tree_node(trace=trace)
+        self.assertEqual(
+            [(e, n.__class__.__name__) for e, n in trace],
+            _TRACE_PREFIX + classname_structure,
+        )
+        return container
+
     def verify(self, string, classname_structure, returncode=0):
         """Verify string produces tokens and names for tokens.
 
         Run 'cql' in a subprocess to verify the string is accepted by cql.
 
-        Run the string through the chessql parser to verify the expected
-        tree structure is produced.
+        Call self.verify_chessql().
 
         """
         process = subprocess.run(
@@ -64,12 +82,7 @@ class Verify(unittest.TestCase):
                 *(_CHESSQL_PREFIX + string,),
             )
             return None
-        container = parser.parse(_CHESSQL_PREFIX + string)
-        trace = []
-        container.parse_tree_node(trace=trace)
-        trace = [(e, n.__class__.__name__) for e, n in trace]
-        self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
-        return container
+        return self.verify_chessql(string, classname_structure)
 
     def verify_run(self, string, classname_structure, returncode=0):
         """Verify string produces tokens and names for tokens.
@@ -78,8 +91,7 @@ class Verify(unittest.TestCase):
         and the evaluation succeeds, but set returncode to 1 if evaluation
         is declared a failure.
 
-        Run the string through the chessql parser to verify the expected
-        tree structure is produced.
+        Call self.verify_chessql().
 
         """
         process = subprocess.run(
@@ -91,12 +103,7 @@ class Verify(unittest.TestCase):
             os.remove(_CQL_DEFAULT_OUTPUT)
         except FileNotFoundError:
             pass
-        container = parser.parse(_CHESSQL_PREFIX + string)
-        trace = []
-        container.parse_tree_node(trace=trace)
-        trace = [(e, n.__class__.__name__) for e, n in trace]
-        self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
-        return container
+        return self.verify_chessql(string, classname_structure)
 
     def verify_run_fail(self, string):
         """Verify string produces run failure after parse and no tokens.
@@ -107,8 +114,7 @@ class Verify(unittest.TestCase):
         Run 'cql' in a subprocess to verify the string gets a run error
         on evaluation by cql.
 
-        Run the string through the chessql parser to verify a NodeError
-        exception is produced.
+        Verify a NodeError is raised by the chessql parser.
 
         """
         process = subprocess.run(
@@ -134,8 +140,7 @@ class Verify(unittest.TestCase):
         Run 'cql' in a subprocess to verify the string is rejected by cql
         parser.
 
-        Run the string through the chessql parser to verify tokens are
-        produced.
+        Call self.verify_chessql().
 
         'sort min' without a 'documentation' filter, for example.
 
@@ -145,12 +150,7 @@ class Verify(unittest.TestCase):
             stdout=subprocess.DEVNULL,
         )
         self.assertEqual(process.returncode, 1)
-        container = parser.parse(_CHESSQL_PREFIX + string)
-        trace = []
-        container.parse_tree_node(trace=trace)
-        trace = [(e, n.__class__.__name__) for e, n in trace]
-        self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
-        return container
+        return self.verify_chessql(string, classname_structure)
 
     def verify_assign(
         self, string, classname_structure, name, variable_type, filter_type
@@ -186,8 +186,7 @@ class Verify(unittest.TestCase):
 
         Run 'cql' in a subprocess to verify the string is accepted by cql.
 
-        Run the string through the chessql parser to verify the expected
-        tree structure is produced.
+        Call self.verify_chessql().
 
         """
         process = subprocess.run(
@@ -205,18 +204,20 @@ class Verify(unittest.TestCase):
             )
             return None
         self.assertEqual(cql_output in process.stdout, True)
-        container = parser.parse(_CHESSQL_PREFIX + string)
-        trace = []
-        container.parse_tree_node(trace=trace)
-        trace = [(e, n.__class__.__name__) for e, n in trace]
-        self.assertEqual(trace, _TRACE_PREFIX + classname_structure)
-        return container
+        return self.verify_chessql(string, classname_structure)
 
 
 if __name__ == "__main__":
 
     class VerifyTest(Verify):
         """Unittests for Verify class."""
+
+        def test_verify_chessql(self):
+            """Unittest for chessql parse."""
+            value = self.verify_chessql("b", [(3, "PieceDesignator")])
+            self.assertEqual(
+                isinstance(value, querycontainer.QueryContainer), True
+            )
 
         def test_verify_returncode_0(self):
             """Unittest for returncode 0 from cql job."""
