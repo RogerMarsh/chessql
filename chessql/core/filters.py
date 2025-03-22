@@ -24,7 +24,8 @@ import re
 from . import basenode
 from . import constants
 from . import cqltypes
-from . import hhdb
+
+# from . import hhdb
 from . import querycontainer
 from . import cql
 from . import structure
@@ -312,9 +313,6 @@ def string(match_=None, container=None):
     characters including 'A', 'a', and '_'.
 
     """
-    if hhdb.is_hhdb_token_accepted_by(container.cursor):
-        if match_.group() in hhdb.KEYWORD_STRINGS:
-            return hhdb.HHDBToken(match_=match_, container=container)
     if isinstance(container.cursor, AssignPromotion):
         if _is_type_designator_string(match_):
             return TypeDesignator(match_=match_, container=container)
@@ -3390,8 +3388,6 @@ class MainLine(structure.NoArgumentsFilter):
 
 def mainline(match_=None, container=None):
     """Return MainLine or HHDBToken instance."""
-    if hhdb.is_hhdb_token_accepted_by(container.cursor):
-        return hhdb.HHDBToken(match_=match_, container=container)
     return MainLine(match_=match_, container=container)
 
 
@@ -3457,8 +3453,6 @@ def max_(match_=None, container=None):
     syntax error for some filters.
 
     """
-    if hhdb.is_hhdb_token_accepted_by(container.cursor):
-        return hhdb.HHDBToken(match_=match_, container=container)
     # This is probably too simple because the parent may be at the end of a
     # chain of ancestors, one of which takes 'max' as a parameter, and can
     # accept the parameter.  For example the chain may belong to another
@@ -4560,8 +4554,6 @@ class Sort(structure.Argument):
 
 def sort(match_=None, container=None):
     """Return Sort or HHDBToken instance."""
-    if hhdb.is_hhdb_token_accepted_by(container.cursor):
-        return hhdb.HHDBToken(match_=match_, container=container)
     return Sort(match_=match_, container=container)
 
 
@@ -4905,8 +4897,6 @@ class Variation(structure.NoArgumentsFilter):
 
 def variation(match_=None, container=None):
     """Return Variation or HHDBToken instance."""
-    if hhdb.is_hhdb_token_accepted_by(container.cursor):
-        return hhdb.HHDBToken(match_=match_, container=container)
     return Variation(match_=match_, container=container)
 
 
@@ -5277,11 +5267,6 @@ def variable(match_=None, container=None):
 
     """
     name = match_.groupdict()["variable"]
-    if (
-        hhdb.is_hhdb_token_accepted_by(container.cursor)
-        and name in hhdb.KEYWORD_VARIABLES
-    ):
-        return hhdb.HHDBToken(match_=match_, container=container)
     definitions = container.definitions
     if name in definitions:
         definition_type = definitions[name].definition_type
@@ -6167,6 +6152,14 @@ def end_of_stream(match_=None, container=None):
             return EndPaths(match_=match_, container=container)
         node = node.parent
     return EndOfStream(match_=match_, container=container)
+
+
+def hhdb_not_implemented(match_=None, container=None):
+    """Raise NodeError exception for 'hhdb' filter."""
+    raise basenode.NodeError(
+        container.cursor.__class__.__name__
+        + ": the 'hhdb' filter is not implemented yet"
+    )
 
 
 def _is_dash_or_capture(filter_):

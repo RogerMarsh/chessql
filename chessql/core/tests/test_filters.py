@@ -10694,7 +10694,7 @@ class Filters(verify.Verify):
     def test_211_persistent_assign_05_modulus_04_string(self):
         self.verify('persistent y%="a"', [], returncode=1)
 
-    def test_212_hhdb_something(self):
+    def test_212_hhdb_01_not_implemented_yet(self):
         self.verify("hddb", [], returncode=1)
 
     def test_213_compare_lhs_filter_type_01_ASCII_01_numeric(self):
