@@ -30,8 +30,7 @@ import re
 
 from . import basenode
 from . import filters
-
-# from . import hhdb
+from . import hhdb
 from . import structure
 from . import cql
 
@@ -320,7 +319,7 @@ class_from_token_name = {
     "ge": filters.GE,
     "gt": filters.GT,
     "gamenumber": filters.GameNumber,
-    "hhdb": filters.hhdb_not_implemented,  # hhdb.HHDB,
+    "hhdb": hhdb.hhdb_not_implemented,  # hhdb.HHDB,
     "hascomment": filters.OriginalComment,
     "horizontal": filters.horizontal,
     "idealmate": filters.IdealMate,

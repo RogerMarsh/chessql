@@ -14,6 +14,7 @@ text of a CQL statement.
 import re
 
 from . import elements
+from . import hhdb
 
 # Pattern for regular expression to parse CQL query files (*.cql).
 CQL_TOKENS = r")|(".join(
@@ -151,7 +152,7 @@ CQL_TOKENS = r")|(".join(
         elements.FUNCTION,  # 6.0.4
         elements.GAMENUMBER,  # 6.0.4
         elements.HASCOMMENT,  # 6.0.4
-        elements.HHDB,  # 6.1
+        hhdb.HHDB,  # 6.1
         elements.HORIZONTAL,  # 6.0.4
         elements.IDEALMATE,  # 6.2
         elements.IDEALSTALEMATE,  # 6.2

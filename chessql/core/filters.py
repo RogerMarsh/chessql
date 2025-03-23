@@ -6,6 +6,7 @@
 # Think of good criteria for putting the definitions in one module rather
 # than another.
 # Perhaps the superclass signatures of the defined classes would do.
+# The classes for the 'hhdb' filter are put in a separate module.
 """Chess Query Language (CQL) object class definitions.
 
 This module defines the classes and functions which are values in the
@@ -6152,14 +6153,6 @@ def end_of_stream(match_=None, container=None):
             return EndPaths(match_=match_, container=container)
         node = node.parent
     return EndOfStream(match_=match_, container=container)
-
-
-def hhdb_not_implemented(match_=None, container=None):
-    """Raise NodeError exception for 'hhdb' filter."""
-    raise basenode.NodeError(
-        container.cursor.__class__.__name__
-        + ": the 'hhdb' filter is not implemented yet"
-    )
 
 
 def _is_dash_or_capture(filter_):

@@ -25,8 +25,8 @@ class PatternAttributes(unittest.TestCase):
                 "ANCESTOR",
                 "AND",
                 "ANYDIRECTION",
-                "ANY_SQUARE",
                 "ANYTHING_ELSE",
+                "ANY_SQUARE",
                 "ARROW_BACKWARD",
                 "ARROW_FORWARD",
                 "ASCII",
@@ -134,7 +134,6 @@ class PatternAttributes(unittest.TestCase):
                 "GE",
                 "GT",
                 "HASCOMMENT",
-                "HHDB",
                 "HORIZONTAL",
                 "IDEALMATE",
                 "IDEALSTALEMATE",
@@ -1372,9 +1371,6 @@ class PatternElement(unittest.TestCase):
         self.assertEqual(
             elements.EVENTDATE, r"(?P<eventdate>)eventdate(?![\w$])"
         )
-
-    def test_hhdb(self):
-        self.assertEqual(elements.HHDB, r"(?P<hhdb>)hhdb(?![\w$])")
 
     def test_indexof(self):
         self.assertEqual(elements.INDEXOF, r"(?P<indexof>)indexof\s*\(")

@@ -633,9 +633,6 @@ DICTIONARY = constants.VARIABLE_NAME_CHARS.join(
 ECO = r"(?P<eco>)eco(?![\w$])"  # 6.1 table of filters.
 EVENTDATE = r"(?P<eventdate>)eventdate(?![\w$])"  # 6.1 table of filters.
 
-# 6.1 table of filters: keyword 'hhdb' for Heijden database VI interface.
-HHDB = r"(?P<hhdb>)hhdb(?![\w$])"
-
 # 6.1 table of filters.
 # 6.1 table of filters entry is inconsistent on '(' and ')' but main
 # documnetation is clear.
