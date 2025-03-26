@@ -388,7 +388,7 @@ class Filters(verify.Verify):
             "countmoves --",
             [
                 (3, "CountMoves"),
-                (4, "SingleMove"),
+                (4, "DashII"),
                 (5, "AnySquare"),
                 (5, "AnySquare"),
             ],
@@ -400,7 +400,7 @@ class Filters(verify.Verify):
             [
                 (3, "CountMoves"),
                 (4, "Legal"),
-                (5, "SingleMove"),
+                (5, "DashII"),
                 (6, "AnySquare"),
                 (6, "AnySquare"),
             ],
@@ -412,7 +412,7 @@ class Filters(verify.Verify):
             [
                 (3, "CountMoves"),
                 (4, "Pseudolegal"),
-                (5, "SingleMove"),
+                (5, "DashII"),
                 (6, "AnySquare"),
                 (6, "AnySquare"),
             ],
@@ -429,7 +429,7 @@ class Filters(verify.Verify):
             "currentmove --",
             [
                 (3, "CurrentMove"),
-                (4, "SingleMove"),
+                (4, "DashII"),
                 (5, "AnySquare"),
                 (5, "AnySquare"),
             ],
@@ -2512,7 +2512,7 @@ class Filters(verify.Verify):
             "legal --",
             [
                 (3, "Legal"),
-                (4, "SingleMove"),
+                (4, "DashII"),
                 (5, "AnySquare"),
                 (5, "AnySquare"),
             ],
@@ -6450,7 +6450,7 @@ class Filters(verify.Verify):
             "pseudolegal --",
             [
                 (3, "Pseudolegal"),
-                (4, "SingleMove"),
+                (4, "DashII"),
                 (5, "AnySquare"),
                 (5, "AnySquare"),
             ],
@@ -10540,7 +10540,7 @@ class Filters(verify.Verify):
             "pseudolegal --",
             [
                 (3, "Pseudolegal"),
-                (4, "SingleMove"),
+                (4, "DashII"),
                 (5, "AnySquare"),
                 (5, "AnySquare"),
             ],

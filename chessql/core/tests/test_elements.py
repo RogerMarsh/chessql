@@ -55,21 +55,6 @@ class PatternAttributes(unittest.TestCase):
                 "BRACKET_RIGHT",
                 "BTM",
                 "CAPTURE",
-                "CAPTURES",
-                "CAPTURES_BL",
-                "CAPTURES_BLBR",
-                "CAPTURES_BL_P",
-                "CAPTURES_BL_R",
-                "CAPTURES_BL_R_P",
-                "CAPTURES_BR",
-                "CAPTURES_L",
-                "CAPTURES_LR",
-                "CAPTURES_LR_P",
-                "CAPTURES_L_BR",
-                "CAPTURES_L_P",
-                "CAPTURES_P",
-                "CAPTURES_R",
-                "CAPTURES_R_P",
                 "CASTLE",
                 "CHECK",
                 "CHILD",
@@ -90,6 +75,10 @@ class PatternAttributes(unittest.TestCase):
                 "CURRENTPOSITION",
                 "CURRENTTRANSFORM",
                 "DARK",
+                "DASH_II",
+                "DASH_IR",
+                "DASH_LI",
+                "DASH_LR",
                 "DATE",
                 "DEPTH",
                 "DESCENDANT",
@@ -210,6 +199,7 @@ class PatternAttributes(unittest.TestCase):
                 "PIECENAME",
                 "PIECEPATH",
                 "PIECE_DESIGNATOR",
+                "PIECE_OPTIONS",
                 "PIECE_VARIABLE",
                 "PIN",
                 "PLAYER",
@@ -247,21 +237,6 @@ class PatternAttributes(unittest.TestCase):
                 "SHIFTVERTICAL",
                 "SIDETOMOVE",
                 "SINGLECOLOR",
-                "SINGLE_MOVE",
-                "SINGLE_MOVE_BL",
-                "SINGLE_MOVE_BLBR",
-                "SINGLE_MOVE_BL_P",
-                "SINGLE_MOVE_BL_R",
-                "SINGLE_MOVE_BL_R_P",
-                "SINGLE_MOVE_BR",
-                "SINGLE_MOVE_L",
-                "SINGLE_MOVE_LR",
-                "SINGLE_MOVE_LR_P",
-                "SINGLE_MOVE_L_BR",
-                "SINGLE_MOVE_L_P",
-                "SINGLE_MOVE_P",
-                "SINGLE_MOVE_R",
-                "SINGLE_MOVE_R_P",
                 "SITE",
                 "SORT",
                 "SOUTHEAST",
@@ -275,6 +250,10 @@ class PatternAttributes(unittest.TestCase):
                 "STRING",
                 "STR_PARENTHESES",
                 "TAG",
+                "TAKE_II",
+                "TAKE_IR",
+                "TAKE_LI",
+                "TAKE_LR",
                 "TERMINAL",
                 "THEN",
                 "THROUGH",
@@ -309,7 +288,6 @@ class PatternAttributes(unittest.TestCase):
                 "_COMPOUND_PIECE",
                 "_COMPOUND_SQUARE",
                 "_PIECE_CHARS",
-                "_PIECE_OPTIONS",
                 "_SIMPLE_PIECE",
                 "_SIMPLE_SQUARE",
                 "_SQUARE_OPTIONS",
@@ -500,190 +478,46 @@ class PatternElement(unittest.TestCase):
             elements.ATTACKED_ARROW, r"(?P<attacked_arrow>)(?:<-|\u2190)"
         )
 
-    def test_single_move(self):
+    def test_dash_ii(self):
+        self.assertEqual(elements.DASH_II, r"(?P<dash_ii>)(?:--|\u2015\u2015)")
+
+    def test_dash_li(self):
         self.assertEqual(
-            elements.SINGLE_MOVE, r"(?P<single_move>)(?:--|\u2015\u2015)"
+            elements.DASH_LI,
+            r"(?P<dash_li>)(?<=\S)(?:--|\u2015\u2015)",
         )
 
-    def test_single_move_p(self):
+    def test_dash_ir(self):
         self.assertEqual(
-            elements.SINGLE_MOVE_P,
-            r"(?P<single_move_p>)(?:--|\u2015\u2015)(?==)",
+            elements.DASH_IR,
+            r"(?P<dash_ir>)(?:--|\u2015\u2015)(?=\S)",
         )
 
-    def test_single_move_l(self):
+    def test_dash_lr(self):
         self.assertEqual(
-            elements.SINGLE_MOVE_L,
-            r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)",
+            elements.DASH_LR,
+            r"(?P<dash_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)",
         )
 
-    def test_single_move_l_p(self):
+    def test_take_ii(self):
+        self.assertEqual(elements.TAKE_II, r"(?P<take_ii>)(?:\[x\]|\u00d7)")
+
+    def test_take_li(self):
         self.assertEqual(
-            elements.SINGLE_MOVE_L_P,
-            r"(?P<single_move_l_p>)(?<=\S)(?:--|\u2015\u2015)(?==)",
+            elements.TAKE_LI,
+            r"(?P<take_li>)(?<=\S)(?:\[x\]|\u00d7)",
         )
 
-    def test_single_move_bl(self):
+    def test_take_ir(self):
         self.assertEqual(
-            elements.SINGLE_MOVE_BL,
-            r"(?P<single_move_bl>)(?<=[\(\{])(?:--|\u2015\u2015)",
+            elements.TAKE_IR,
+            r"(?P<take_ir>)(?:\[x\]|\u00d7)(?=\S)",
         )
 
-    def test_single_move_bl_p(self):
+    def test_take_lr(self):
         self.assertEqual(
-            elements.SINGLE_MOVE_BL_P,
-            r"(?P<single_move_bl_p>)(?<=[\(\{])(?:--|\u2015\u2015)(?==)",
-        )
-
-    def test_single_move_blbr(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_BLBR,
-            r"".join(
-                (
-                    r"(?P<single_move_blbr>)(?<=[\(\{])(?:--|\u2015\u2015)",
-                    r"(?=[\)\}\*\+])",
-                )
-            ),
-        )
-
-    def test_single_move_br(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_BR,
-            r"(?P<single_move_br>)(?:--|\u2015\u2015)(?=[\)\}\*\+])",
-        )
-
-    def test_single_move_r(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_R,
-            r"(?P<single_move_r>)(?:--|\u2015\u2015)(?=\S)",
-        )
-
-    def test_single_move_r_p(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_R_P,
-            r"(?P<single_move_r_p>)(?:--|\u2015\u2015)(?=\S+=)",
-        )
-
-    def test_single_move_l_br(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_L_BR,
-            r"(?P<single_move_l_br>)(?<=\S)(?:--|\u2015\u2015)(?=[\)\}\*\+])",
-        )
-
-    def test_single_move_lr(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_LR,
-            r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)",
-        )
-
-    def test_single_move_lr_p(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_LR_P,
-            r"(?P<single_move_lr_p>)(?<=\S)(?:--|\u2015\u2015)(?=\S+=)",
-        )
-
-    def test_single_move_bl_r(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_BL_R,
-            r"(?P<single_move_bl_r>)(?<=[\(\{])(?:--|\u2015\u2015)(?=\S)",
-        )
-
-    def test_single_move_bl_r_p(self):
-        self.assertEqual(
-            elements.SINGLE_MOVE_BL_R_P,
-            r"(?P<single_move_bl_r_p>)(?<=[\(\{])(?:--|\u2015\u2015)(?=\S+=)",
-        )
-
-    def test_captures(self):
-        self.assertEqual(elements.CAPTURES, r"(?P<captures>)(?:\[x\]|\u00d7)")
-
-    def test_captures_p(self):
-        self.assertEqual(
-            elements.CAPTURES_P,
-            r"(?P<captures_p>)(?:\[x\]|\u00d7)(?==)",
-        )
-
-    def test_captures_l(self):
-        self.assertEqual(
-            elements.CAPTURES_L,
-            r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)",
-        )
-
-    def test_captures_l_p(self):
-        self.assertEqual(
-            elements.CAPTURES_L_P,
-            r"(?P<captures_l_p>)(?<=\S)(?:\[x\]|\u00d7)(?==)",
-        )
-
-    def test_captures_bl(self):
-        self.assertEqual(
-            elements.CAPTURES_BL,
-            r"(?P<captures_bl>)(?<=[\(\{])(?:\[x\]|\u00d7)",
-        )
-
-    def test_captures_bl_p(self):
-        self.assertEqual(
-            elements.CAPTURES_BL_P,
-            r"(?P<captures_bl_p>)(?<=[\(\{])(?:\[x\]|\u00d7)(?==)",
-        )
-
-    def test_captures_blbr(self):
-        self.assertEqual(
-            elements.CAPTURES_BLBR,
-            r"".join(
-                (
-                    r"(?P<captures_blbr>)(?<=[\(\{])(?:\[x\]|\u00d7)",
-                    r"(?=[\)\}\*\+])",
-                )
-            ),
-        )
-
-    def test_captures_br(self):
-        self.assertEqual(
-            elements.CAPTURES_BR,
-            r"(?P<captures_br>)(?:\[x\]|\u00d7)(?=[\)\}\*\+])",
-        )
-
-    def test_captures_r(self):
-        self.assertEqual(
-            elements.CAPTURES_R,
-            r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=\S)",
-        )
-
-    def test_captures_r_p(self):
-        self.assertEqual(
-            elements.CAPTURES_R_P,
-            r"(?P<captures_r_p>)(?:\[x\]|\u00d7)(?=\S+=)",
-        )
-
-    def test_captures_l_br(self):
-        self.assertEqual(
-            elements.CAPTURES_L_BR,
-            r"(?P<captures_l_br>)(?<=\S)(?:\[x\]|\u00d7)(?=[\)\}\*\+])",
-        )
-
-    def test_captures_lr(self):
-        self.assertEqual(
-            elements.CAPTURES_LR,
-            r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=\S)",
-        )
-
-    def test_captures_lr_p(self):
-        self.assertEqual(
-            elements.CAPTURES_LR_P,
-            r"(?P<captures_lr_p>)(?<=\S)(?:\[x\]|\u00d7)(?=\S+=)",
-        )
-
-    def test_captures_bl_r(self):
-        self.assertEqual(
-            elements.CAPTURES_BL_R,
-            r"(?P<captures_bl_r>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=\S)",
-        )
-
-    def test_captures_bl_r_p(self):
-        self.assertEqual(
-            elements.CAPTURES_BL_R_P,
-            r"(?P<captures_bl_r_p>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=\S+=)",
+            elements.TAKE_LR,
+            r"(?P<take_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=\S)",
         )
 
     def test_any_square(self):
@@ -1695,7 +1529,7 @@ class PatternElement(unittest.TestCase):
 
     def test__piece_options(self):
         self.assertEqual(
-            elements._PIECE_OPTIONS,
+            elements.PIECE_OPTIONS,
             r"".join(
                 (
                     r"\[",

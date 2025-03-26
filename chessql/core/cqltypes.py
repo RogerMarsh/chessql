@@ -346,6 +346,7 @@ def dictionary(name, container):
 class Precedence(enum.Enum):
     """Define the precedences available to operators."""
 
+    PLOW = 1
     P10 = 10
     P20 = 20
     P30 = 30
@@ -369,6 +370,7 @@ class Precedence(enum.Enum):
     P210 = 210
     P220 = 220
     P230 = 230
+    PHIGH = 999
 
     def __ge__(self, other):
         """Return True for 'self >= other' for ordered enumeration."""

@@ -25,12 +25,11 @@ import re
 from . import basenode
 from . import constants
 from . import cqltypes
-
-# from . import hhdb
 from . import querycontainer
 from . import cql
 from . import structure
 from . import pattern
+from . import elements
 
 BLOCK_COMMENT = "block_comment"
 END_OF_LINE = "end_of_line"
@@ -49,6 +48,9 @@ _ALL_BLOCK_ENDS = frozenset((BRACE_RIGHT, BRACKET_RIGHT, PARENTHESIS_RIGHT))
 _type_designator_string_re = re.compile(
     constants.PIECE_NAMES.join((r"^\"[", ']+"$'))
 )
+
+# Type designator piece designator must not specify squares.
+_type_designator_piece_re = re.compile(elements.PIECE_OPTIONS)
 
 # Split a match on 'echo' filter pattern into components.
 # The negative look-ahead after 'all' in pattern.ECHO is not needed.
@@ -266,7 +268,6 @@ class TypeDesignator(structure.NoArgumentsFilter):
         self._raise_if_node_not_child_of_filters(
             self.match_.group(), structure.MoveInfix
         )
-        self.container.target_move_interrupt = False
 
 
 class String(structure.NoArgumentsFilter):
@@ -784,6 +785,18 @@ def brace_left(match_=None, container=None):
 class TargetParenthesisLeft(structure.BlockLeft):
     """Represent '(' target conditions in '--' or '[x]' filter."""
 
+    def place_node_in_tree(self):
+        """Place as child of '--' or '[x]' if possible."""
+        node = self.container.cursor
+        while node:
+            if _is_dash_or_capture(node):
+                node.children.append(self.parent.children.pop())
+                self.parent = node
+                self.container.cursor = self
+                return
+            node = node.parent
+        super().place_node_in_tree()
+
 
 # The replaced complete() method returned False.
 # Verify LineConstituentParenthesisRight sets completed True.
@@ -855,7 +868,8 @@ def parenthesis_left(match_=None, container=None):
     'line', 'path', or '{'.
 
     """
-    if not container.target_move_interrupt:
+    cursor = container.cursor.parent
+    if _is_dash_or_capture(cursor) or _is_dash_or_capture(cursor.parent):
         return TargetParenthesisLeft(match_=match_, container=container)
     node = container.cursor
     while node:
@@ -1125,70 +1139,20 @@ class BeforeNE(structure.ComparePosition, structure.InfixRight):
     _precedence = cqltypes.Precedence.P30  # from 'ancestor'.
 
 
-class CapturesLR(structure.MoveInfix):
-    """Represent '[x]' ('×') filter like F[x]G.
-
-    F and G are set filters where whitespace between them and '[x]' matters.
-
-    CapturesLR is an infix operator with neither LHS nor RHS implicit: F is
-    the LHS and G is the RHS.
-    """
-
-    def place_node_in_tree(self):
-        """Delegate then set target interrupt to False."""
-        super().place_node_in_tree()
-        self.container.target_move_interrupt = False
-
-
-class CapturesL(structure.MoveInfix):
-    """Represent '[x]' ('×') filter like F[x] G.
-
-    F and G are set filters where whitespace between them and '[x]' matters.
-
-    CapturesL is an infix operator with only RHS implicit: F is the LHS and
-    G is not the RHS.  The RHS is the '.' filter, equivalent to 'a-h1-8'.
-    """
-
-    def place_node_in_tree(self):
-        """Delegate then append the implied '.' filter."""
-        super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        AnySquare(match_=self.match_, container=container).place_node_in_tree()
-        container.target_move_interrupt = False
-
-
-class CapturesR(structure.MoveInfix):
-    """Represent '[x]' ('×') filter like F [x]G.
-
-    F and G are set filters where whitespace between them and '[x]' matters.
-
-    CapturesR is an infix operator with only LHS implicit: F is not the LHS
-    and G is the RHS.  The LHS is the '.' filter, equivalent to 'a-h1-8'.
-    """
-
-    def __init__(self, match_=None, container=None):
-        """Create the implied '.' filter then delegate."""
-        AnySquare(match_=match_, container=container).place_node_in_tree()
-        super().__init__(match_=match_, container=container)
-
-    def place_node_in_tree(self):
-        """Delegate then set cursor to self and target interrupt to False."""
-        super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        container.target_move_interrupt = False
-
-
-class Captures(structure.MoveInfix):
+class TakeII(structure.InfixLeft):
     """Represent '[x]' ('×') filter like F [x] G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
-    Captures is an infix operator with both LHS and RHS implicit: F is not
+    TakeII is an infix operator with both LHS and RHS implicit: F is not
     the LHS and G is not the RHS.  Both LHS and RHS are the '.' filter,
     equivalent to 'a-h1-8'.
     """
 
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Prevent other filters taking implicit arguments by precedence.
+    _precedence = cqltypes.Precedence.PHIGH
+
     def __init__(self, match_=None, container=None):
         """Create the implied '.' filter then delegate."""
         AnySquare(match_=match_, container=container).place_node_in_tree()
@@ -1200,7 +1164,124 @@ class Captures(structure.MoveInfix):
         container = self.container
         container.cursor = self
         AnySquare(match_=self.match_, container=container).place_node_in_tree()
-        container.target_move_interrupt = False
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+
+
+class TakeLI(structure.InfixLeft):
+    """Represent '[x]' ('×') filter like F[x] G.
+
+    F and G are set filters where whitespace between them and '[x]' matters.
+
+    TakeLI is an infix operator with only RHS implicit: F is the LHS and
+    G is not the RHS.  The RHS is the '.' filter, equivalent to 'a-h1-8'.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Allow other filters to take lhs argument by precedence.
+    # '--'has extremely low precedence and lhs filter is not implicit.
+    # Once placed in tree precedence must become PHIGH to prevent other
+    # filters taking the implicit rhs filter.
+    _precedence = cqltypes.Precedence.PLOW
+
+    def place_node_in_tree(self):
+        """Delegate then append the implied '.' filter."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+        AnySquare(match_=self.match_, container=container).place_node_in_tree()
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._precedence = cqltypes.Precedence.PHIGH
+
+
+class TakeIR(structure.InfixLeft):
+    """Represent '[x]' ('×') filter like F [x]G.
+
+    F and G are set filters where whitespace between them and '[x]' matters.
+
+    TakeIR is an infix operator with only LHS implicit: F is not the LHS
+    and G is the RHS.  The LHS is the '.' filter, equivalent to 'a-h1-8'.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Prevent other filters taking implicit lhs argument by precedence.
+    # Once placed in tree precedence must become PLOW because '--' has
+    # extremely low precedence and rhs filter is not implicit.
+    _precedence = cqltypes.Precedence.PHIGH
+
+    def __init__(self, match_=None, container=None):
+        """Create the implied '.' filter then delegate."""
+        AnySquare(match_=match_, container=container).place_node_in_tree()
+        super().__init__(match_=match_, container=container)
+
+    def place_node_in_tree(self):
+        """Delegate then append the implied '.' filter."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._precedence = cqltypes.Precedence.PLOW
+
+
+class TakeLR(structure.InfixLeft):
+    """Represent '[x]' ('×') filter like F[x]G.
+
+    F and G are set filters where whitespace between them and '[x]' matters.
+
+    TakeLR is an infix operator with neither LHS nor RHS implicit: F is
+    the LHS and G is the RHS.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Allow other filters to take lhs and rhs argument by precedence.
+    # '--'has extremely low precedence and both lhs filter and rhs filter
+    # are not implicit.
+    _precedence = cqltypes.Precedence.PLOW
+
+    def place_node_in_tree(self):
+        """Delegate then append the implied '.' filter."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+
+
+def take_lr(match_=None, container=None):
+    """Return a TakeLI or TakeLR instance depending on match_ detail.
+
+    A TakeLI instance is returned if character following match_.group()
+    is a '=' or '('.  Otherwise return a TakeLR instance.
+
+    """
+    if match_.string[match_.end()] in "=(":
+        return TakeLI(match_=match_, container=container)
+    return TakeLR(match_=match_, container=container)
+
+
+def take_ir(match_=None, container=None):
+    """Return a TakeII or TakeIR instance depending on match_ detail.
+
+    A TakeLI instance is returned if character following match_.group()
+    is a '=' or '('.  Otherwise return a TakeLR instance.
+
+    """
+    if match_.string[match_.end()] in "=(":
+        return TakeII(match_=match_, container=container)
+    return TakeIR(match_=match_, container=container)
 
 
 class CommentSymbol(structure.BlockLeft):
@@ -1250,79 +1331,22 @@ class AttackedArrow(structure.MoveInfix):
     _filter_type = cqltypes.FilterType.SET
 
 
-class SingleMoveLR(structure.MoveInfix):
-    """Represent '--' ('―') filter like F--G.
-
-    F and G are set filters where whitespace between them and '--' matters.
-
-    Targets are within '()' like 'F--G(check)' for example.
-
-    SingleMoveLR is an infix operator with neither LHS nor RHS implicit: F
-    is the LHS and G is the RHS.
-    """
-
-    def place_node_in_tree(self):
-        """Delegate then set target interrupt to False."""
-        super().place_node_in_tree()
-        self.container.target_move_interrupt = False
-
-
-class SingleMoveL(structure.MoveInfix):
-    """Represent '--' ('―') filter like F-- G.
-
-    F and G are set filters where whitespace between them and '--' matters.
-
-    Targets are within '()' like 'F--(check) G' for example.
-
-    SingleMoveL is an infix operator with only RHS implicit: F is the LHS
-    and G is not the RHS.  The RHS is the '.' filter, equivalent to
-    'a-h1-8'.
-    """
-
-    def place_node_in_tree(self):
-        """Delegate then append the implied '.' filter."""
-        super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        AnySquare(match_=self.match_, container=container).place_node_in_tree()
-        container.target_move_interrupt = False
-
-
-class SingleMoveR(structure.MoveInfix):
-    """Represent '--' ('―') filter like F --G.
-
-    F and G are set filters where whitespace between them and '--' matters.
-
-    Targets are within '()' like 'F --G(check)' for example.
-
-    SingleMoveR is an infix operator with only LHS implicit: F is not the
-    LHS and G is the RHS.  The LHS is the '.' filter, equivalent to 'a-h1-8'.
-    """
-
-    def __init__(self, match_=None, container=None):
-        """Create the implied '.' filter then delegate."""
-        AnySquare(match_=match_, container=container).place_node_in_tree()
-        super().__init__(match_=match_, container=container)
-
-    def place_node_in_tree(self):
-        """Delegate then set cursor to self and target interrupt to False."""
-        super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        container.target_move_interrupt = False
-
-
-class SingleMove(structure.MoveInfix):
+class DashII(structure.InfixLeft):
     """Represent '--' ('―') filter like F -- G.
 
     F and G are set filters where whitespace between them and '--' matters.
 
     Targets are within '()' like 'F --(check) G' for example.
 
-    SingleMove is an infix operator with both LHS and RHS implicit: F is not
+    DashII is an infix operator with both LHS and RHS implicit: F is not
     the LHS and G is not the RHS.  Both LHS and RHS are the '.' filter,
     equivalent to 'a-h1-8'.
     """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Prevent other filters taking implicit arguments by precedence.
+    _precedence = cqltypes.Precedence.PHIGH
 
     def __init__(self, match_=None, container=None):
         """Create the implied '.' filter then delegate."""
@@ -1335,7 +1359,130 @@ class SingleMove(structure.MoveInfix):
         container = self.container
         container.cursor = self
         AnySquare(match_=self.match_, container=container).place_node_in_tree()
-        container.target_move_interrupt = False
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+
+
+class DashLI(structure.InfixLeft):
+    """Represent '--' ('―') filter like F-- G.
+
+    F and G are set filters where whitespace between them and '--' matters.
+
+    Targets are within '()' like 'F--(check) G' for example.
+
+    DashLI is an infix operator with only RHS implicit: F is the LHS and
+    G is not the RHS.  The RHS is the '.' filter, equivalent to 'a-h1-8'.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Allow other filters to take lhs argument by precedence.
+    # '--'has extremely low precedence and lhs filter is not implicit.
+    # Once placed in tree precedence must become PHIGH to prevent other
+    # filters taking the implicit rhs filter.
+    _precedence = cqltypes.Precedence.PLOW
+
+    def place_node_in_tree(self):
+        """Delegate then append the implied '.' filter."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+        AnySquare(match_=self.match_, container=container).place_node_in_tree()
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._precedence = cqltypes.Precedence.PHIGH
+
+
+class DashIR(structure.InfixLeft):
+    """Represent '--' ('―') filter like F --G.
+
+    F and G are set filters where whitespace between them and '--' matters.
+
+    Targets are within '()' like 'F --G(check)' for example.
+
+    DashIR is an infix operator with only LHS implicit: F is not the LHS
+    and G is the RHS.  The LHS is the '.' filter, equivalent to 'a-h1-8'.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Prevent other filters taking implicit lhs argument by precedence.
+    # Once placed in tree precedence must become PLOW because '--' has
+    # extremely low precedence and rhs filter is not implicit.
+    _precedence = cqltypes.Precedence.PHIGH
+
+    def __init__(self, match_=None, container=None):
+        """Create the implied '.' filter then delegate."""
+        AnySquare(match_=match_, container=container).place_node_in_tree()
+        super().__init__(match_=match_, container=container)
+
+    def place_node_in_tree(self):
+        """Delegate then append the implied '.' filter."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._precedence = cqltypes.Precedence.PLOW
+
+
+class DashLR(structure.InfixLeft):
+    """Represent '--' ('―') filter like F--G.
+
+    F and G are set filters where whitespace between them and '--' matters.
+
+    Targets are within '()' like 'F--G(check)' for example.
+
+    DashLR is an infix operator with neither LHS nor RHS implicit: F is the
+    LHS and G is the RHS.
+    """
+
+    _filter_type = cqltypes.FilterType.LOGICAL
+
+    # Allow other filters to take lhs and rhs argument by precedence.
+    # '--'has extremely low precedence and both lhs filter and rhs filter
+    # are not implicit.
+    _precedence = cqltypes.Precedence.PLOW
+
+    def place_node_in_tree(self):
+        """Delegate then append the implied '.' filter."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+
+
+def dash_lr(match_=None, container=None):
+    """Return a DashLI or DashLR instance depending on match_ detail.
+
+    A DashLI instance is returned if character following match_.group()
+    is a '=' or '('.  Otherwise return a DashLR instance.
+
+    """
+    if match_.string[match_.end()] in "=(":
+        return DashLI(match_=match_, container=container)
+    return DashLR(match_=match_, container=container)
+
+
+def dash_ir(match_=None, container=None):
+    """Return a DashII or DashIR instance depending on match_ detail.
+
+    A DashLI instance is returned if character following match_.group()
+    is a '=' or '('.  Otherwise return a DashLR instance.
+
+    """
+    if match_.string[match_.end()] in "=(":
+        return DashII(match_=match_, container=container)
+    return DashIR(match_=match_, container=container)
 
 
 # RegexMatch, RegexCapturedGroup, and RegexCapturedGroupIndex,
@@ -6055,16 +6202,56 @@ class AssignPromotion(structure.Argument):
         """Verify and apply node to tree then set cursor to self."""
         # This tests the situation if the following parent relationships
         # are applied.
-        self._raise_if_node_not_child_of_filters("=", AnySquare)
+        # self._raise_if_node_not_child_of_filters("=", AnySquare)
         node = self.parent
         node.children[-1].parent = node.parent
         node.parent.children.append(node.children.pop())
         self.container.cursor = self
 
+    def _verify_children_and_set_own_types(self):
+        """Raise NodeError if child cannot be a promotion piece."""
+        child = self.children[0]
+        # This block has no effect on existing unittests but does allow
+        # the CQL-6.2 examples which did not fail parsing to continue not
+        # failing.  Comment to be removed when all '--' unittests pass.
+        if isinstance(child, (structure.VariableName, Dictionary)):
+            if (
+                self.container.function_body_cursor is None
+                and child.filter_type is not cqltypes.FilterType.STRING
+            ):
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + " expects a piece type designator or string but got a '"
+                    + child.__class__.__name__
+                    + "' with filter type '"
+                    + child.filter_type
+                    + "'"
+                )
+            return
+        if not isinstance(child, PieceDesignator):
+            # See string() for for validation of promotion piece as quoted
+            # string.  Perhaps it must be there for CQL-6.1 syntax.
+            # CQL parsing does not ban promotion to king or pawn.
+            if child.filter_type is not cqltypes.FilterType.STRING:
+                raise basenode.NodeError(
+                    self.__class__.__name__
+                    + " expects a piece type designator or string but got a '"
+                    + child.__class__.__name__
+                    + "'"
+                )
+            return
+        if _type_designator_piece_re.fullmatch(child.match_.group()) is None:
+            raise basenode.NodeError(
+                self.__class__.__name__
+                + " expects a piece type designator or string but got a '"
+                + child.match_.group()
+                + "' piece designator"
+            )
+
 
 def assign(match_=None, container=None):
     """Return Assign or AssignPromotion instance."""
-    if not container.target_move_interrupt:
+    if _is_dash_or_capture(container.cursor.parent):
         return AssignPromotion(match_=match_, container=container)
     return Assign(match_=match_, container=container)
 
@@ -6159,24 +6346,13 @@ def _is_dash_or_capture(filter_):
     """Return True if filter_ class represents '--' or '[x]' filter."""
     return isinstance(
         filter_,
-        (
-            CapturesLR,
-            CapturesL,
-            CapturesR,
-            Captures,
-            SingleMoveLR,
-            SingleMoveL,
-            SingleMoveR,
-            SingleMove,
-        ),
+        (DashII, DashIR, DashLI, DashLR, TakeII, TakeIR, TakeLI, TakeLR),
     )
 
 
 def _is_dash(filter_):
     """Return True if filter_ class represents '--' filter."""
-    return isinstance(
-        filter_, (SingleMoveLR, SingleMoveL, SingleMoveR, SingleMove)
-    )
+    return isinstance(filter_, (DashII, DashIR, DashLI, DashLR))
 
 
 def _set_or_parameter(
@@ -6224,7 +6400,7 @@ def _string_or_parentheses_comment(match_, container, general, after_move):
 
 
 def _raise_if_primary_and_secondary_parameter_present(filter_):
-    """Return True if filter_ has 'primary' and 'secondary parameters."""
+    """Raise NodeError if filter_ has 'primary' and 'secondary parameters."""
     if (
         len(
             set(
@@ -6239,6 +6415,35 @@ def _raise_if_primary_and_secondary_parameter_present(filter_):
             filter_.__class__.__name__
             + ": cannot have both 'primary' and 'secondary' parameters"
         )
+
+
+def _raise_if_dash_or_take_arguments_are_not_filter_type_set(filter_):
+    """Raise NodeError if first two arguments of filter_ are not sets.
+
+    Dash and Take instances can have up to four arguments, the last two
+    being AssignPromotion and TargetParenthesisLeft instances.
+
+    """
+    for item, child in enumerate(filter_.children):
+        if item < 2:
+            if (
+                filter_.container.function_body_count is not None
+                and isinstance(child, (structure.VariableName, Dictionary))
+            ):
+                continue
+            if child.filter_type is not cqltypes.FilterType.SET:
+                if child.filter_type:
+                    name = child.filter_type.name.lower()
+                else:
+                    name = str(None)
+                raise basenode.NodeError(
+                    filter_.__class__.__name__
+                    + ": expects a '"
+                    + cqltypes.FilterType.SET.name.lower()
+                    + "' but got a '"
+                    + name
+                    + "'"
+                )
 
 
 def _is_local_dictionary(filter_):

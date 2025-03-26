@@ -90,13 +90,6 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
         self._parent = None
         self._whitespace = []
 
-        # Set to False by '--' and type designator filters, set to True by
-        # next BaseNode created for a token from input stream.
-        # Tested for '(' and '=' tokens from input stream, before token's
-        # BaseNode is created, to see if target conditions or promotion is
-        # specified.
-        self._target_move_interrupt = True
-
         # Nodes whose verify_children_and_set_types() method has
         # been called.
         self._verified = set()
@@ -138,21 +131,6 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
     def verified(self):
         """Return self._verified."""
         return self._verified
-
-    @property
-    def target_move_interrupt(self):
-        """Return self._target_move_interrupt."""
-        return self._target_move_interrupt
-
-    @target_move_interrupt.setter
-    def target_move_interrupt(self, value):
-        """Bind self._target_move_interrupt to value.
-
-        Value must be True or False.
-
-        """
-        assert value is True or value is False
-        self._target_move_interrupt = value
 
     def get_next_variable_id(self, name):
         """Return str of _next_reserved_name_id and incremant by 1."""

@@ -91,8 +91,6 @@ class BaseNode:
         self._container = container
         container.cursor.children.append(self)
         self._parent = container.cursor
-        if not container.is_cursor_moveinfix_instance():
-            container.target_move_interrupt = True
         if container.function_body_cursor is not None:
             container.definitions[
                 container.function_body_cursor.name

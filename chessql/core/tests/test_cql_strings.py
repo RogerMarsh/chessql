@@ -32,214 +32,214 @@ class Patterns(unittest.TestCase):
             self.assertEqual(len(group), 1)
             self.assertEqual(group[0], names[item])
 
-    def test_01_single_move_ascii(self):
-        self.verify("--", ["--", ""], ["single_move", "end_of_stream"])
+    def test_01_dash_ascii(self):
+        self.verify("--", ["--", ""], ["dash_ii", "end_of_stream"])
 
-    def test_02_single_move_utf8(self):
-        self.verify("――", ["――", ""], ["single_move", "end_of_stream"])
+    def test_02_dash_utf8(self):
+        self.verify("――", ["――", ""], ["dash_ii", "end_of_stream"])
 
-    def test_03_single_move_left_ascii(self):
+    def test_03_dash_left_ascii(self):
         self.verify(
             "R--",
             ["R", "--", ""],
-            ["piece_designator", "single_move_l", "end_of_stream"],
+            ["piece_designator", "dash_li", "end_of_stream"],
         )
 
-    def test_04_single_move_left_utf8(self):
+    def test_04_dash_left_utf8(self):
         self.verify(
             "R――",
             ["R", "――", ""],
-            ["piece_designator", "single_move_l", "end_of_stream"],
+            ["piece_designator", "dash_li", "end_of_stream"],
         )
 
-    def test_05_single_move_right_ascii(self):
+    def test_05_dash_right_ascii(self):
         self.verify(
             "--R",
             ["--", "R", ""],
-            ["single_move_r", "piece_designator", "end_of_stream"],
+            ["dash_ir", "piece_designator", "end_of_stream"],
         )
 
-    def test_06_single_move_right_utf8(self):
+    def test_06_dash_right_utf8(self):
         self.verify(
             "――R",
             ["――", "R", ""],
-            ["single_move_r", "piece_designator", "end_of_stream"],
+            ["dash_ir", "piece_designator", "end_of_stream"],
         )
 
-    def test_07_single_move_left_right_ascii(self):
+    def test_07_dash_left_right_ascii(self):
         self.verify(
             "b--R",
             ["b", "--", "R", ""],
             [
                 "piece_designator",
-                "single_move_lr",
+                "dash_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_08_single_move_left_right_utf8(self):
+    def test_08_dash_left_right_utf8(self):
         self.verify(
             "b――R",
             ["b", "――", "R", ""],
             [
                 "piece_designator",
-                "single_move_lr",
+                "dash_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_09_single_move_right_ascii(self):
+    def test_09_dash_right_ascii(self):
         self.verify(
             "b --R",
             ["b", " ", "--", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move_r",
+                "dash_ir",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_10_single_move_right_utf8(self):
+    def test_10_dash_right_utf8(self):
         self.verify(
             "b ――R",
             ["b", " ", "――", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move_r",
+                "dash_ir",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_11_single_move_left_ascii(self):
+    def test_11_dash_left_ascii(self):
         self.verify(
             "b-- R",
             ["b", "--", " ", "R", ""],
             [
                 "piece_designator",
-                "single_move_l",
+                "dash_li",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_12_single_move_left_utf8(self):
+    def test_12_dash_left_utf8(self):
         self.verify(
             "b―― R",
             ["b", "――", " ", "R", ""],
             [
                 "piece_designator",
-                "single_move_l",
+                "dash_li",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_13_single_move_ascii(self):
+    def test_13_dash_ascii(self):
         self.verify(
             "b -- R",
             ["b", " ", "--", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move",
+                "dash_ii",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_14_single_move_utf8(self):
+    def test_14_dash_utf8(self):
         self.verify(
             "b ―― R",
             ["b", " ", "――", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move",
+                "dash_ii",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_15_single_move_ascii(self):
+    def test_15_dash_ascii(self):
         self.verify(
             " -- ",
             [" ", "--", " ", ""],
             [
                 "whitespace",
-                "single_move",
+                "dash_ii",
                 "whitespace",
                 "end_of_stream",
             ],
         )
 
-    def test_16_single_move_utf8(self):
+    def test_16_dash_utf8(self):
         self.verify(
             " ―― ",
             [" ", "――", " ", ""],
             [
                 "whitespace",
-                "single_move",
+                "dash_ii",
                 "whitespace",
                 "end_of_stream",
             ],
         )
 
-    def test_17_single_move_promote_ascii(self):
+    def test_17_dash_promote_ascii(self):
         self.verify(
             "--=q",
             ["--", "=", "q", ""],
-            ["single_move_p", "assign", "piece_designator", "end_of_stream"],
+            ["dash_ir", "assign", "piece_designator", "end_of_stream"],
         )
 
-    def test_18_single_move_promote_utf8(self):
+    def test_18_dash_promote_utf8(self):
         self.verify(
             "――=q",
             ["――", "=", "q", ""],
-            ["single_move_p", "assign", "piece_designator", "end_of_stream"],
+            ["dash_ir", "assign", "piece_designator", "end_of_stream"],
         )
 
-    def test_19_single_move_left_promote_ascii(self):
+    def test_19_dash_left_promote_ascii(self):
         self.verify(
             "R--=q",
             ["R", "--", "=", "q", ""],
             [
                 "piece_designator",
-                "single_move_l_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_20_single_move_left_promote_utf8(self):
+    def test_20_dash_left_promote_utf8(self):
         self.verify(
             "R――=q",
             ["R", "――", "=", "q", ""],
             [
                 "piece_designator",
-                "single_move_l_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_21_single_move_right_promote_ascii(self):
+    def test_21_dash_right_promote_ascii(self):
         self.verify(
             "--R=q",
             ["--", "R", "=", "q", ""],
             [
-                "single_move_r_p",
+                "dash_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -247,12 +247,12 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_22_single_move_right_promote_utf8(self):
+    def test_22_dash_right_promote_utf8(self):
         self.verify(
             "――R=q",
             ["――", "R", "=", "q", ""],
             [
-                "single_move_r_p",
+                "dash_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -260,13 +260,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_23_single_move_left_right_promote_ascii(self):
+    def test_23_dash_left_right_promote_ascii(self):
         self.verify(
             "b--R=n",
             ["b", "--", "R", "=", "n", ""],
             [
                 "piece_designator",
-                "single_move_lr_p",
+                "dash_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -274,13 +274,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_24_single_move_left_right_promote_utf8(self):
+    def test_24_dash_left_right_promote_utf8(self):
         self.verify(
             "b――R=n",
             ["b", "――", "R", "=", "n", ""],
             [
                 "piece_designator",
-                "single_move_lr_p",
+                "dash_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -288,14 +288,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_25_single_move_right_promote_ascii(self):
+    def test_25_dash_right_promote_ascii(self):
         self.verify(
             "b --R=n",
             ["b", " ", "--", "R", "=", "n", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move_r_p",
+                "dash_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -303,14 +303,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_26_single_move_right_promote_utf8(self):
+    def test_26_dash_right_promote_utf8(self):
         self.verify(
             "b ――R=n",
             ["b", " ", "――", "R", "=", "n", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move_r_p",
+                "dash_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -318,13 +318,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_27_single_move_left_promote_ascii(self):
+    def test_27_dash_left_promote_ascii(self):
         self.verify(
             "b--=r R",
             ["b", "--", "=", "r", " ", "R", ""],
             [
                 "piece_designator",
-                "single_move_l_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -333,13 +333,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_28_single_move_left_promote_utf8(self):
+    def test_28_dash_left_promote_utf8(self):
         self.verify(
             "b――=r R",
             ["b", "――", "=", "r", " ", "R", ""],
             [
                 "piece_designator",
-                "single_move_l_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -348,14 +348,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_29_single_move_promote_ascii(self):
+    def test_29_dash_promote_ascii(self):
         self.verify(
             "b --=Q R",
             ["b", " ", "--", "=", "Q", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move_p",
+                "dash_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -364,14 +364,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_30_single_move_promote_utf8(self):
+    def test_30_dash_promote_utf8(self):
         self.verify(
             "b ――=Q R",
             ["b", " ", "――", "=", "Q", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "single_move_p",
+                "dash_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -380,13 +380,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_31_single_move_promote_ascii(self):
+    def test_31_dash_promote_ascii(self):
         self.verify(
             " --=Q ",
             [" ", "--", "=", "Q", " ", ""],
             [
                 "whitespace",
-                "single_move_p",
+                "dash_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -394,13 +394,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_32_single_move_promote_utf8(self):
+    def test_32_dash_promote_utf8(self):
         self.verify(
             " ――=Q ",
             [" ", "――", "=", "Q", " ", ""],
             [
                 "whitespace",
-                "single_move_p",
+                "dash_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -408,217 +408,217 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_33_single_move_parenthesisleft_ascii(self):
+    def test_33_dash_parenthesisleft_ascii(self):
         self.verify(
             "(--",
             ["(", "--", ""],
-            ["parenthesis_left", "single_move_bl", "end_of_stream"],
+            ["parenthesis_left", "dash_li", "end_of_stream"],
         )
 
-    def test_34_single_move_parenthesisleft_utf8(self):
+    def test_34_dash_parenthesisleft_utf8(self):
         self.verify(
             "(――",
             ["(", "――", ""],
-            ["parenthesis_left", "single_move_bl", "end_of_stream"],
+            ["parenthesis_left", "dash_li", "end_of_stream"],
         )
 
-    def test_35_single_move_braceleft_ascii(self):
+    def test_35_dash_braceleft_ascii(self):
         self.verify(
             "{--",
             ["{", "--", ""],
-            ["brace_left", "single_move_bl", "end_of_stream"],
+            ["brace_left", "dash_li", "end_of_stream"],
         )
 
-    def test_36_single_move_braceleft_utf8(self):
+    def test_36_dash_braceleft_utf8(self):
         self.verify(
             "{――",
             ["{", "――", ""],
-            ["brace_left", "single_move_bl", "end_of_stream"],
+            ["brace_left", "dash_li", "end_of_stream"],
         )
 
-    def test_37_single_move_parenthesisleft_promote_ascii(self):
+    def test_37_dash_parenthesisleft_promote_ascii(self):
         self.verify(
             "(--=Q",
             ["(", "--", "=", "Q", ""],
             [
                 "parenthesis_left",
-                "single_move_bl_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_38_single_move_parenthesisleft_promote_utf8(self):
+    def test_38_dash_parenthesisleft_promote_utf8(self):
         self.verify(
             "(――=Q",
             ["(", "――", "=", "Q", ""],
             [
                 "parenthesis_left",
-                "single_move_bl_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_39_single_move_braceleft_promote_ascii(self):
+    def test_39_dash_braceleft_promote_ascii(self):
         self.verify(
             "{--=Q",
             ["{", "--", "=", "Q", ""],
             [
                 "brace_left",
-                "single_move_bl_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_40_single_move_brace_left_promote_utf8(self):
+    def test_40_dash_brace_left_promote_utf8(self):
         self.verify(
             "{――=Q",
             ["{", "――", "=", "Q", ""],
             [
                 "brace_left",
-                "single_move_bl_p",
+                "dash_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_41_single_move_parenthesisright_ascii(self):
+    def test_41_dash_parenthesisright_ascii(self):
         self.verify(
             "--)",
             ["--", ")", ""],
-            ["single_move_br", "parenthesis_right", "end_of_stream"],
+            ["dash_ir", "parenthesis_right", "end_of_stream"],
         )
 
-    def test_42_single_move_parenthesisright_utf8(self):
+    def test_42_dash_parenthesisright_utf8(self):
         self.verify(
             "――)",
             ["――", ")", ""],
-            ["single_move_br", "parenthesis_right", "end_of_stream"],
+            ["dash_ir", "parenthesis_right", "end_of_stream"],
         )
 
-    def test_43_single_move_braceright_ascii(self):
+    def test_43_dash_braceright_ascii(self):
         self.verify(
             "--}",
             ["--", "}", ""],
-            ["single_move_br", "brace_right", "end_of_stream"],
+            ["dash_ir", "brace_right", "end_of_stream"],
         )
 
-    def test_44_single_move_braceright_utf8(self):
+    def test_44_dash_braceright_utf8(self):
         self.verify(
             "――}",
             ["――", "}", ""],
-            ["single_move_br", "brace_right", "end_of_stream"],
+            ["dash_ir", "brace_right", "end_of_stream"],
         )
 
-    def test_45_single_move_parenthesisleft_parenthesisright_ascii(self):
+    def test_45_dash_parenthesisleft_parenthesisright_ascii(self):
         self.verify(
             "(--)",
             ["(", "--", ")", ""],
             [
                 "parenthesis_left",
-                "single_move_blbr",
+                "dash_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_46_single_move_parenthesisleft_parenthesisright_utf8(self):
+    def test_46_dash_parenthesisleft_parenthesisright_utf8(self):
         self.verify(
             "(――)",
             ["(", "――", ")", ""],
             [
                 "parenthesis_left",
-                "single_move_blbr",
+                "dash_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_47_single_move_braceleft_braceright_ascii(self):
+    def test_47_dash_braceleft_braceright_ascii(self):
         self.verify(
             "{--}",
             ["{", "--", "}", ""],
             [
                 "brace_left",
-                "single_move_blbr",
+                "dash_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_48_single_move_braceleft_braceright_utf8(self):
+    def test_48_dash_braceleft_braceright_utf8(self):
         self.verify(
             "{――}",
             ["{", "――", "}", ""],
             [
                 "brace_left",
-                "single_move_blbr",
+                "dash_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_49_single_move_parenthesisleft_right_ascii(self):
+    def test_49_dash_parenthesisleft_right_ascii(self):
         self.verify(
             "(--R",
             ["(", "--", "R", ""],
             [
                 "parenthesis_left",
-                "single_move_bl_r",
+                "dash_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_50_single_move_parenthesisleft_right_utf8(self):
+    def test_50_dash_parenthesisleft_right_utf8(self):
         self.verify(
             "(――R",
             ["(", "――", "R", ""],
             [
                 "parenthesis_left",
-                "single_move_bl_r",
+                "dash_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_51_single_move_braceleft_right_ascii(self):
+    def test_51_dash_braceleft_right_ascii(self):
         self.verify(
             "{--N",
             ["{", "--", "N", ""],
             [
                 "brace_left",
-                "single_move_bl_r",
+                "dash_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_52_single_move_braceleft_right_utf8(self):
+    def test_52_dash_braceleft_right_utf8(self):
         self.verify(
             "{――N",
             ["{", "――", "N", ""],
             [
                 "brace_left",
-                "single_move_bl_r",
+                "dash_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_53_single_move_parenthesisleft_right_promote_ascii(self):
+    def test_53_dash_parenthesisleft_right_promote_ascii(self):
         self.verify(
             "(--R=q",
             ["(", "--", "R", "=", "q", ""],
             [
                 "parenthesis_left",
-                "single_move_bl_r_p",
+                "dash_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -626,13 +626,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_54_single_move_parenthesisleft_right_promote_utf8(self):
+    def test_54_dash_parenthesisleft_right_promote_utf8(self):
         self.verify(
             "(――R=q",
             ["(", "――", "R", "=", "q", ""],
             [
                 "parenthesis_left",
-                "single_move_bl_r_p",
+                "dash_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -640,13 +640,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_55_single_move_braceleft_right_promote_ascii(self):
+    def test_55_dash_braceleft_right_promote_ascii(self):
         self.verify(
             "{--N=q",
             ["{", "--", "N", "=", "q", ""],
             [
                 "brace_left",
-                "single_move_bl_r_p",
+                "dash_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -654,13 +654,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_56_single_move_braceleft_right_promote_utf8(self):
+    def test_56_dash_braceleft_right_promote_utf8(self):
         self.verify(
             "{――N=q",
             ["{", "――", "N", "=", "q", ""],
             [
                 "brace_left",
-                "single_move_bl_r_p",
+                "dash_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -668,262 +668,262 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_57_single_move_left_parenthesisright_promote_ascii(self):
+    def test_57_dash_left_parenthesisright_promote_ascii(self):
         self.verify(
             "R--)",
             ["R", "--", ")", ""],
             [
                 "piece_designator",
-                "single_move_l_br",
+                "dash_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_58_single_move_left_parenthesisright_promote_utf8(self):
+    def test_58_dash_left_parenthesisright_promote_utf8(self):
         self.verify(
             "R――)",
             ["R", "――", ")", ""],
             [
                 "piece_designator",
-                "single_move_l_br",
+                "dash_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_59_single_move_left_braceright_promote_ascii(self):
+    def test_59_dash_left_braceright_promote_ascii(self):
         self.verify(
             "N--}",
             ["N", "--", "}", ""],
             [
                 "piece_designator",
-                "single_move_l_br",
+                "dash_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_60_single_move_left_braceright_promote_utf8(self):
+    def test_60_dash_left_braceright_promote_utf8(self):
         self.verify(
             "N――}",
             ["N", "――", "}", ""],
             [
                 "piece_designator",
-                "single_move_l_br",
+                "dash_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_61_captures_ascii(self):
-        self.verify("[x]", ["[x]", ""], ["captures", "end_of_stream"])
+    def test_61_take_ascii(self):
+        self.verify("[x]", ["[x]", ""], ["take_ii", "end_of_stream"])
 
-    def test_62_captures_utf8(self):
-        self.verify("×", ["×", ""], ["captures", "end_of_stream"])
+    def test_62_take_utf8(self):
+        self.verify("×", ["×", ""], ["take_ii", "end_of_stream"])
 
-    def test_63_captures_left_ascii(self):
+    def test_63_take_left_ascii(self):
         self.verify(
             "R[x]",
             ["R", "[x]", ""],
-            ["piece_designator", "captures_l", "end_of_stream"],
+            ["piece_designator", "take_li", "end_of_stream"],
         )
 
-    def test_64_captures_left_utf8(self):
+    def test_64_take_left_utf8(self):
         self.verify(
             "R×",
             ["R", "×", ""],
-            ["piece_designator", "captures_l", "end_of_stream"],
+            ["piece_designator", "take_li", "end_of_stream"],
         )
 
-    def test_65_captures_right_ascii(self):
+    def test_65_take_right_ascii(self):
         self.verify(
             "[x]R",
             ["[x]", "R", ""],
-            ["captures_r", "piece_designator", "end_of_stream"],
+            ["take_ir", "piece_designator", "end_of_stream"],
         )
 
-    def test_66_captures_right_utf8(self):
+    def test_66_take_right_utf8(self):
         self.verify(
             "×R",
             ["×", "R", ""],
-            ["captures_r", "piece_designator", "end_of_stream"],
+            ["take_ir", "piece_designator", "end_of_stream"],
         )
 
-    def test_67_captures_left_right_ascii(self):
+    def test_67_take_left_right_ascii(self):
         self.verify(
             "b[x]R",
             ["b", "[x]", "R", ""],
             [
                 "piece_designator",
-                "captures_lr",
+                "take_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_68_captures_left_right_utf8(self):
+    def test_68_take_left_right_utf8(self):
         self.verify(
             "b×R",
             ["b", "×", "R", ""],
             [
                 "piece_designator",
-                "captures_lr",
+                "take_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_69_captures_right_ascii(self):
+    def test_69_take_right_ascii(self):
         self.verify(
             "b [x]R",
             ["b", " ", "[x]", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures_r",
+                "take_ir",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_70_captures_right_utf8(self):
+    def test_70_take_right_utf8(self):
         self.verify(
             "b ×R",
             ["b", " ", "×", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures_r",
+                "take_ir",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_71_captures_left_ascii(self):
+    def test_71_take_left_ascii(self):
         self.verify(
             "b[x] R",
             ["b", "[x]", " ", "R", ""],
             [
                 "piece_designator",
-                "captures_l",
+                "take_li",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_72_captures_left_utf8(self):
+    def test_72_take_left_utf8(self):
         self.verify(
             "b× R",
             ["b", "×", " ", "R", ""],
             [
                 "piece_designator",
-                "captures_l",
+                "take_li",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_73_captures_ascii(self):
+    def test_73_take_ascii(self):
         self.verify(
             "b [x] R",
             ["b", " ", "[x]", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures",
+                "take_ii",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_74_captures_utf8(self):
+    def test_74_take_utf8(self):
         self.verify(
             "b × R",
             ["b", " ", "×", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures",
+                "take_ii",
                 "whitespace",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_75_captures_ascii(self):
+    def test_75_take_ascii(self):
         self.verify(
             " [x] ",
             [" ", "[x]", " ", ""],
             [
                 "whitespace",
-                "captures",
+                "take_ii",
                 "whitespace",
                 "end_of_stream",
             ],
         )
 
-    def test_76_captures_utf8(self):
+    def test_76_take_utf8(self):
         self.verify(
             " × ",
             [" ", "×", " ", ""],
             [
                 "whitespace",
-                "captures",
+                "take_ii",
                 "whitespace",
                 "end_of_stream",
             ],
         )
 
-    def test_77_captures_promote_ascii(self):
+    def test_77_take_promote_ascii(self):
         self.verify(
             "[x]=q",
             ["[x]", "=", "q", ""],
-            ["captures_p", "assign", "piece_designator", "end_of_stream"],
+            ["take_ir", "assign", "piece_designator", "end_of_stream"],
         )
 
-    def test_78_captures_promote_utf8(self):
+    def test_78_take_promote_utf8(self):
         self.verify(
             "×=q",
             ["×", "=", "q", ""],
-            ["captures_p", "assign", "piece_designator", "end_of_stream"],
+            ["take_ir", "assign", "piece_designator", "end_of_stream"],
         )
 
-    def test_79_captures_left_promote_ascii(self):
+    def test_79_take_left_promote_ascii(self):
         self.verify(
             "R[x]=q",
             ["R", "[x]", "=", "q", ""],
             [
                 "piece_designator",
-                "captures_l_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_80_captures_left_promote_utf8(self):
+    def test_80_take_left_promote_utf8(self):
         self.verify(
             "R×=q",
             ["R", "×", "=", "q", ""],
             [
                 "piece_designator",
-                "captures_l_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_81_captures_right_promote_ascii(self):
+    def test_81_take_right_promote_ascii(self):
         self.verify(
             "[x]R=q",
             ["[x]", "R", "=", "q", ""],
             [
-                "captures_r_p",
+                "take_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -931,12 +931,12 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_82_captures_right_promote_utf8(self):
+    def test_82_take_right_promote_utf8(self):
         self.verify(
             "×R=q",
             ["×", "R", "=", "q", ""],
             [
-                "captures_r_p",
+                "take_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -944,13 +944,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_83_captures_left_right_promote_ascii(self):
+    def test_83_take_left_right_promote_ascii(self):
         self.verify(
             "b[x]R=n",
             ["b", "[x]", "R", "=", "n", ""],
             [
                 "piece_designator",
-                "captures_lr_p",
+                "take_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -958,13 +958,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_84_captures_left_right_promote_utf8(self):
+    def test_84_take_left_right_promote_utf8(self):
         self.verify(
             "b×R=n",
             ["b", "×", "R", "=", "n", ""],
             [
                 "piece_designator",
-                "captures_lr_p",
+                "take_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -972,14 +972,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_85_captures_right_promote_ascii(self):
+    def test_85_take_right_promote_ascii(self):
         self.verify(
             "b [x]R=n",
             ["b", " ", "[x]", "R", "=", "n", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures_r_p",
+                "take_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -987,14 +987,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_86_captures_right_promote_utf8(self):
+    def test_86_take_right_promote_utf8(self):
         self.verify(
             "b ×R=n",
             ["b", " ", "×", "R", "=", "n", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures_r_p",
+                "take_ir",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -1002,13 +1002,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_87_captures_left_promote_ascii(self):
+    def test_87_take_left_promote_ascii(self):
         self.verify(
             "b[x]=r R",
             ["b", "[x]", "=", "r", " ", "R", ""],
             [
                 "piece_designator",
-                "captures_l_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -1017,13 +1017,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_88_captures_left_promote_utf8(self):
+    def test_88_take_left_promote_utf8(self):
         self.verify(
             "b×=r R",
             ["b", "×", "=", "r", " ", "R", ""],
             [
                 "piece_designator",
-                "captures_l_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -1032,14 +1032,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_89_captures_promote_ascii(self):
+    def test_89_take_promote_ascii(self):
         self.verify(
             "b [x]=Q R",
             ["b", " ", "[x]", "=", "Q", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures_p",
+                "take_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -1048,14 +1048,14 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_90_captures_promote_utf8(self):
+    def test_90_take_promote_utf8(self):
         self.verify(
             "b ×=Q R",
             ["b", " ", "×", "=", "Q", " ", "R", ""],
             [
                 "piece_designator",
                 "whitespace",
-                "captures_p",
+                "take_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -1064,13 +1064,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_91_captures_promote_ascii(self):
+    def test_91_take_promote_ascii(self):
         self.verify(
             " [x]=Q ",
             [" ", "[x]", "=", "Q", " ", ""],
             [
                 "whitespace",
-                "captures_p",
+                "take_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -1078,13 +1078,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_92_captures_promote_utf8(self):
+    def test_92_take_promote_utf8(self):
         self.verify(
             " ×=Q ",
             [" ", "×", "=", "Q", " ", ""],
             [
                 "whitespace",
-                "captures_p",
+                "take_ir",
                 "assign",
                 "piece_designator",
                 "whitespace",
@@ -1092,217 +1092,217 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_93_captures_parenthesisleft_ascii(self):
+    def test_93_take_parenthesisleft_ascii(self):
         self.verify(
             "([x]",
             ["(", "[x]", ""],
-            ["parenthesis_left", "captures_bl", "end_of_stream"],
+            ["parenthesis_left", "take_li", "end_of_stream"],
         )
 
-    def test_94_captures_parenthesisleft_utf8(self):
+    def test_94_take_parenthesisleft_utf8(self):
         self.verify(
             "(×",
             ["(", "×", ""],
-            ["parenthesis_left", "captures_bl", "end_of_stream"],
+            ["parenthesis_left", "take_li", "end_of_stream"],
         )
 
-    def test_95_captures_braceleft_ascii(self):
+    def test_95_take_braceleft_ascii(self):
         self.verify(
             "{[x]",
             ["{", "[x]", ""],
-            ["brace_left", "captures_bl", "end_of_stream"],
+            ["brace_left", "take_li", "end_of_stream"],
         )
 
-    def test_96_captures_braceleft_utf8(self):
+    def test_96_take_braceleft_utf8(self):
         self.verify(
             "{×",
             ["{", "×", ""],
-            ["brace_left", "captures_bl", "end_of_stream"],
+            ["brace_left", "take_li", "end_of_stream"],
         )
 
-    def test_97_captures_parenthesisleft_promote_ascii(self):
+    def test_97_take_parenthesisleft_promote_ascii(self):
         self.verify(
             "([x]=Q",
             ["(", "[x]", "=", "Q", ""],
             [
                 "parenthesis_left",
-                "captures_bl_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_98_captures_parenthesisleft_promote_utf8(self):
+    def test_98_take_parenthesisleft_promote_utf8(self):
         self.verify(
             "(×=Q",
             ["(", "×", "=", "Q", ""],
             [
                 "parenthesis_left",
-                "captures_bl_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_99_captures_braceleft_promote_ascii(self):
+    def test_99_take_braceleft_promote_ascii(self):
         self.verify(
             "{[x]=Q",
             ["{", "[x]", "=", "Q", ""],
             [
                 "brace_left",
-                "captures_bl_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_100_captures_brace_left_promote_utf8(self):
+    def test_100_take_brace_left_promote_utf8(self):
         self.verify(
             "{×=Q",
             ["{", "×", "=", "Q", ""],
             [
                 "brace_left",
-                "captures_bl_p",
+                "take_lr",
                 "assign",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_101_captures_parenthesisright_ascii(self):
+    def test_101_take_parenthesisright_ascii(self):
         self.verify(
             "[x])",
             ["[x]", ")", ""],
-            ["captures_br", "parenthesis_right", "end_of_stream"],
+            ["take_ir", "parenthesis_right", "end_of_stream"],
         )
 
-    def test_102_captures_parenthesisright_utf8(self):
+    def test_102_take_parenthesisright_utf8(self):
         self.verify(
             "×)",
             ["×", ")", ""],
-            ["captures_br", "parenthesis_right", "end_of_stream"],
+            ["take_ir", "parenthesis_right", "end_of_stream"],
         )
 
-    def test_103_captures_braceright_ascii(self):
+    def test_103_take_braceright_ascii(self):
         self.verify(
             "[x]}",
             ["[x]", "}", ""],
-            ["captures_br", "brace_right", "end_of_stream"],
+            ["take_ir", "brace_right", "end_of_stream"],
         )
 
-    def test_104_captures_braceright_utf8(self):
+    def test_104_take_braceright_utf8(self):
         self.verify(
             "×}",
             ["×", "}", ""],
-            ["captures_br", "brace_right", "end_of_stream"],
+            ["take_ir", "brace_right", "end_of_stream"],
         )
 
-    def test_105_captures_parenthesisleft_parenthesisright_ascii(self):
+    def test_105_take_parenthesisleft_parenthesisright_ascii(self):
         self.verify(
             "([x])",
             ["(", "[x]", ")", ""],
             [
                 "parenthesis_left",
-                "captures_blbr",
+                "take_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_106_captures_parenthesisleft_parenthesisright_utf8(self):
+    def test_106_take_parenthesisleft_parenthesisright_utf8(self):
         self.verify(
             "(×)",
             ["(", "×", ")", ""],
             [
                 "parenthesis_left",
-                "captures_blbr",
+                "take_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_107_captures_braceleft_braceright_ascii(self):
+    def test_107_take_braceleft_braceright_ascii(self):
         self.verify(
             "{[x]}",
             ["{", "[x]", "}", ""],
             [
                 "brace_left",
-                "captures_blbr",
+                "take_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_108_captures_braceleft_braceright_utf8(self):
+    def test_108_take_braceleft_braceright_utf8(self):
         self.verify(
             "{×}",
             ["{", "×", "}", ""],
             [
                 "brace_left",
-                "captures_blbr",
+                "take_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_109_captures_parenthesisleft_right_ascii(self):
+    def test_109_take_parenthesisleft_right_ascii(self):
         self.verify(
             "([x]R",
             ["(", "[x]", "R", ""],
             [
                 "parenthesis_left",
-                "captures_bl_r",
+                "take_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_110_captures_parenthesisleft_right_utf8(self):
+    def test_110_take_parenthesisleft_right_utf8(self):
         self.verify(
             "(×R",
             ["(", "×", "R", ""],
             [
                 "parenthesis_left",
-                "captures_bl_r",
+                "take_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_111_captures_braceleft_right_ascii(self):
+    def test_111_take_braceleft_right_ascii(self):
         self.verify(
             "{[x]N",
             ["{", "[x]", "N", ""],
             [
                 "brace_left",
-                "captures_bl_r",
+                "take_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_112_captures_braceleft_right_utf8(self):
+    def test_112_take_braceleft_right_utf8(self):
         self.verify(
             "{×N",
             ["{", "×", "N", ""],
             [
                 "brace_left",
-                "captures_bl_r",
+                "take_lr",
                 "piece_designator",
                 "end_of_stream",
             ],
         )
 
-    def test_113_captures_parenthesisleft_right_promote_ascii(self):
+    def test_113_take_parenthesisleft_right_promote_ascii(self):
         self.verify(
             "([x]R=q",
             ["(", "[x]", "R", "=", "q", ""],
             [
                 "parenthesis_left",
-                "captures_bl_r_p",
+                "take_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -1310,13 +1310,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_114_captures_parenthesisleft_right_promote_utf8(self):
+    def test_114_take_parenthesisleft_right_promote_utf8(self):
         self.verify(
             "(×R=q",
             ["(", "×", "R", "=", "q", ""],
             [
                 "parenthesis_left",
-                "captures_bl_r_p",
+                "take_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -1324,13 +1324,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_115_captures_braceleft_right_promote_ascii(self):
+    def test_115_take_braceleft_right_promote_ascii(self):
         self.verify(
             "{[x]N=q",
             ["{", "[x]", "N", "=", "q", ""],
             [
                 "brace_left",
-                "captures_bl_r_p",
+                "take_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -1338,13 +1338,13 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_116_captures_braceleft_right_promote_utf8(self):
+    def test_116_take_braceleft_right_promote_utf8(self):
         self.verify(
             "{×N=q",
             ["{", "×", "N", "=", "q", ""],
             [
                 "brace_left",
-                "captures_bl_r_p",
+                "take_lr",
                 "piece_designator",
                 "assign",
                 "piece_designator",
@@ -1352,49 +1352,49 @@ class Patterns(unittest.TestCase):
             ],
         )
 
-    def test_117_captures_left_parenthesisright_promote_ascii(self):
+    def test_117_take_left_parenthesisright_promote_ascii(self):
         self.verify(
             "R[x])",
             ["R", "[x]", ")", ""],
             [
                 "piece_designator",
-                "captures_l_br",
+                "take_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_118_captures_left_parenthesisright_promote_utf8(self):
+    def test_118_take_left_parenthesisright_promote_utf8(self):
         self.verify(
             "R×)",
             ["R", "×", ")", ""],
             [
                 "piece_designator",
-                "captures_l_br",
+                "take_lr",
                 "parenthesis_right",
                 "end_of_stream",
             ],
         )
 
-    def test_119_captures_left_braceright_promote_ascii(self):
+    def test_119_take_left_braceright_promote_ascii(self):
         self.verify(
             "N[x]}",
             ["N", "[x]", "}", ""],
             [
                 "piece_designator",
-                "captures_l_br",
+                "take_lr",
                 "brace_right",
                 "end_of_stream",
             ],
         )
 
-    def test_120_captures_left_braceright_promote_utf8(self):
+    def test_120_take_left_braceright_promote_utf8(self):
         self.verify(
             "N×}",
             ["N", "×", "}", ""],
             [
                 "piece_designator",
-                "captures_l_br",
+                "take_lr",
                 "brace_right",
                 "end_of_stream",
             ],

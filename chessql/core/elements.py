@@ -135,8 +135,8 @@ ATTACK_ARROW = r"(?P<attack_arrow>)(?:->|\u2192)"  # 6.2 unicode symbols, '->'.
 # 6.2 unicode symbols, '<-'.
 ATTACKED_ARROW = r"(?P<attacked_arrow>)(?:<-|\u2190)"
 
-# 6.2 unicode symbols, '--'.
-# Single move filters. F and G must be set filters when attached to '--'.
+# 6.2 unicode symbols, '--'.  Dash filters (any move).
+# F and G must be set filters when attached to '--'.
 # F--G, F --G, F-- G, and F -- G, are different: a ' ' attached to '--'
 # means the left or right filter, as appropriate, is 'a-h1-8' (all squares).
 # '--r=b' is like 'F --G=Q' and is accepted.
@@ -148,49 +148,19 @@ ATTACKED_ARROW = r"(?P<attacked_arrow>)(?:<-|\u2190)"
 # '{r b}--{N Q} is F--G with both being compound filters, and the
 # expression '{r b}--{N Q}=b(r q B)' is legal but will never match since
 # F is not asking for a black pawn move promoting to bishop.
-SINGLE_MOVE = r"(?P<single_move>)(?:--|\u2015\u2015)"
-SINGLE_MOVE_P = r"(?P<single_move_p>)(?:--|\u2015\u2015)(?==)"
-SINGLE_MOVE_BL = r"(?P<single_move_bl>)(?<=[\(\{])(?:--|\u2015\u2015)"
-SINGLE_MOVE_BL_P = r"(?P<single_move_bl_p>)(?<=[\(\{])(?:--|\u2015\u2015)(?==)"
-SINGLE_MOVE_BR = r"(?P<single_move_br>)(?:--|\u2015\u2015)(?=[\)\}\*\+])"
-SINGLE_MOVE_BLBR = (
-    r"(?P<single_move_blbr>)(?<=[\(\{])(?:--|\u2015\u2015)(?=[\)\}\*\+])"
-)
-SINGLE_MOVE_L = r"(?P<single_move_l>)(?<=\S)(?:--|\u2015\u2015)"
-SINGLE_MOVE_L_P = r"(?P<single_move_l_p>)(?<=\S)(?:--|\u2015\u2015)(?==)"
-SINGLE_MOVE_R = r"(?P<single_move_r>)(?:--|\u2015\u2015)(?=\S)"
-SINGLE_MOVE_R_P = r"(?P<single_move_r_p>)(?:--|\u2015\u2015)(?=\S+=)"
-SINGLE_MOVE_BL_R = (
-    r"(?P<single_move_bl_r>)(?<=[\(\{])(?:--|\u2015\u2015)(?=\S)"
-)
-SINGLE_MOVE_BL_R_P = (
-    r"(?P<single_move_bl_r_p>)(?<=[\(\{])(?:--|\u2015\u2015)(?=\S+=)"
-)
-SINGLE_MOVE_L_BR = (
-    r"(?P<single_move_l_br>)(?<=\S)(?:--|\u2015\u2015)(?=[\)\}\*\+])"
-)
-SINGLE_MOVE_LR = r"(?P<single_move_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)"
-SINGLE_MOVE_LR_P = r"(?P<single_move_lr_p>)(?<=\S)(?:--|\u2015\u2015)(?=\S+=)"
+DASH_II = r"(?P<dash_ii>)(?:--|\u2015\u2015)"
+DASH_LI = r"(?P<dash_li>)(?<=\S)(?:--|\u2015\u2015)"
+DASH_IR = r"(?P<dash_ir>)(?:--|\u2015\u2015)(?=\S)"
+DASH_LR = r"(?P<dash_lr>)(?<=\S)(?:--|\u2015\u2015)(?=\S)"
 
-# 6.2 unicode symbols, '[x]'.  Similar to the single move filters.
-# Single move captures filters.  (unicode given as U+D7)
+# 6.2 unicode symbols, '[x]'.  Similar to the dash filters.
+# Take filters (dash filters for captures only).  (unicode given as U+D7)
 # F[x]G, F [x]G, F[x] G, and F [x] G, are different: a ' ' attached to '[x]'
 # means the left or right filter, as appropriate, is 'a-h1-8' (all squares).
-CAPTURES = r"(?P<captures>)(?:\[x\]|\u00d7)"
-CAPTURES_P = r"(?P<captures_p>)(?:\[x\]|\u00d7)(?==)"
-CAPTURES_BL = r"(?P<captures_bl>)(?<=[\(\{])(?:\[x\]|\u00d7)"
-CAPTURES_BL_P = r"(?P<captures_bl_p>)(?<=[\(\{])(?:\[x\]|\u00d7)(?==)"
-CAPTURES_BR = r"(?P<captures_br>)(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
-CAPTURES_BLBR = r"(?P<captures_blbr>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
-CAPTURES_L = r"(?P<captures_l>)(?<=\S)(?:\[x\]|\u00d7)"
-CAPTURES_L_P = r"(?P<captures_l_p>)(?<=\S)(?:\[x\]|\u00d7)(?==)"
-CAPTURES_R = r"(?P<captures_r>)(?:\[x\]|\u00d7)(?=\S)"
-CAPTURES_R_P = r"(?P<captures_r_p>)(?:\[x\]|\u00d7)(?=\S+=)"
-CAPTURES_BL_R = r"(?P<captures_bl_r>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=\S)"
-CAPTURES_BL_R_P = r"(?P<captures_bl_r_p>)(?<=[\(\{])(?:\[x\]|\u00d7)(?=\S+=)"
-CAPTURES_L_BR = r"(?P<captures_l_br>)(?<=\S)(?:\[x\]|\u00d7)(?=[\)\}\*\+])"
-CAPTURES_LR = r"(?P<captures_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=\S)"
-CAPTURES_LR_P = r"(?P<captures_lr_p>)(?<=\S)(?:\[x\]|\u00d7)(?=\S+=)"
+TAKE_II = r"(?P<take_ii>)(?:\[x\]|\u00d7)"
+TAKE_LI = r"(?P<take_li>)(?<=\S)(?:\[x\]|\u00d7)"
+TAKE_IR = r"(?P<take_ir>)(?:\[x\]|\u00d7)(?=\S)"
+TAKE_LR = r"(?P<take_lr>)(?<=\S)(?:\[x\]|\u00d7)(?=\S)"
 
 # 6.0.4 index of symbols, '.'.  6.2 unicode symbols (equivalent to 'a-h1-8').
 ANY_SQUARE = r"(?P<any_square>)(?:\.|\u25a6)"
@@ -775,7 +745,7 @@ _UNICODE_PIECE_CHARS = r"".join(
 _UNICODE_PIECES = _UNICODE_PIECE_CHARS.join((r"(?:[", r"]+)|\[(?:[", r"]+)\]"))
 _ALL_PIECES = r"\u25ed"  # Equivalent to '[Aa]'.
 _SQUARE_OPTIONS = r"|".join((_COMPOUND_SQUARE, _SIMPLE_SQUARE))
-_PIECE_OPTIONS = r"|".join(
+PIECE_OPTIONS = r"|".join(
     (_COMPOUND_PIECE, _PIECE_CHARS, _UNICODE_PIECES, _ALL_PIECES)
 )
 
@@ -786,7 +756,7 @@ PIECE_DESIGNATOR = "".join(
     (
         r"(?P<piece_designator>)",
         r"(?:(?:",
-        _PIECE_OPTIONS.join(("(?:", ")?")),
+        PIECE_OPTIONS.join(("(?:", ")?")),
         _SQUARE_OPTIONS.join(("(?:", ")")),
         r")|(?:",
         r"|".join(
