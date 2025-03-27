@@ -346,7 +346,6 @@ def dictionary(name, container):
 class Precedence(enum.Enum):
     """Define the precedences available to operators."""
 
-    PLOW = 1
     P10 = 10
     P20 = 20
     P30 = 30
@@ -370,6 +369,20 @@ class Precedence(enum.Enum):
     P210 = 210
     P220 = 220
     P230 = 230
+
+    # One of the precedences allocated to '--' and '[x]' filters.
+    # Has to be greater than precedence of 'not' to stop the 'not' in
+    # 'not --' grabbing the implicit LHS set filter to '--'.
+    # Precedence of 'not' is P60.
+    # Has to be less than precedence of '|' to allow the '|' in 'k|q--'
+    # to take the 'q' from the '--' filter.
+    # Precedence of '|' is P160.
+    PLOW = 61
+
+    # One of the precedences allocated to '--' and '[x]' filters.
+    # Has to be greater than precedence of ':' to stop the ':' in
+    # 'currentpostion: --' grabbing the implicit LHS set filter to '--'.
+    # Precedence of ':' is P230.
     PHIGH = 999
 
     def __ge__(self, other):

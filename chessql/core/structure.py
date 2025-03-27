@@ -2,6 +2,9 @@
 # Copyright 2020, 2024 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
+# pylint C0302 too-many-lines.
+# Ignore.
+
 """Chess Query Language (CQL) object class definitions.
 
 This module defines the classes and functions needed by objects referred

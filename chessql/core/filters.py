@@ -1197,7 +1197,13 @@ class TakeLI(structure.InfixLeft):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
-        self._precedence = cqltypes.Precedence.PHIGH
+
+    @property
+    def precedence(self):
+        """Return self._precedence appropriate to RHS filter."""
+        if len(self.children) > 1 and isinstance(self.children[1], AnySquare):
+            return cqltypes.Precedence.PHIGH
+        return self._precedence
 
 
 class TakeIR(structure.InfixLeft):
@@ -1226,11 +1232,11 @@ class TakeIR(structure.InfixLeft):
         super().place_node_in_tree()
         container = self.container
         container.cursor = self
+        self._precedence = cqltypes.Precedence.PLOW
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
-        self._precedence = cqltypes.Precedence.PLOW
 
 
 class TakeLR(structure.InfixLeft):
@@ -1394,7 +1400,13 @@ class DashLI(structure.InfixLeft):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
-        self._precedence = cqltypes.Precedence.PHIGH
+
+    @property
+    def precedence(self):
+        """Return self._precedence appropriate to RHS filter."""
+        if len(self.children) > 1 and isinstance(self.children[1], AnySquare):
+            return cqltypes.Precedence.PHIGH
+        return self._precedence
 
 
 class DashIR(structure.InfixLeft):
@@ -1425,11 +1437,11 @@ class DashIR(structure.InfixLeft):
         super().place_node_in_tree()
         container = self.container
         container.cursor = self
+        self._precedence = cqltypes.Precedence.PLOW
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
-        self._precedence = cqltypes.Precedence.PLOW
 
 
 class DashLR(structure.InfixLeft):

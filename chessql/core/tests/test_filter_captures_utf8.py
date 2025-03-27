@@ -16,13 +16,13 @@ from . import verify
 
 class FilterCapturesUTF8(verify.Verify):
 
-    def test_215_captures_utf8_01(self):
+    def test_215_take_utf8_01(self):
         self.verify(
             "×",
             [(3, "TakeII"), (4, "AnySquare"), (4, "AnySquare")],
         )
 
-    def test_215_captures_utf8_02_left(self):
+    def test_215_take_utf8_02_left(self):
         self.verify(
             "e2×",
             [
@@ -32,7 +32,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_03_right(self):
+    def test_215_take_utf8_03_right(self):
         self.verify(
             "×Qa4",
             [
@@ -42,7 +42,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_04_left_right(self):
+    def test_215_take_utf8_04_left_right(self):
         self.verify(
             "r×Qa4",
             [
@@ -52,7 +52,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_05_promote_01(self):
+    def test_215_take_utf8_05_promote_01(self):
         self.verify(
             "×=q",
             [
@@ -64,13 +64,13 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_05_promote_02(self):  # chessql accepts.
+    def test_215_take_utf8_05_promote_02(self):
         self.verify("×=qa5", [], returncode=1)
 
-    def test_215_captures_utf8_05_promote_03(self):  # chessql accepts.
+    def test_215_take_utf8_05_promote_03(self):
         self.verify("×=check", [], returncode=1)
 
-    def test_215_captures_utf8_06_left_promote_01(self):
+    def test_215_take_utf8_06_left_promote_01(self):
         self.verify(
             "e2×=b",
             [
@@ -82,13 +82,13 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_06_left_promote_02(self):  # chessql accepts.
+    def test_215_take_utf8_06_left_promote_02(self):
         self.verify("e2×=bc6", [], returncode=1)
 
-    def test_215_captures_utf8_06_left_promote_03(self):  # chessql accepts.
+    def test_215_take_utf8_06_left_promote_03(self):
         self.verify("e2×=check", [], returncode=1)
 
-    def test_215_captures_utf8_07_right_promote_01(self):  # chessql wrong.
+    def test_215_take_utf8_07_right_promote_01(self):
         self.verify(
             "×Qa4=N",
             [
@@ -100,13 +100,13 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_07_right_promote_02(self):
+    def test_215_take_utf8_07_right_promote_02(self):
         self.verify("×Qa4=bc6", [], returncode=1)
 
-    def test_215_captures_utf8_07_right_promote_03(self):
+    def test_215_take_utf8_07_right_promote_03(self):
         self.verify("×Qa4=check", [], returncode=1)
 
-    def test_215_captures_utf8_08_left_right_promote_01(self):  # wrong.
+    def test_215_take_utf8_08_left_right_promote_01(self):
         self.verify(
             "r×Qa4=R",
             [
@@ -118,13 +118,13 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_08_left_right_promote_02(self):
+    def test_215_take_utf8_08_left_right_promote_02(self):
         self.verify("r×Qa4=bc6", [], returncode=1)
 
-    def test_215_captures_utf8_08_left_right_promote_03(self):
+    def test_215_take_utf8_08_left_right_promote_03(self):
         self.verify("r×Qa4=check", [], returncode=1)
 
-    def test_215_captures_utf8_09_target(self):  # chessql wrong.
+    def test_215_take_utf8_09_target(self):
         self.verify(
             "×(btm)",
             [
@@ -136,7 +136,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_10_left_target(self):  # chessql wrong.
+    def test_215_take_utf8_10_left_target(self):
         self.verify(
             "P×(btm)",
             [
@@ -148,7 +148,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_11_right_target(self):  # chessql wrong.
+    def test_215_take_utf8_11_right_target(self):
         self.verify(
             "×N(btm)",
             [
@@ -160,7 +160,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_12_left_right_target(self):  # chessql wrong.
+    def test_215_take_utf8_12_left_right_target(self):
         self.verify(
             "r×N(btm)",
             [
@@ -172,7 +172,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_13_promote_target(self):  # chessql wrong.
+    def test_215_take_utf8_13_promote_target(self):
         self.verify(
             "×=Q(btm)",
             [
@@ -186,7 +186,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_14_promote_left_target(self):  # chessql wrong.
+    def test_215_take_utf8_14_promote_left_target(self):
         self.verify(
             "P×=Q(btm)",
             [
@@ -200,7 +200,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_15_promote_right_target(self):  # wrong.
+    def test_215_take_utf8_15_promote_right_target(self):
         self.verify(
             "×N=Q(btm)",
             [
@@ -214,7 +214,7 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_captures_utf8_16_promote_left_right_target(self):  # wrong.
+    def test_215_take_utf8_16_promote_left_right_target(self):
         self.verify(
             "r×N=Q(btm)",
             [
@@ -227,6 +227,92 @@ class FilterCapturesUTF8(verify.Verify):
                 (5, "BTM"),
             ],
         )
+
+    def test_215_take_utf8_17_not_01_implicit_lhs(self):
+        self.verify(
+            "not ×",
+            [(3, "Not"), (4, "TakeII"), (5, "AnySquare"), (5, "AnySquare")],
+        )
+
+    def test_215_take_utf8_17_not_02_given_lhs(self):
+        self.verify(
+            "not q×",
+            [
+                (3, "Not"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_18_or_01_implicit_lhs(self):
+        self.verify("b| ×", [], returncode=1)
+
+    def test_215_take_utf8_18_or_02_given_lhs(self):
+        self.verify(
+            "b|q×",
+            [
+                (3, "TakeLI"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_19_colon_01_implicit_lhs(self):
+        self.verify(
+            "currentposition: ×",
+            [
+                (3, "Colon"),
+                (4, "CurrentPosition"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_19_colon_02_given_lhs(self):
+        self.verify(
+            "currentposition:q×",
+            [
+                (3, "TakeLI"),
+                (4, "Colon"),
+                (5, "CurrentPosition"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_20_or_01_implicit_rhs(self):
+        self.verify("× |b", [], returncode=1)
+
+    def test_215_take_utf8_20_or_02_given_rhs(self):
+        self.verify(
+            "×q|b",
+            [
+                (3, "TakeIR"),
+                (4, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_215_take_utf8_20_or_03_given_rhs_and_lhs(self):
+        self.verify(
+            "R×q|b",
+            [
+                (3, "TakeLR"),
+                (4, "PieceDesignator"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_215_take_utf8_20_or_04_implicit_rhs_given_lhs(self):
+        self.verify("R× |b", [], returncode=1)
 
 
 if __name__ == "__main__":
