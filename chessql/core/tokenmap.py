@@ -28,7 +28,6 @@ direct use of the class_from_token_name dict defined in this module.
 """
 import re
 
-from . import basenode
 from . import filters
 from . import hhdb
 from . import structure
@@ -81,7 +80,7 @@ class FunctionCallEnd(filters.RightCompoundPlace):
         """Delegate then add function body to container cursor."""
         super().place_node_in_tree()
         container = self.container
-        assert isinstance(container.cursor, filters.FunctionCall)
+        self._raise_if_cursor_is_not_expected_class(filters.FunctionCall)
         if container.function_body_cursor is None:
             cursor = container.cursor
             formal = {}
@@ -131,8 +130,8 @@ class FunctionCallEnd(filters.RightCompoundPlace):
                     for key, value in token.groupdict().items()
                     if value is not None
                 }
-                structure.raise_if_not_single_match_groupdict_entry(
-                    self, token, classes
+                container.raise_if_not_single_match_groupdict_entry(
+                    token, classes
                 )
                 for value in classes.values():
                     # Rename formal variable instances as they appear.
@@ -181,25 +180,28 @@ def parenthesis_right(match_=None, container=None):
                 match_=match_, container=container
             )
         if isinstance(node, filters.BraceLeft):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '{' compound filter with ')'"
+            node.raise_nodeerror(
+                node.__class__.__name__.join("''"),
+                " cannot close a '{' compound filter with ')'",
             )
         if isinstance(node, filters.ConstituentBraceLeft):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '{' constituent filter with ')'"
+            node.raise_nodeerror(
+                node.__class__.__name__.join("''"),
+                " cannot close a '{' constituent filter with ')'",
             )
         if isinstance(node, filters.BracketLeft):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '[' string index with ')'"
+            node.raise_nodeerror(
+                node.__class__.__name__.join("''"),
+                " cannot close a '[' string index with ')'",
             )
         node = node.parent
-    raise basenode.NodeError(
-        node.__class__.__name__
-        + ": cannot find a '(' phrase to close with ')'"
+    node.raise_nodeerror(
+        node.__class__.__name__.join("''"),
+        " cannot find a '(' phrase to close with ')'",
     )
+    # A pylint R1710 inconsistent-return-statements report indicates the
+    # absence of this statement.
+    raise RuntimeError("This point is intentionally unreachable")
 
 
 class_from_token_name = {

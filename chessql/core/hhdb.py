@@ -18,7 +18,6 @@ the 'hhdb' filter.
 """
 from . import structure
 from . import cqltypes
-from . import basenode
 
 # Position Attributes. (Logical filters.)
 COOK = r'"<cook>"'
@@ -570,30 +569,30 @@ def hhdb_not_implemented(match_=None, container=None):
     """Return instance of class representing the 'hhdb' filter."""
     keywords = match_.group().split()
     if len(keywords) < 2:
-        raise basenode.NodeError(
-            container.cursor.__class__.__name__
-            + ": an HHDB filter needs at least one keyword after 'hhdb'"
+        raise container.raise_nodeerror(
+            container.cursor.__class__.__name__.join("''"),
+            " an HHDB filter needs at least one keyword after 'hhdb'",
         )
     if keywords[0] != "hhdb":
-        raise basenode.NodeError(
-            container.cursor.__class__.__name__
-            + ": the first keyword must be 'hhdb' in an HHDB filter"
+        raise container.raise_nodeerror(
+            container.cursor.__class__.__name__.join("''"),
+            " the first keyword must be 'hhdb' in an HHDB filter",
         )
     hhdb_keywords = set(keywords[1:]) & _HHDB_KEYWORDS
     if (
         len(hhdb_keywords) > 1
         and hhdb_keywords & _AWARD_KEYWORDS != hhdb_keywords
     ):
-        raise basenode.NodeError(
-            container.cursor.__class__.__name__
-            + ": only 'hhdb' award filters can have more than one keyword"
+        raise container.raise_nodeerror(
+            container.cursor.__class__.__name__.join("''"),
+            " only 'hhdb' award filters can have more than one keyword",
         )
     hhdb_class = _keyword_to_class.get(keywords[1])
     if hhdb_class is None:
-        raise basenode.NodeError(
-            container.cursor.__class__.__name__
-            + ": the 'hhdb' '"
-            + keywords[1]
-            + "' filter is not implemented yet"
+        raise container.raise_nodeerror(
+            container.cursor.__class__.__name__.join("''"),
+            " the 'hhdb' ",
+            keywords[1].join("''"),
+            " filter is not implemented yet",
         )
     return hhdb_class(match_=match_, container=container)

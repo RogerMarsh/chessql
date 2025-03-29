@@ -12,7 +12,6 @@ and 'result' parameters.
 """
 import re
 
-from . import basenode
 from . import constants
 from . import parameters
 from . import structure
@@ -80,18 +79,15 @@ class CQL(structure.CompleteBlock):
         """
         container = self.container
         if container.cursor is not container:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + container.__class__.__name__
-                + "' is not the class of parent instance"
+            self.raise_nodeerror(
+                container.__class__.__name__.join("''"),
+                " is not the class of parent instance  of ",
+                self.__class__.__name__.join("''"),
             )
         if len(container.cursor.children) != 1:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + self.__class__.__name__
-                + "' instance must be first item in query tree"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " instance must be first item in query tree",
             )
         container.cursor = self
         self.parse(self.match_["cql"])
@@ -113,9 +109,7 @@ class CQL(structure.CompleteBlock):
                 for key, value in token.groupdict().items()
                 if value is not None
             }
-            structure.raise_if_not_single_match_groupdict_entry(
-                self, token, classes
-            )
+            container.raise_if_not_single_match_groupdict_entry(token, classes)
             for value in classes.values():
                 value(
                     match_=token,

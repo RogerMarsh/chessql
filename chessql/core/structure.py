@@ -54,18 +54,23 @@ class CQLObject(basenode.BaseNode):
 
     def __init__(self, match_=None, container=None):
         """Delegate then set details for this instance and add to tree."""
-        assert isinstance(match_, re.Match)
+        if not isinstance(match_, re.Match):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects a ",
+                re.Match.__name__.join("''"),
+                " instance but sees a ",
+                match_.__class__.__name__.join("''"),
+            )
         super().__init__(match_=match_, container=container)
         if container.cursor is container:
             if (
                 len(container.cursor.children) == 1
                 and not self.is_allowed_first_object_in_container
             ):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": '"
-                    + self.__class__.__name__
-                    + "' instance must not be first item in query tree"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " instance must not be first item in query tree",
                 )
 
     @property
@@ -115,15 +120,15 @@ class CQLObject(basenode.BaseNode):
         """
         if not self.is_parameter_accepted_by_filter():
             if self.parent:
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + " instance is not a parameter of "
-                    + self.parent.__class__.__name__
-                    + " instance"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " instance is not a parameter of ",
+                    self.parent.__class__.__name__.join("''"),
+                    " instance",
                 )
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + " instance cannot be a parameter because it has no parent"
+            self.raise_nodeerror(
+                self.__class__.__name__,
+                " instance cannot be a parameter because it has no parent",
             )
 
     # CQL-6.2 does not care if 'find' parameters are duplicated or about the
@@ -147,10 +152,10 @@ class CQLObject(basenode.BaseNode):
             )
             > 1
         ):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + " instance is duplicate parameter for instance of "
-                + self.parent.__class__.__name__
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " instance is duplicate parameter for instance of ",
+                self.parent.__class__.__name__.join("''"),
             )
 
     def _raise_if_node_not_child_of_filters(self, name, filters):
@@ -162,22 +167,21 @@ class CQLObject(basenode.BaseNode):
             if not isinstance(self.parent, filters):
                 if isinstance(filters, type):
                     filters = (filters,)
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": '"
-                    + name
-                    + "' must be a child of one of "
-                    + str([c.__name__ for c in filters])
-                    + ", not "
-                    + self.parent.__class__.__name__
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " named ",
+                    name.join("''"),
+                    "' must be a child of one of ",
+                    str([c.__name__ for c in filters]),
+                    ", not ",
+                    self.parent.__class__.__name__.join("''"),
                 )
             return
-        raise basenode.NodeError(
-            "'"
-            + name
-            + "' is not allowed for "
-            + self.__class__.__name__
-            + " if parent does not exist"
+        self.raise_nodeerror(
+            name.join("''"),
+            "' is not allowed for ",
+            self.__class__.__name__.join("''"),
+            " if parent does not exist",
         )
 
     # This method exists to allow BaseNode and CQLObject classes to be in
@@ -185,6 +189,92 @@ class CQLObject(basenode.BaseNode):
     def _match_string(self):
         """Return str containing the span of the match."""
         return " ".join((str(self.match_.span()), repr(self.match_[0])))
+
+    def raise_if_not_number_of_children(self, number):
+        """Raise NodeError if parent does not have number children."""
+        if len(self.children) != number:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects ",
+                str(number).join("''"),
+                " children but got ",
+                str(len(self.children)).join("''"),
+            )
+
+    def raise_if_not_same_filter_type(
+        self, operation, filter_type=None, allowany=False
+    ):
+        """Raise NodeError if self's children are different filter types.
+
+        self should be instance of one of '+=', '-=', '*=', '/=', %=',
+        and comparison, classes.
+
+        Any filter type except ANY is acceptable as rhs.
+
+        When lhs is first mention of a variable, it's filter type will be
+        ANY, nd any allowed rhs filter type is acceptable.
+
+        """
+        if self.container.function_body_cursor is not None:
+            return
+        lhs = self.children[0]
+        rhs = self.children[1]
+        if filter_type is not None and rhs.filter_type not in filter_type:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                "' cannot ",
+                operation.join("''"),
+                " because rhs filter type is ",
+                str(rhs.filter_type).join("''"),
+            )
+        if lhs.filter_type is not rhs.filter_type and not allowany:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                "' cannot ",
+                operation.join("''"),
+                " because lhs filter type is ",
+                str(lhs.filter_type).join("''"),
+                " and rhs is ",
+                str(rhs.filter_type).join("''"),
+            )
+
+    def raise_if_not_filter_type(self, child, filter_type):
+        """Raise NodeError if child of parent is not a filter type.
+
+        filter_type is the union of the allowed filter types.
+
+        """
+        if self.container.function_body_cursor is not None:
+            return
+        if child.filter_type not in filter_type:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects a ",
+                filter_type.name.lower().join("''"),
+                " argument but got a ",
+                child.filter_type.name.lower().join("''"),
+            )
+
+    def raise_if_not_instance(self, child, instance, msg):
+        """Raise NodeError if child of parent is not an instance.
+
+        instance is a class or tuple of classses.
+
+        """
+        if not isinstance(child, instance):
+            if isinstance(instance, tuple):
+                names = ", ".join([c.__name__ for c in instance])
+            else:
+                names = instance.__name__
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " ",
+                msg,
+                " ",
+                names.join("''"),
+                " not a ",
+                child.__class__.__name__.join("''"),
+            )
 
 
 class Complete(CQLObject):
@@ -315,14 +405,33 @@ class Name(CQLObject):
     @basenode.BaseNode.name.setter
     def name(self, value):
         """Set self._name."""
-        assert self._name is None or self._name == value
-        self._name = value
+        if self._name is None or self._name == value:
+            self._name = value
+            return
+        self.raise_nodeerror(
+            "A ",
+            self.__class__.__name__.join("''"),
+            " instance's name, ",
+            str(self._name).join("''"),
+            ", cannot be changed to ",
+            value.join("''"),
+            " once set",
+        )
 
     def replace_formal_name(self, formal):
         """Set self._name to name in formal mapping."""
         name = self._name
-        assert name in formal and name in self.container.definitions
-        self._name = formal[name]
+        if name in formal and name in self.container.definitions:
+            self._name = formal[name]
+            return
+        self.raise_nodeerror(
+            "A ",
+            self.__class__.__name__.join("''"),
+            " instance expects it's name ",
+            name.join("''"),
+            ", to be in both the 'formal' parameter and the container ",
+            "definitions",
+        )
 
     def _raise_if_already_defined(self, definition_types, definition_type):
         """Raise NodeError if name exists with type in definition_types."""
@@ -332,14 +441,15 @@ class Name(CQLObject):
             name in container.definitions
             and container.definitions[name].definition_type in definition_types
         ):
-            raise basenode.NodeError(
-                "'"
-                + name
-                + "' is a '"
-                + container.definitions[name].definition_type.name.lower()
-                + "' object so cannot be defined as a '"
-                + definition_type.name.lower()
-                + "' object"
+            self.raise_nodeerror(
+                name.join("''"),
+                " is a ",
+                container.definitions[name]
+                .definition_type.name.lower()
+                .join("''"),
+                " object so cannot be defined as a ",
+                definition_type.name.lower().join("''"),
+                " object",
             )
 
     def _raise_if_characters_invalid(self, type_):
@@ -349,40 +459,40 @@ class Name(CQLObject):
         """
         name = self._name
         if name in keywords.KEYWORDS:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + name
-                + "' is a keyword and cannot be a "
-                + type_.__name__.lower()
-                + " name"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " named ",
+                name.join("''"),
+                " is a keyword and cannot be a ",
+                type_.__name__.lower().join("''"),
+                " name",
             )
         if _simple_designator_re.match(name):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + name
-                + "' is a piece designator and cannot be a "
-                + type_.__name__.lower()
-                + " name"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " named ",
+                name.join("''"),
+                " is a piece designator and cannot be a ",
+                type_.__name__.lower().join("''"),
+                " name",
             )
         if name[0].isdigit():
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + name
-                + "' starts with a digit and cannot be a "
-                + type_.__name__.lower()
-                + " name"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " named ",
+                name.join("''"),
+                " starts with a digit and cannot be a ",
+                type_.__name__.lower().join("''"),
+                " name",
             )
         if name.isdigit():
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": '"
-                + name
-                + "' is all digits and cannot be a "
-                + type_.__name__.lower()
-                + " name"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " named ",
+                name.join("''"),
+                " is all digits and cannot be a ",
+                type_.__name__.lower().join("''"),
+                " name",
             )
 
     def _raise_if_name_reserved(self, type_):
@@ -392,24 +502,24 @@ class Name(CQLObject):
         """
         name = self._name
         if name.startswith(constants.UPPER_CASE_CQL_PREFIX):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": "
-                + type_
-                + "'"
-                + type_.__name__.lower()
-                + "' starts with reserved sequence "
-                + constants.UPPER_CASE_CQL_PREFIX
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " of ",
+                type_.join("''"),
+                " named ",
+                type_.__name__.lower().join("''"),
+                " starts with reserved sequence ",
+                constants.UPPER_CASE_CQL_PREFIX.join("''"),
             )
         if name.startswith(constants.LOWER_CASE_CQL_PREFIX):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": "
-                + type_
-                + "'"
-                + type_.__name__.lower()
-                + "' starts with reserved sequence "
-                + constants.LOWER_CASE_CQL_PREFIX
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " of ",
+                type_.join("''"),
+                " named ",
+                type_.__name__.lower().join("''"),
+                " starts with reserved sequence ",
+                constants.LOWER_CASE_CQL_PREFIX.join("''"),
             )
 
     def _raise_if_name_invalid(self, type_):
@@ -427,14 +537,15 @@ class Name(CQLObject):
         if name in container.definitions and not container.definitions[
             name
         ].is_variable_type(variable_type):
-            raise basenode.NodeError(
-                "'"
-                + name
-                + "' is a '"
-                + container.definitions[name].variable_type.name.lower()
-                + "' variable so cannot be a '"
-                + variable_type.name.lower()
-                + "' variable"
+            self.raise_nodeerror(
+                name.join("''"),
+                " is a ",
+                container.definitions[name]
+                .variable_type.name.lower()
+                .join("''"),
+                " variable so cannot be a ",
+                variable_type.name.lower().join("''"),
+                " variable",
             )
 
 
@@ -472,30 +583,30 @@ class VariableTypeSetter(Name):
         definitions = container.definitions
         name = self.name
         if name not in definitions:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": "
-                + nametype
-                + "'"
-                + name
-                + "' has not been registered ("
-                + "by _register_variable_type)"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " of ",
+                nametype.join("''"),
+                " named ",
+                name.join("''"),
+                " has not been registered (",
+                "by _register_variable_type)",
             )
         item = definitions[name]
         if item.filter_type is cqltypes.FilterType.ANY:
             item.filter_type = filter_type
         if item.filter_type is not filter_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": "
-                + nametype
-                + "'"
-                + name
-                + "' is a '"
-                + item.filter_type.name.lower()
-                + "' filter so cannot be set as a '"
-                + filter_type.name.lower()
-                + "' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " of ",
+                nametype.join("''"),
+                " named ",
+                name.join("''"),
+                " is a ",
+                item.filter_type.name.lower().join("''"),
+                " filter so cannot be set as a ",
+                filter_type.name.lower().join("''"),
+                " filter",
             )
 
     def _set_persistence_type(self, persistence_type, check_types=None):
@@ -510,12 +621,12 @@ class VariableTypeSetter(Name):
         if name not in definitions:
             if self.container.function_body_cursor is not None:
                 return
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot set persistence type because '"
-                + name
-                + "' is not in definitions "
-                + "(has _register_variable_type been called?)"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                "' cannot set persistence type because ",
+                name.join("''"),
+                " is not in definitions ",
+                "(has _register_variable_type been called?)",
             )
         item = definitions[name]
         if item.persistence_type is cqltypes.PersistenceType.ANY:
@@ -525,15 +636,14 @@ class VariableTypeSetter(Name):
             check_types = persistence_type
         for test in check_types:
             if test in persistence_type and test not in item.persistence_type:
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": cannot set '"
-                    + name
-                    + "' as '"
-                    + test.name.lower()
-                    + "' because it is not already '"
-                    + test.name.lower()
-                    + "'"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " cannot set ",
+                    name.join("''"),
+                    " as '",
+                    test.name.lower().join("''"),
+                    " because it is not already ",
+                    test.name.lower().join("''"),
                 )
 
 
@@ -555,9 +665,13 @@ class VariableName(VariableTypeSetter):
             return self.container.definitions[self.name].filter_type
         except KeyError as exc:
             raise basenode.NodeError(
-                "Name definition '"
-                + str(self.name)
-                + "' referenced before it is set"
+                "".join(
+                    (
+                        "Name definition '",
+                        str(self.name),
+                        "' referenced before it is set",
+                    )
+                )
             ) from exc
 
     def _register_variable_type(self, variable_type):
@@ -608,17 +722,17 @@ class VariableName(VariableTypeSetter):
         if item.variable_type is cqltypes.VariableType.ANY:
             item.variable_type = variable_type
         if item.variable_type is not variable_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": "
-                + nametype
-                + "'"
-                + self.name
-                + "' is a '"
-                + item.variable_type.name.lower()
-                + "' variable so cannot be set as a '"
-                + variable_type.name.lower()
-                + "' variable"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " of ",
+                nametype.join("''"),
+                " naamed ",
+                self.name.join("''"),
+                " is a ",
+                item.variable_type.name.lower().join("''"),
+                " variable so cannot be set as a ",
+                variable_type.name.lower().join("''"),
+                " variable",
             )
 
     def _set_persistence_type(self, persistence_type, check_types=None):
@@ -659,11 +773,10 @@ class BindArgument(Argument):
         """Override, raise NodeError if children verification fails."""
         child = self.children[0]
         if not isinstance(child, Name):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": expects a variable name but got a '"
-                + child.__class__.__name__
-                + "'"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects a variable name but got a ",
+                child.__class__.__name__.join("''"),
             )
 
 
@@ -703,21 +816,21 @@ class MaxOrMin(ParenthesizedArguments):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) < 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have at least two arguments"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have at least two arguments",
             )
         filter_types = set()
         for child in self.children:
-            raise_if_not_filter_type(
+            self.raise_if_not_filter_type(
                 child,
-                self,
                 cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING,
             )
             filter_types.add(child.filter_type)
         if len(filter_types) != 1:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": arguments must be all string or all numeric"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " arguments must be all string or all numeric",
             )
         if self.container.function_body_cursor is not None:
             return
@@ -760,24 +873,24 @@ class Infix(CQLObject):
         # Infix operators are not full until their second argument has
         # been consumed.
         if not container.cursor.full():
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot apply this operator to incomplete "
-                + container.cursor.__class__.__name__
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot apply this operator to incomplete ",
+                container.cursor.__class__.__name__.join("''"),
             )
         if len(container.cursor.parent.children) == 0:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cursor's parent (a "
-                + container.cursor.parent.__class__.__name__
-                + ") should have at least one child but has none"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cursor's parent (a ",
+                container.cursor.parent.__class__.__name__.join("''"),
+                ") should have at least one child but has none",
             )
         if container.cursor is not container.cursor.parent.children[-1]:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cursor (a "
-                + container.cursor.__class__.__name__
-                + ") is not the last child of it's parent"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cursor (a ",
+                container.cursor.__class__.__name__.join("''"),
+                ") is not the last child of it's parent",
             )
         super().__init__(match_=match_, container=container)
 
@@ -806,6 +919,26 @@ class Infix(CQLObject):
                     break
             node.verify_children_and_set_types(set_node_completed=True)
 
+    def _raise_if_parent_is_not_cursor(self, parent):
+        """Raise NodeError if parent is not cursor."""
+        if parent is not self.container.cursor:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects it's parent, a ",
+                parent.__class__.__name__.join("''"),
+                ", to be the cursor but the cursor is some other node",
+            )
+
+    def _raise_if_precedence_is_none(self):
+        """Raise NodeError if precedence is None."""
+        if self.precedence is None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " has precedence None but it should have a ",
+                cqltypes.Precedence.__name__.join("''"),
+                " precedence value",
+            )
+
 
 class InfixLeft(Infix):
     """Subclass of CQLObject for left associative infix operators."""
@@ -815,8 +948,8 @@ class InfixLeft(Infix):
         """Adjust node hierarchy, assert cursor is parent."""
         parent = self.parent
         ancestor = parent.parent
-        assert parent is self.container.cursor
-        assert self.precedence is not None
+        self._raise_if_parent_is_not_cursor(parent)
+        self._raise_if_precedence_is_none()
         while True:
             if isinstance(ancestor, BlockLeft):
                 break
@@ -835,7 +968,13 @@ class InfixLeft(Infix):
             self._verify_and_set_filter_type(parent)
             return
         # For 'if 1 + 2 then k' (legal nonsense left association in 'if').
-        assert not ancestor.complete()
+        if ancestor.complete():
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects to swap places in an incomplete ",
+                ancestor.__class__.__name__.join("''"),
+                " instance but sees a completed one",
+            )
         if self.precedence.value < ancestor.precedence.value:
             self._swap_tree_position(ancestor.parent)
             self._verify_and_set_filter_type(parent)
@@ -844,7 +983,14 @@ class InfixLeft(Infix):
             self._swap_tree_position(ancestor)
             self._verify_and_set_filter_type(parent)
             return
-        assert isinstance(ancestor, InfixLeft)
+        if not isinstance(ancestor, InfixLeft):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects to swap places with a ",
+                InfixLeft.__name__.join("''"),
+                " instance but sees a ",
+                ancestor.__class__.__name__.join("''"),
+            )
         self._swap_tree_position(ancestor.parent)
         self._verify_and_set_filter_type(parent)
         return
@@ -858,8 +1004,8 @@ class InfixRight(Infix):
         """Adjust node hierarchy, assert cursor is parent."""
         parent = self.parent
         ancestor = parent.parent
-        assert parent is self.container.cursor
-        assert self.precedence is not None
+        self._raise_if_parent_is_not_cursor(parent)
+        self._raise_if_precedence_is_none()
         while True:
             if isinstance(ancestor, BlockLeft):
                 break
@@ -878,7 +1024,13 @@ class InfixRight(Infix):
             self._verify_and_set_filter_type(parent)
             return
         # For 'if 1 > 2 then k' (legal nonsense right association in 'if').
-        assert not ancestor.complete()
+        if ancestor.complete():
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects to swap places in an incomplete ",
+                ancestor.__class__.__name__.join("''"),
+                " instance but sees a completed one",
+            )
         if self.precedence.value < ancestor.precedence.value:
             self._swap_tree_position(ancestor.parent)
             self._verify_and_set_filter_type(parent)
@@ -887,7 +1039,14 @@ class InfixRight(Infix):
             self._swap_tree_position(ancestor)
             self._verify_and_set_filter_type(parent)
             return
-        assert isinstance(ancestor, InfixRight)
+        if not isinstance(ancestor, InfixRight):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects to swap places with a ",
+                InfixRight.__name__.join("''"),
+                " instance but sees a ",
+                ancestor.__class__.__name__.join("''"),
+            )
         self._swap_tree_position(ancestor)
         self._verify_and_set_filter_type(parent)
         return
@@ -915,8 +1074,19 @@ class MoveInfix(Infix):
     def place_node_in_tree(self):
         """Make prior sibling a child of self, assert cursor is parent."""
         parent = self.parent
-        assert parent is self.container.cursor
-        assert self.precedence is None
+        if parent is not self.container.cursor:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects it's parent, a ",
+                parent.__class__.__name__.join("''"),
+                ", to be the cursor but the cursor is some other node",
+            )
+        if self.precedence is not None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " is expected to have precedence None but it is ",
+                self.precedence.name.join("''"),
+            )
         self._swap_tree_position(parent.parent)
         self._verify_and_set_filter_type(parent)
 
@@ -926,9 +1096,8 @@ class Numeric(InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        raise_if_not_number_of_children(self, 2)
-        raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
             "apply arithmetic operation",
             filter_type=cqltypes.FilterType.NUMERIC,
         )
@@ -956,9 +1125,9 @@ class ComparePosition(CQLObject):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        raise_if_not_number_of_children(self, 2)
-        raise_if_not_same_filter_type(
-            self, "compare", filter_type=cqltypes.FilterType.POSITION
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
+            "compare", filter_type=cqltypes.FilterType.POSITION
         )
 
 
@@ -1032,14 +1201,13 @@ class Compare(CQLObject):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        raise_if_not_number_of_children(self, 2)
+        self.raise_if_not_number_of_children(2)
         if (
             self.children[0].filter_type | self.children[1].filter_type
             == self._coerce_to_numeric
         ):
             return
-        raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_same_filter_type(
             "compare",
             filter_type=self._comparable_filter_types,
             allowany=self.container.function_body_count > 0,
@@ -1125,20 +1293,21 @@ class ModifyAssign(CQLObject):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        raise_if_not_instance(lhs, self, VariableName, "lhs must be a")
+        self.raise_if_not_instance(lhs, VariableName, "lhs must be a")
         rhs = self.children[1]
         if self.container.function_body_cursor is None or not isinstance(
             rhs, VariableName
         ):
             if rhs.filter_type is not cqltypes.FilterType.NUMERIC:
-                raise basenode.NodeError(
-                    self.__class__.__name__ + ": rhs must be a Numeric filter"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " rhs must be a Numeric filter",
                 )
         set_persistent_variable_filter_type(lhs, rhs)
         if self.container.function_body_cursor is None or not isinstance(
             rhs, VariableName
         ):
-            raise_if_not_same_filter_type(self, "assign")
+            self.raise_if_not_same_filter_type("assign")
 
 
 def set_persistent_variable_filter_type(lhs, rhs):
@@ -1158,106 +1327,3 @@ def set_persistent_variable_filter_type(lhs, rhs):
         return
     if definition.persistence_type is cqltypes.PersistenceType.PERSISTENT:
         definition.filter_type = rhs.filter_type
-
-
-def raise_if_not_instance(child, parent, instance, msg):
-    """Raise NodeError if child of parent is not an instance.
-
-    instance is a class or tuple of classses.
-
-    """
-    if not isinstance(child, instance):
-        if isinstance(instance, tuple):
-            names = ", ".join([c.__name__ for c in instance])
-        else:
-            names = instance.__name__
-        raise basenode.NodeError(
-            parent.__class__.__name__
-            + ": "
-            + msg
-            + " "
-            + names
-            + ": not a "
-            + child.__class__.__name__
-        )
-
-
-def raise_if_not_filter_type(child, parent, filter_type):
-    """Raise NodeError if child of parent is not a filter type.
-
-    filter_type is the union of the allowed filter types.
-
-    """
-    if parent.container.function_body_cursor is not None:
-        return
-    if child.filter_type not in filter_type:
-        raise basenode.NodeError(
-            parent.__class__.__name__
-            + ": expects a '"
-            + filter_type.name.lower()
-            + "' argument but got a '"
-            + child.filter_type.name.lower()
-            + "'"
-        )
-
-
-def raise_if_not_same_filter_type(
-    parent, operation, filter_type=None, allowany=False
-):
-    """Raise NodeError if parent's children are different filter types.
-
-    parent should be instance of one of '+=', '-=', '*=', '/=', %=', and
-    comparison, classes.
-
-    Any filter type except ANY is acceptable as rhs.
-
-    When lhs is first mention of a variable, it's filter type will be ANY,
-    and any allowed rhs filter type is acceptable.
-
-    """
-    if parent.container.function_body_cursor is not None:
-        return
-    lhs = parent.children[0]
-    rhs = parent.children[1]
-    if filter_type is not None and rhs.filter_type not in filter_type:
-        raise basenode.NodeError(
-            parent.__class__.__name__
-            + ": cannot "
-            + operation
-            + " because rhs filter type is "
-            + str(rhs.filter_type)
-        )
-    if lhs.filter_type is not rhs.filter_type and not allowany:
-        raise basenode.NodeError(
-            parent.__class__.__name__
-            + ": cannot "
-            + operation
-            + " because lhs filter type is "
-            + str(lhs.filter_type)
-            + " and rhs is "
-            + str(rhs.filter_type)
-        )
-
-
-def raise_if_not_number_of_children(parent, number):
-    """Raise NodeError if parent does not have number children."""
-    if len(parent.children) != number:
-        raise basenode.NodeError(
-            parent.__class__.__name__
-            + ": expects "
-            + str(number)
-            + " children but got "
-            + str(len(parent.children))
-        )
-
-
-def raise_if_not_single_match_groupdict_entry(node, token, entries):
-    """Raise NodeError if entries has more than one item for token."""
-    if len(entries) != 1:
-        raise basenode.NodeError(
-            node.__class__.__name__
-            + ": a single groupdict entry is expected frpm match on '"
-            + token.group()
-            + "' but got "
-            + str(len(entries))
-        )

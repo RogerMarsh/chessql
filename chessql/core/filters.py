@@ -177,6 +177,18 @@ class RightCompoundPlace(structure.CQLObject):
         # Class instances for tokens treated as whitespace have no parent.
         self.parent = None
 
+    def _raise_if_cursor_is_not_expected_class(self, expected_class):
+        """Raise NodeError if cursor is not expected class."""
+        if isinstance(self.container.cursor, expected_class):
+            return
+        self.raise_nodeerror(
+            self.__class__.__name__.join("''"),
+            " expects cursor to be a ",
+            expected_class.__name__.join("''"),
+            " but it is a ",
+            self.container.cursor.__class__.__name__.join("''"),
+        )
+
 
 class TransformFilterType(structure.CQLObject):
     """Determine filter type of transform filters.
@@ -244,9 +256,9 @@ class RepeatConstituent(structure.Complete):
             node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
         if not isinstance(self.parent, (LineArrow, Path)):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": parent is not a '<--', '-->', or 'path' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " parent is not a '<--', '-->', or 'path' filter",
             )
         self.container.cursor = self
 
@@ -318,13 +330,14 @@ def string(match_=None, container=None):
     if isinstance(container.cursor, AssignPromotion):
         if _is_type_designator_string(match_):
             return TypeDesignator(match_=match_, container=container)
-        raise basenode.NodeError(
-            container.cursor.__class__.__name__
-            + ": type designator string "
-            + match_.group()
-            + " contains characters other than '"
-            + constants.PIECE_NAMES
-            + "'"
+        container.raise_nodeerror(
+            "'",
+            container.cursor.__class__.__name__,
+            "' type designator string ",
+            match_.group(),
+            " contains characters other than '",
+            constants.PIECE_NAMES,
+            "'",
         )
     if is_documentation_parameter_accepted_by(container.cursor):
         return Documentation(match_=match_, container=container)
@@ -344,9 +357,9 @@ class EndCommentSymbol(structure.CQLObject):
                 break
             if isinstance(node, structure.CompleteBlock):
                 if not node.full():
-                    raise basenode.NodeError(
-                        self.__class__.__name__
-                        + ": cannot end '///' filter in open block filter"
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " cannot end '///' filter in open block filter",
                     )
             node = node.parent
         super().__init__(match_=match_, container=container)
@@ -366,10 +379,10 @@ class EndCommentSymbol(structure.CQLObject):
                 node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, (Path, CommentSymbol)):
-                raise basenode.NodeError(
-                    node.__class__.__name__
-                    + ": not complete while handing "
-                    + self.__class__.__name__
+                self.raise_nodeerror(
+                    node.__class__.__name__.join("''"),
+                    " not complete while handling ",
+                    self.__class__.__name__.join("''"),
                 )
             node.verify_children_and_set_types()
             node.completed = True
@@ -407,10 +420,10 @@ class EndPaths(structure.CQLObject):
                 node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, (Path, CommentSymbol)):
-                raise basenode.NodeError(
-                    node.__class__.__name__
-                    + ": not complete while handing "
-                    + self.__class__.__name__
+                self.raise_nodeerror(
+                    node.__class__.__name__.join("''"),
+                    " not complete while handling ",
+                    self.__class__.__name__.join("''"),
                 )
             node.verify_children_and_set_types()
             node.completed = True
@@ -500,7 +513,7 @@ class ConstituentBraceRight(RightCompoundPlace):
         # Assume '(' is correct: ignore possibility '(' is inside
         # a 'cql ( ... )' clause, which might get fixed by a
         # separate parser for this clause.
-        assert isinstance(self.container.cursor, ConstituentBraceLeft)
+        self._raise_if_cursor_is_not_expected_class(ConstituentBraceLeft)
 
 
 class BraceRight(RightCompoundPlace):
@@ -512,7 +525,16 @@ class BraceRight(RightCompoundPlace):
         # Path is terminated by '}' but the Plus should have been seen as
         # a RepeatPlus within a Path (itself terminated by '}') in
         # cql6-9-493-windows/examples/followpath.cql query.
-        assert isinstance(self.container.cursor, (BraceLeft, Plus))
+        if not isinstance(self.container.cursor, (BraceLeft, Plus)):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects cursor to be a ",
+                BraceLeft.__name__.join("''"),
+                " or a ",
+                Plus.__name__,
+                " but it is a ",
+                self.container.cursor.__class__.__name__.join("''"),
+            )
 
 
 class FunctionBodyRight(RightCompoundPlace):
@@ -527,8 +549,14 @@ class FunctionBodyRight(RightCompoundPlace):
         """
         super().place_node_in_tree()
         container = self.container
-        assert isinstance(container.cursor, FunctionBodyLeft)
-        assert container.function_body_count > 0
+        self._raise_if_cursor_is_not_expected_class(FunctionBodyLeft)
+        if container.function_body_count == 0:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects cursor to be within a function body definition ",
+                "but function_body_count is ",
+                str(container.function_body_count).join("''"),
+            )
         container.function_body_count -= 1
         if container.function_body_count == 0:
             container.function_body_cursor = None
@@ -556,17 +584,19 @@ def brace_right(match_=None, container=None):
         if not node.full():
             if isinstance(node, BraceLeft):
                 if not node.children:
-                    raise basenode.NodeError(
-                        node.__class__.__name__
-                        + ": '{' block must contain at least one filter"
+                    node.raise_nodeerror(
+                        "'",
+                        node.__class__.__name__,
+                        "' '{' block must contain at least one filter",
                     )
                 return BraceRight(match_=match_, container=container)
             if isinstance(node, ConstituentBraceLeft):
                 if not node.children:
-                    raise basenode.NodeError(
-                        node.__class__.__name__
-                        + ": '{' constituent block must contain"
-                        + " at least one filter"
+                    node.raise_nodeerror(
+                        "'",
+                        node.__class__.__name__,
+                        "' '{' constituent block must contain",
+                        " at least one filter",
                     )
                 return ConstituentBraceRight(
                     match_=match_, container=container
@@ -574,9 +604,10 @@ def brace_right(match_=None, container=None):
             if isinstance(node, FunctionBodyLeft):
                 return FunctionBodyRight(match_=match_, container=container)
             if isinstance(node, ParenthesisLeft):
-                raise basenode.NodeError(
-                    node.__class__.__name__
-                    + ": cannot close a '(' parenthesized block with '}'"
+                node.raise_nodeerror(
+                    "'",
+                    node.__class__.__name__,
+                    "' cannot close a '(' parenthesized block with '}'",
                 )
             if isinstance(
                 node,
@@ -585,24 +616,30 @@ def brace_right(match_=None, container=None):
                     LineConstituentParenthesisLeft,
                 ),
             ):
-                raise basenode.NodeError(
-                    node.__class__.__name__
-                    + ": cannot close a '(' top level constituent with '}'"
+                node.raise_nodeerror(
+                    "'",
+                    node.__class__.__name__,
+                    "' cannot close a '(' top level constituent with '}'",
                 )
             if isinstance(node, BracketLeft):
-                raise basenode.NodeError(
-                    node.__class__.__name__
-                    + ": cannot close a '[' string index with '}'"
+                node.raise_nodeerror(
+                    "'",
+                    node.__class__.__name__,
+                    "' cannot close a '[' string index with '}'",
                 )
             if isinstance(node, structure.ParenthesizedArguments):
-                raise basenode.NodeError(
-                    node.__class__.__name__
-                    + ": cannot close parenthesized arguments with '}'"
+                node.raise_nodeerror(
+                    "'",
+                    node.__class__.__name__,
+                    "' cannot close parenthesized arguments with '}'",
                 )
         node = node.parent
-    raise basenode.NodeError(
-        "Unexpected " + str(node) + " found while trying to match a '}'"
+    container.raise_nodeerror(
+        "Unexpected ", str(node), " found while trying to match a '}'"
     )
+    # A pylint R1710 inconsistent-return-statements report indicates the
+    # absence of this statement.
+    raise RuntimeError("This point is intentionally unreachable")
 
 
 # This has same effect as PlusRepeat.
@@ -645,11 +682,11 @@ class RegexRepeat(RepeatConstituent):
         """Delegate then set details for this instance and add to tree."""
         super().__init__(match_=match_, container=container)
         if isinstance(container.cursor, Function):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": cannot be applied to "
-                + container.cursor.__class__.__name__
-                + " instance"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot be applied to ",
+                container.cursor.__class__.__name__.join("''"),
+                " instance",
             )
 
 
@@ -845,10 +882,10 @@ class ParenthesisLeft(structure.BlockLeft):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) != 1:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": expects one child filter but has "
-                + str(len(self.children))
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects one child filter but has ",
+                str(len(self.children)),
             )
 
 
@@ -909,8 +946,8 @@ class LineConstituentParenthesisRight(RightCompoundPlace):
         # Assume '(' is correct: ignore possibility '(' is inside
         # a 'cql ( ... )' clause, which might get fixed by a
         # separate parser for this clause.
-        assert isinstance(
-            self.container.cursor, LineConstituentParenthesisLeft
+        self._raise_if_cursor_is_not_expected_class(
+            LineConstituentParenthesisLeft
         )
 
 
@@ -920,7 +957,7 @@ class ConstituentParenthesisRight(RightCompoundPlace):
     def place_node_in_tree(self):
         """Delegate then verify cursor class is ConstituentParenthesisLeft."""
         super().place_node_in_tree()
-        assert isinstance(self.container.cursor, ConstituentParenthesisLeft)
+        self._raise_if_cursor_is_not_expected_class(ConstituentParenthesisLeft)
 
 
 class ParenthesisRight(RightCompoundPlace):
@@ -929,7 +966,7 @@ class ParenthesisRight(RightCompoundPlace):
     def place_node_in_tree(self):
         """Delegate then verify cursor class is ParenthesisLeft."""
         super().place_node_in_tree()
-        assert isinstance(self.container.cursor, ParenthesisLeft)
+        self._raise_if_cursor_is_not_expected_class(ParenthesisLeft)
 
 
 class ParenthesizedArgumentsEnd(RightCompoundPlace):
@@ -946,8 +983,8 @@ class ParenthesizedArgumentsEnd(RightCompoundPlace):
 
         """
         super().place_node_in_tree()
-        assert isinstance(
-            self.container.cursor, structure.ParenthesizedArguments
+        self._raise_if_cursor_is_not_expected_class(
+            structure.ParenthesizedArguments
         )
 
 
@@ -1064,16 +1101,13 @@ class LineArrow(structure.CQLObject):
                             if isinstance(self, ArrowForward)
                             else ("-->", "<--")
                         )
-                        raise basenode.NodeError(
-                            self.__class__.__name__
-                            + ": '"
-                            + current
-                            + "'"
-                            + " cannot be mixed with existing "
-                            + "'"
-                            + existing
-                            + "'s"
-                            + " in 'line' filter"
+                        self.raise_nodeerror(
+                            self.__class__.__name__.join("''"),
+                            current.join("''"),
+                            " cannot be mixed with existing ",
+                            existing.join("''"),
+                            "s",
+                            " in 'line' filter",
                         )
                 break
             node = node.parent
@@ -1139,7 +1173,38 @@ class BeforeNE(structure.ComparePosition, structure.InfixRight):
     _precedence = cqltypes.Precedence.P30  # from 'ancestor'.
 
 
-class TakeII(structure.InfixLeft):
+class _DashOrTake(structure.InfixLeft):
+    """Represent shared behaviour of '--' and '[x]' filters."""
+
+    def _raise_if_dash_or_take_arguments_are_not_filter_type_set(self):
+        """Raise NodeError if first two arguments of filter_ are not sets.
+
+        Dash and Take instances can have up to four arguments, the last two
+        being AssignPromotion and TargetParenthesisLeft instances.
+
+        """
+        for item, child in enumerate(self.children):
+            if item < 2:
+                if (
+                    self.container.function_body_count is not None
+                    and isinstance(child, (structure.VariableName, Dictionary))
+                ):
+                    continue
+                if child.filter_type is not cqltypes.FilterType.SET:
+                    if child.filter_type:
+                        name = child.filter_type.name.lower()
+                    else:
+                        name = str(None)
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " expects a ",
+                        cqltypes.FilterType.SET.name.lower().join("''"),
+                        " but got a ",
+                        name.join("''"),
+                    )
+
+
+class TakeII(_DashOrTake):
     """Represent '[x]' ('×') filter like F [x] G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1167,10 +1232,10 @@ class TakeII(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class TakeLI(structure.InfixLeft):
+class TakeLI(_DashOrTake):
     """Represent '[x]' ('×') filter like F[x] G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1196,7 +1261,7 @@ class TakeLI(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
     @property
     def precedence(self):
@@ -1206,7 +1271,7 @@ class TakeLI(structure.InfixLeft):
         return self._precedence
 
 
-class TakeIR(structure.InfixLeft):
+class TakeIR(_DashOrTake):
     """Represent '[x]' ('×') filter like F [x]G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1236,10 +1301,10 @@ class TakeIR(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class TakeLR(structure.InfixLeft):
+class TakeLR(_DashOrTake):
     """Represent '[x]' ('×') filter like F[x]G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1263,7 +1328,7 @@ class TakeLR(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
 def take_lr(match_=None, container=None):
@@ -1308,9 +1373,9 @@ class CommentSymbol(structure.BlockLeft):
         node = container.cursor
         while node:
             if isinstance(node, CommentSymbol):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": cannot have more than one '///' filter on a line"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " cannot have more than one '///' filter on a line",
                 )
             node = node.parent
         super().__init__(match_=match_, container=container)
@@ -1320,8 +1385,8 @@ class CommentSymbol(structure.BlockLeft):
         if not self.children or isinstance(
             self.children[0], (EndPaths, EndCommentSymbol)
         ):
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": no items in comment"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"), " has no items in comment"
             )
 
 
@@ -1337,7 +1402,7 @@ class AttackedArrow(structure.MoveInfix):
     _filter_type = cqltypes.FilterType.SET
 
 
-class DashII(structure.InfixLeft):
+class DashII(_DashOrTake):
     """Represent '--' ('―') filter like F -- G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1368,10 +1433,10 @@ class DashII(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class DashLI(structure.InfixLeft):
+class DashLI(_DashOrTake):
     """Represent '--' ('―') filter like F-- G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1399,7 +1464,7 @@ class DashLI(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
     @property
     def precedence(self):
@@ -1409,7 +1474,7 @@ class DashLI(structure.InfixLeft):
         return self._precedence
 
 
-class DashIR(structure.InfixLeft):
+class DashIR(_DashOrTake):
     """Represent '--' ('―') filter like F --G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1441,10 +1506,10 @@ class DashIR(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class DashLR(structure.InfixLeft):
+class DashLR(_DashOrTake):
     """Represent '--' ('―') filter like F--G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1470,7 +1535,7 @@ class DashLR(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        _raise_if_dash_or_take_arguments_are_not_filter_type_set(self)
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
 def dash_lr(match_=None, container=None):
@@ -1518,9 +1583,8 @@ class RegexMatch(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 2)
-        structure.raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
             "match pattern",
             filter_type=cqltypes.FilterType.STRING,
         )
@@ -1594,8 +1658,8 @@ class AssignPlus(structure.InfixLeft):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        structure.raise_if_not_instance(
-            lhs, self, structure.VariableName, "lhs must be a"
+        self.raise_if_not_instance(
+            lhs, structure.VariableName, "lhs must be a"
         )
         rhs = self.children[1]
         if self.container.function_body_cursor is None or not isinstance(
@@ -1605,15 +1669,15 @@ class AssignPlus(structure.InfixLeft):
                 rhs.filter_type is not cqltypes.FilterType.NUMERIC
                 and rhs.filter_type is not cqltypes.FilterType.STRING
             ):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": rhs must be a Numeric or String filter"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " rhs must be a Numeric or String filter",
                 )
         structure.set_persistent_variable_filter_type(lhs, rhs)
         if self.container.function_body_cursor is None or not isinstance(
             rhs, structure.VariableName
         ):
-            structure.raise_if_not_same_filter_type(self, "assign")
+            self.raise_if_not_same_filter_type("assign")
 
 
 class AssignMinus(structure.ModifyAssign, structure.InfixLeft):
@@ -1755,13 +1819,12 @@ class ASCII(structure.Argument):
         if child_filter_type is cqltypes.FilterType.STRING:
             self.filter_type = cqltypes.FilterType.NUMERIC
             return
-        raise basenode.NodeError(
-            self.__class__.__name__
-            + ": expects a '"
-            + self.filter_type.name.lower()
-            + "' argument but got a '"
-            + child_filter_type.name.lower()
-            + "'"
+        self.raise_nodeerror(
+            self.__class__.__name__.join("''"),
+            " expects a ",
+            self.filter_type.name.lower().join("''"),
+            " argument but got a ",
+            child_filter_type.name.lower().join("''"),
         )
 
 
@@ -2035,11 +2098,11 @@ class ConsecutiveMoves(structure.ParenthesizedArguments):
                 )
             else:
                 if item not in container.definitions:
-                    raise basenode.NodeError(
-                        self.__class__.__name__
-                        + ": range variable '"
-                        + item
-                        + "' not defined"
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " range variable ",
+                        item.join("''"),
+                        " not defined",
                     )
                 range_item = RangeVariable(
                     match_=_range_variable_re.match(item),
@@ -2052,8 +2115,9 @@ class ConsecutiveMoves(structure.ParenthesizedArguments):
         """Override, raise NodeError if children verification fails."""
         components = [c for c in self.children if not c.is_parameter]
         if len(components) != 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have exactly two components"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have exactly two components",
             )
         definitions = self.container.definitions
         for child in components:
@@ -2062,9 +2126,9 @@ class ConsecutiveMoves(structure.ParenthesizedArguments):
                 or not definitions[child.name].variable_type
                 in cqltypes.VariableType.POSITION
             ):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": argument must be a position variable"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " argument must be a position variable",
                 )
 
 
@@ -2132,17 +2196,17 @@ class CountMoves(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
+        self.raise_if_not_number_of_children(1)
         child = self.children[0]
         if not _is_dash_or_capture(child) and not isinstance(
             child, (Legal, Pseudolegal)
         ):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": argument must be a '--', '[x]', 'legal', "
-                + "or 'pseudolegal', filter, not a '"
-                + self.children[0].__class__.__name__
-                + "' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " argument must be a '--', '[x]', 'legal', ",
+                "or 'pseudolegal', filter, not a ",
+                self.children[0].__class__.__name__.join("''"),
+                " filter",
             )
 
 
@@ -2153,13 +2217,13 @@ class CurrentMove(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
+        self.raise_if_not_number_of_children(1)
         if not _is_dash_or_capture(self.children[0]):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": argument must be a '--' or '[x]' filter, not a '"
-                + self.children[0].__class__.__name__
-                + "' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " argument must be a '--' or '[x]' filter, not a ",
+                self.children[0].__class__.__name__.join("''"),
+                " filter",
             )
 
 
@@ -2353,45 +2417,45 @@ class Dictionary(structure.Complete, structure.VariableTypeSetter):
         if item.key_filter_type is cqltypes.FilterType.ANY:
             item.key_filter_type = key_filter_type
         if item.key_filter_type is not key_filter_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": existing keys in dictionary '"
-                + name
-                + "' are '"
-                + item.key_filter_type.name.lower()
-                + "' filters so cannot set key as a '"
-                + key_filter_type.name.lower()
-                + "' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " existing keys in dictionary ",
+                name.join("''"),
+                " are ",
+                item.key_filter_type.name.lower().join("''"),
+                " filters so cannot set key as a ",
+                key_filter_type.name.lower().join("''"),
+                " filter",
             )
         if self.match_.group().startswith("local"):
             persistence_type = cqltypes.PersistenceType.LOCAL
         elif self.match_.group().startswith("dictionary"):
             persistence_type = cqltypes.PersistenceType.PERSISTENT
         elif item.persistence_type is cqltypes.PersistenceType.ANY:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": dictionary '"
-                + name
-                + "' has not been declared '"
-                + cqltypes.PersistenceType.LOCAL.name.lower()
-                + "' or '"
-                + cqltypes.PersistenceType.PERSISTENT.name.lower()
-                + "' previously"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " dictionary ",
+                name.join("''"),
+                " has not been declared ",
+                cqltypes.PersistenceType.LOCAL.name.lower().join("''"),
+                " or ",
+                cqltypes.PersistenceType.PERSISTENT.name.lower().join("''"),
+                " previously",
             )
         else:
             persistence_type = item.persistence_type
         if item.persistence_type is cqltypes.PersistenceType.ANY:
             item.persistence_type = persistence_type
         if item.persistence_type is not persistence_type:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": dictionary '"
-                + name
-                + "' is a '"
-                + item.persistence_type.name.lower()
-                + "' dictionary so cannot be set as a '"
-                + persistence_type.name.lower()
-                + "' dictionary"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " dictionary ",
+                name.join("''"),
+                " is a ",
+                item.persistence_type.name.lower().join("''"),
+                " dictionary so cannot be set as a ",
+                persistence_type.name.lower().join("''"),
+                " dictionary",
             )
 
     # This method exists to allow BaseNode and Dictionary classes to be in
@@ -2564,10 +2628,10 @@ class Else(structure.Argument):
         self.raise_if_name_parameter_not_for_filters()
         parent = self.parent
         if len(parent.children) != 3:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": incorrect number of children to have 'else' in "
-                + parent.__class__.__name__
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " incorrect number of children to have 'else' in ",
+                parent.__class__.__name__.join("''"),
             )
 
     def is_parameter_accepted_by_filter(self):
@@ -2719,9 +2783,9 @@ class Find(structure.Argument):
             if isinstance(f, (All, RangeInteger, RangeVariable))
         )
         if All in filters and len(filters) > 1:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": specify either a range or 'all' parameter but not both"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " specify either a range or 'all' parameter but not both",
             )
 
 
@@ -3039,8 +3103,10 @@ class Function(structure.Name, structure.Argument):
             cqltypes.DefinitionType.VARIABLE,
         )
         if len(names) != len(set(names)):
-            raise basenode.NodeError(
-                "Function '" + self.name + "' has duplicate parameter names"
+            self.raise_nodeerror(
+                "Function ",
+                self.name.join("''"),
+                " has duplicate parameter names",
             )
         cqltypes.function(self.name, container)
         if container.function_body_cursor is None:
@@ -3088,19 +3154,18 @@ class FunctionCall(structure.Name, structure.ParenthesizedArguments):
         name = self._name
         container = self.container
         if name not in container.definitions:
-            raise basenode.NodeError(
-                "'" + name + "' is not defined so cannot be a function call"
+            self.raise_nodeerror(
+                name.join("''"), " is not defined so cannot be a function call"
             )
         if (
             container.definitions[name].definition_type
             is not cqltypes.DefinitionType.FUNCTION
         ):
-            raise basenode.NodeError(
-                "'"
-                + name
-                + "' is a '"
-                + container.definitions[name].definition_type.name
-                + "' so cannot be a function call"
+            self.raise_nodeerror(
+                name.join("''"),
+                " is a ",
+                container.definitions[name].definition_type.name.join("''"),
+                " so cannot be a function call",
             )
 
     # This method exists to allow BaseNode and FunctionCall classes to be in
@@ -3278,9 +3343,8 @@ class In(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 2)
-        structure.raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
             "apply intersection operation",
             filter_type=cqltypes.FilterType.SET | cqltypes.FilterType.STRING,
         )
@@ -3401,13 +3465,13 @@ class Legal(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
+        self.raise_if_not_number_of_children(1)
         if not _is_dash(self.children[0]):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": argument must be a '--' filter, not a '"
-                + self.children[0].__class__.__name__
-                + "' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " argument must be a '--' filter, not a ",
+                self.children[0].__class__.__name__.join("''"),
+                " filter",
             )
 
 
@@ -3447,7 +3511,28 @@ class Light(structure.Argument):
     _precedence = cqltypes.Precedence.P210
 
 
-class Line(structure.CompleteParameterArguments):
+class _LineOrMove(structure.CompleteParameterArguments):
+    """Represent shared behaviour of 'line' and 'move' filters."""
+
+    def _raise_if_primary_and_secondary_parameter_present(self):
+        """Raise NodeError if both 'primary' and 'secondary present."""
+        if (
+            len(
+                set(
+                    c
+                    for c in self.children
+                    if c.__class__ in (PrimaryParameter, SecondaryParameter)
+                )
+            )
+            > 1
+        ):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot have both 'primary' and 'secondary' parameters",
+            )
+
+
+class Line(_LineOrMove):
     """Represent 'line' numeric or position filter."""
 
     # The 'lastposition' parameter changes the filter type to 'position'.
@@ -3476,11 +3561,11 @@ class Line(structure.CompleteParameterArguments):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) == 0:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": must have at least one '<--' or '-->' component"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have at least one '<--' or '-->' component",
             )
-        _raise_if_primary_and_secondary_parameter_present(self)
+        self._raise_if_primary_and_secondary_parameter_present()
 
 
 class Local(structure.CQLObject):
@@ -3493,7 +3578,7 @@ class Local(structure.CQLObject):
     def place_node_in_tree(self):
         """Delegate then raise NodeError because bare 'local' not allowed."""
         super().place_node_in_tree()
-        raise basenode.NodeError(r"Unexpected bare 'local' found")
+        self.raise_nodeerror(r"Unexpected bare 'local' found")
 
 
 class Loop(structure.Argument):
@@ -3562,12 +3647,11 @@ class MakeSquareParentheses(structure.ParenthesizedArguments):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
-            structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.NUMERIC
-            )
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.NUMERIC)
         if len(self.children) != 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have exactly two components"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have exactly two components",
             )
 
 
@@ -3690,9 +3774,7 @@ class MoveNumber(structure.NoArgumentsFilter):
     _filter_type = cqltypes.FilterType.NUMERIC
 
 
-class Move(
-    structure.PrecedenceFromChild, structure.CompleteParameterArguments
-):
+class Move(structure.PrecedenceFromChild, _LineOrMove):
     """Represent 'move' set, logical, or numeric, filter.
 
     Copy-typed from CQLi-1.0.4 manual:
@@ -3724,9 +3806,9 @@ class Move(
         for item, child in enumerate(self.children):
             if isinstance(child, CommentParenthesesParameter):
                 if item != len(self.children) - 1:
-                    raise basenode.NodeError(
-                        self.__class__.__name__
-                        + ": parameters follow 'comment' after 'move'"
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " parameters follow 'comment' after 'move'",
                     )
             if isinstance(child, (LegalParameter, PseudolegalParameter)):
                 count_allowed = True
@@ -3735,12 +3817,12 @@ class Move(
             if isinstance(child, (FromParameter, ToParameter, Capture)):
                 from_to_capture_present = True
         if count_present and not count_allowed:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": 'legal' or 'pseudolegal' parameter must be "
-                + "present with 'count' parameter "
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " 'legal' or 'pseudolegal' parameter must be ",
+                "present with 'count' parameter ",
             )
-        _raise_if_primary_and_secondary_parameter_present(self)
+        self._raise_if_primary_and_secondary_parameter_present()
         if count_present:
             self.filter_type = cqltypes.FilterType.NUMERIC
         elif from_to_capture_present:
@@ -4358,13 +4440,13 @@ class Pseudolegal(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
+        self.raise_if_not_number_of_children(1)
         if not _is_dash(self.children[0]):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": argument must be a '--' filter, not a '"
-                + self.children[0].__class__.__name__
-                + "' filter"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " argument must be a '--' filter, not a ",
+                self.children[0].__class__.__name__.join("''"),
+                " filter",
             )
 
 
@@ -4467,21 +4549,20 @@ class Ray(structure.ParenthesizedArguments):
         for word in match_.group().split()[1:-1]:
             directions.extend(_directions[word])
         if len(directions) != len(set(directions)):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": duplicate directions in "
-                + " ".join(match_.group().split()[1:-1])
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " duplicate directions in ",
+                " ".join(match_.group().split()[1:-1]),
             )
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
-            structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.SET
-            )
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
         if len(self.children) < 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have at least two components"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have at least two components",
             )
 
 
@@ -4620,13 +4701,12 @@ class SetTag(structure.ParenthesizedArguments):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) != 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have exactly two arguments"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have exactly two arguments",
             )
         for child in self.children:
-            structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.STRING
-            )
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.STRING)
 
 
 # See comment preceding Shift: same seen for ShiftHorizontal.
@@ -4867,20 +4947,20 @@ class Then(structure.Complete):
         # self.raise_if_name_parameter_not_for_filters()
         # but 'then' keyword is in a category of it's own.
         if not isinstance(self.parent, If):
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + " instance is not associated with "
-                + self.parent.__class__.__name__
-                + " instance"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " instance is not associated with ",
+                self.parent.__class__.__name__.join("''"),
+                " instance",
             )
         # This stops 'if then' and 'if <condition> <action> then' but not
         # 'if <condition> then then <action>'.
         if len(self.parent.children) != 2:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + " instance is only allowed after the condition of a "
-                + self.parent.__class__.__name__
-                + " instance"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " instance is only allowed after the condition of a ",
+                self.parent.__class__.__name__.join("''"),
+                " instance",
             )
         # 'then then' occurs if there is an unbroken sequence of whitespace
         # back to a 'then'.
@@ -4892,11 +4972,11 @@ class Then(structure.Complete):
             if start != item.match_.end():
                 break
             if isinstance(item, Then):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + " instance is separated from previous "
-                    + item.__class__.__name__
-                    + " instance only by whitespace"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " instance is separated from previous ",
+                    item.__class__.__name__.join("''"),
+                    " instance only by whitespace",
                 )
             start = item.match_.start()
         container.whitespace.append(self.parent.children.pop())
@@ -5017,10 +5097,10 @@ class Unbind(structure.BindArgument):
             child = child.children[0]
         name = child.name
         if name not in self.container.definitions:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": expects the name of an existing dictionary, "
-                + "function, or variable"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects the name of an existing dictionary, ",
+                "function, or variable",
             )
 
 
@@ -5136,13 +5216,12 @@ class WriteFile(structure.ParenthesizedArguments):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         if len(self.children) != 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have exactly two components"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have exactly two components",
             )
         for child in self.children:
-            structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.STRING
-            )
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.STRING)
 
 
 class WTM(structure.NoArgumentsFilter):
@@ -5159,12 +5238,11 @@ class XRay(structure.ParenthesizedArguments):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         for child in self.children:
-            structure.raise_if_not_filter_type(
-                child, self, cqltypes.FilterType.SET
-            )
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
         if len(self.children) < 2:
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": must have at least two components"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have at least two components",
             )
 
 
@@ -5432,7 +5510,16 @@ def variable(match_=None, container=None):
         definition_type = definitions[name].definition_type
         if definition_type is cqltypes.DefinitionType.DICTIONARY:
             return Dictionary(match_=match_, container=container)
-        assert definition_type is cqltypes.DefinitionType.VARIABLE
+        if definition_type is not cqltypes.DefinitionType.VARIABLE:
+            container.raise_nodeerror(
+                "Name '",
+                name,
+                "' should be a '",
+                cqltypes.DefinitionType.VARIABLE.name,
+                "' but is a '",
+                definition_type.name,
+                "'",
+            )
         variable_type = definitions[name].variable_type
         if variable_type is cqltypes.VariableType.NUMERIC:
             return _numeric_variable(match_=match_, container=container)
@@ -5458,19 +5545,21 @@ def variable_assign(match_=None, container=None):
     if name in definitions:
         definition_type = definitions[name].definition_type
         if definition_type is not cqltypes.DefinitionType.VARIABLE:
-            raise basenode.NodeError(
-                container.cursor.__class__.__name__
-                + ": cannot assign to a '"
-                + definition_type.name.lower()
-                + "' as a plain variable"
+            container.raise_nodeerror(
+                "'",
+                container.cursor.__class__.__name__,
+                "' cannot assign to a '",
+                definition_type.name.lower(),
+                "' as a plain variable",
             )
         variable_type = definitions[name].variable_type
         if variable_type is cqltypes.VariableType.PIECE:
-            raise basenode.NodeError(
-                container.cursor.__class__.__name__
-                + ": cannot assign to a '"
-                + variable_type.name.lower()
-                + "' variable as a plain variable"
+            container.raise_nodeerror(
+                "'",
+                container.cursor.__class__.__name__,
+                "' cannot assign to a '",
+                variable_type.name.lower(),
+                "' variable as a plain variable",
             )
     return Variable(match_=match_, container=container)
 
@@ -5487,7 +5576,7 @@ class Backslash(structure.CQLObject):
     def place_node_in_tree(self):
         r"""Delegate then raise NodeError because bare '\' not allowed."""
         super().place_node_in_tree()
-        raise basenode.NodeError(r"Unexpected bare '\' found")
+        self.raise_nodeerror(r"Unexpected bare '\' found")
 
 
 # CQL documentation says '▦', or '.', is equivalent to 'a-h1-8' so why
@@ -5541,9 +5630,13 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
             return self.container.definitions[name].filter_type
         except KeyError as exc:
             raise basenode.NodeError(
-                "Name definition '"
-                + str(name)
-                + "' referenced before it is set"
+                "".join(
+                    (
+                        "Name definition '",
+                        str(name),
+                        "' referenced before it is set",
+                    )
+                )
             ) from exc
 
     def set_variable_types(self, variable_type, filter_type):
@@ -5569,10 +5662,10 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
                 lhs.container.definitions[lhs.name].filter_type
                 is cqltypes.FilterType.ANY
             ):
-                raise basenode.NodeError(
-                    lhs.__class__.__name__
-                    + ": cannot reference an undefined variable by "
-                    + "index (like V[1])"
+                self.raise_nodeerror(
+                    lhs.__class__.__name__.join("''"),
+                    " cannot reference an undefined variable by ",
+                    "index (like V[1])",
                 )
 
 
@@ -5602,7 +5695,7 @@ class BracketRight(RightCompoundPlace):
     def place_node_in_tree(self):
         """Delegate then verify cursor is a BracketLeft instance."""
         super().place_node_in_tree()
-        assert isinstance(self.container.cursor, BracketLeft)
+        self._raise_if_cursor_is_not_expected_class(BracketLeft)
 
 
 def bracket_right(match_=None, container=None):
@@ -5615,47 +5708,56 @@ def bracket_right(match_=None, container=None):
             ):
                 for item, child in enumerate(node.children[1:]):
                     if child.filter_type is cqltypes.FilterType.STRING:
-                        raise basenode.NodeError(
-                            node.__class__.__name__
-                            + ": cannot index a '"
-                            + node.children[0].__class__.__name__
-                            + "' by a '"
-                            + node.children[item + 1].__class__.__name__
-                            + "'"
+                        node.raise_nodeerror(
+                            "'",
+                            node.__class__.__name__,
+                            "' cannot index a '",
+                            node.children[0].__class__.__name__,
+                            "' by a '",
+                            node.children[item + 1].__class__.__name__,
+                            "'",
                         )
             return BracketRight(match_=match_, container=container)
         if isinstance(node, ParenthesisLeft):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '(' parenthesized block with ']'"
+            node.raise_nodeerror(
+                "'",
+                node.__class__.__name__,
+                "' cannot close a '(' parenthesized block with ']'",
             )
         if isinstance(
             node,
             (ConstituentParenthesisLeft, LineConstituentParenthesisLeft),
         ):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '(' top level constituent with ']'"
+            node.raise_nodeerror(
+                "'",
+                node.__class__.__name__,
+                "' cannot close a '(' top level constituent with ']'",
             )
         if isinstance(node, BraceLeft):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '{' compound filter with ']'"
+            node.raise_nodeerror(
+                "'",
+                node.__class__.__name__,
+                "' cannot close a '{' compound filter with ']'",
             )
         if isinstance(node, ConstituentBraceLeft):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close a '{' constituent filter with ']'"
+            node.raise_nodeerror(
+                "'",
+                node.__class__.__name__,
+                "' cannot close a '{' constituent filter with ']'",
             )
         if isinstance(node, structure.ParenthesizedArguments):
-            raise basenode.NodeError(
-                node.__class__.__name__
-                + ": cannot close parenthesized arguments with ']'"
+            node.raise_nodeerror(
+                "'",
+                node.__class__.__name__,
+                "' cannot close parenthesized arguments with ']'",
             )
         node = node.parent
-    raise basenode.NodeError(
-        "Unexpected " + str(node) + " found while trying to match a ']'"
+    container.raise_nodeerror(
+        "Unexpected ", str(node), " found while trying to match a ']'"
     )
+    # A pylint R1710 inconsistent-return-statements report indicates the
+    # absence of this statement.
+    raise RuntimeError("This point is intentionally unreachable")
 
 
 class Colon(structure.InfixRight):
@@ -5673,18 +5775,21 @@ class Colon(structure.InfixRight):
     def place_node_in_tree(self):
         """Delegate then verify first child is a Position filter."""
         super().place_node_in_tree()
-        assert self.children
+        if len(self.children) == 0:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"), " has no arguments"
+            )
         if self.container.function_body_cursor is not None:
             return
         if self.children[0].filter_type is not cqltypes.FilterType.POSITION:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": lhs filter type must be "
-                + str(cqltypes.FilterType.POSITION)
-                + " but actual filter is "
-                + self.children[0].__class__.__name__
-                + " of type "
-                + str(self.children[0].filter_type)
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " lhs filter type must be ",
+                str(cqltypes.FilterType.POSITION),
+                " but actual filter is ",
+                self.children[0].__class__.__name__.join("''"),
+                " of type ",
+                str(self.children[0].filter_type).join("''"),
             )
 
 
@@ -5751,9 +5856,8 @@ class Intersection(structure.InfixLeft):
     # the property.
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 2)
-        structure.raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
             "apply intersection operation",
             filter_type=cqltypes.FilterType.SET | cqltypes.FilterType.POSITION,
         )
@@ -5828,9 +5932,8 @@ class Plus(structure.Numeric):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 2)
-        structure.raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
             "apply arithmetic or string concatenation operation",
             filter_type=cqltypes.FilterType.NUMERIC
             | cqltypes.FilterType.STRING,
@@ -5905,15 +6008,14 @@ class UnaryMinus(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
+        self.raise_if_not_number_of_children(1)
         if self.container.function_body_cursor is not None:
             return
         if self.children[0].filter_type is not cqltypes.FilterType.NUMERIC:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + ": expects a numeric argument but got a '"
-                + self.children[0].filter_type.name.lower()
-                + "'"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects a numeric argument but got a ",
+                self.children[0].filter_type.name.lower().join("''"),
             )
 
 
@@ -5941,10 +6043,9 @@ class Complement(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
-        structure.raise_if_not_filter_type(
+        self.raise_if_not_number_of_children(1)
+        self.raise_if_not_filter_type(
             self.children[0],
-            self,
             cqltypes.FilterType.SET,
         )
 
@@ -5957,9 +6058,8 @@ class Union(structure.InfixLeft):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 2)
-        structure.raise_if_not_same_filter_type(
-            self,
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_same_filter_type(
             "apply union operation",
             filter_type=cqltypes.FilterType.SET,
         )
@@ -5992,9 +6092,8 @@ class Assign(structure.MoveInfix):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        structure.raise_if_not_instance(
+        self.raise_if_not_instance(
             lhs,
-            self,
             (
                 Variable,
                 Persistent,
@@ -6017,57 +6116,56 @@ class Assign(structure.MoveInfix):
                 and rhs.filter_type is not cqltypes.FilterType.STRING
                 and rhs.filter_type is not cqltypes.FilterType.POSITION
             ):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": rhs must be a Set, Numeric, String,"
-                    + " or Position, filter"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " rhs must be a Set, Numeric, String,",
+                    " or Position, filter",
                 )
             if isinstance(lhs, BracketLeft):
                 if (
                     isinstance(lhs.children[0], structure.VariableName)
                     and lhs.children[0].filter_type is cqltypes.FilterType.ANY
                 ):
-                    raise basenode.NodeError(
-                        self.__class__.__name__
-                        + ": cannot assign to an undefined variable by "
-                        + 'index (like V[1]="a")'
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " cannot assign to an undefined variable by ",
+                        'index (like V[1]="a")',
                     )
                 if (
                     rhs.filter_type is cqltypes.FilterType.POSITION
                     and not _is_local_dictionary(lhs.children[0])
                 ):
-                    raise basenode.NodeError(
-                        self.__class__.__name__
-                        + ": lhs is a 'dictionary' but not 'local' so rhs "
-                        + "cannot be a Position filter"
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " lhs is a 'dictionary' but not 'local' so rhs ",
+                        "cannot be a Position filter",
                     )
                 # This check on filter type of key is better placed in the
                 # BracketLeft, or perhaps BracketRight, class but that area
                 # may change because the BracketLeft Dictionary tree looks
                 # odd.
                 if lhs.children[1].filter_type is cqltypes.FilterType.LOGICAL:
-                    raise basenode.NodeError(
-                        self.__class__.__name__
-                        + ": lhs is a 'dictionary' and does not accept a '"
-                        + lhs.children[1].__class__.__name__
-                        + "' as a key"
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " lhs is a 'dictionary' and does not accept a ",
+                        lhs.children[1].__class__.__name__.join("''"),
+                        " as a key",
                     )
             elif (  # Must be a VariableName instance.
                 rhs.filter_type is cqltypes.FilterType.POSITION
                 and cqltypes.PersistenceType.PERSISTENT
                 in self.container.definitions[lhs.name].persistence_type
             ):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + ": lhs is a persistent variable and cannot be "
-                    + "assigned a position filter"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " lhs is a persistent variable and cannot be ",
+                    "assigned a position filter",
                 )
         if self.container.function_body_cursor is None or (
             not isinstance(lhs, structure.VariableName)
             and not isinstance(rhs, structure.VariableName)
         ):
-            structure.raise_if_not_same_filter_type(
-                self,
+            self.raise_if_not_same_filter_type(
                 "assign",
                 allowany=(
                     isinstance(lhs, (structure.VariableName, BracketLeft))
@@ -6080,8 +6178,9 @@ class Assign(structure.MoveInfix):
         """Delegate then vefify LHS is a variable."""
         super().place_node_in_tree()
         if isinstance(self.parent, Assign):
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": cannot chain variable assignment"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot chain variable assignment",
             )
 
     def _set_types_lhs(self, lhs, rhs):
@@ -6118,10 +6217,10 @@ class Assign(structure.MoveInfix):
                 cqltypes.FilterType.POSITION,
             )
             return
-        raise basenode.NodeError(
-            self.__class__.__name__
-            + ": cannot set lhs filter type because rhs filter type is "
-            + str(rhs.filter_type)
+        self.raise_nodeerror(
+            self.__class__.__name__.join("''"),
+            " cannot set lhs filter type because rhs filter type is ",
+            str(rhs.filter_type).join("''"),
         )
 
 
@@ -6142,22 +6241,18 @@ class AssignIf(structure.MoveInfix):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        structure.raise_if_not_instance(
+        self.raise_if_not_instance(
             lhs,
-            self,
             (Variable, Persistent, PersistentQuiet),
             "lhs must be a",
         )
         rhs = self.children[1]
         if not isinstance(rhs, structure.VariableName):
-            structure.raise_if_not_filter_type(
-                rhs, self, cqltypes.FilterType.SET
-            )
+            self.raise_if_not_filter_type(rhs, cqltypes.FilterType.SET)
         if not isinstance(lhs, structure.VariableName) and not isinstance(
             rhs, structure.VariableName
         ):
-            structure.raise_if_not_same_filter_type(
-                self,
+            self.raise_if_not_same_filter_type(
                 "assign",
                 allowany=(
                     isinstance(lhs, structure.VariableName)
@@ -6170,8 +6265,9 @@ class AssignIf(structure.MoveInfix):
         """Delegate then vefify LHS is a variable."""
         super().place_node_in_tree()
         if isinstance(self.parent, Assign):
-            raise basenode.NodeError(
-                self.__class__.__name__ + ": cannot chain variable assignment"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot chain variable assignment",
             )
 
     def _set_types_lhs(self, lhs, rhs):
@@ -6189,10 +6285,10 @@ class AssignIf(structure.MoveInfix):
                 cqltypes.FilterType.SET,
             )
             return
-        raise basenode.NodeError(
-            self.__class__.__name__
-            + ": cannot set lhs filter type because rhs filter type is "
-            + str(rhs.filter_type)
+        self.raise_nodeerror(
+            self.__class__.__name__.join("''"),
+            " cannot set lhs filter type because rhs filter type is ",
+            str(rhs.filter_type).join("''"),
         )
 
 
@@ -6231,13 +6327,12 @@ class AssignPromotion(structure.Argument):
                 self.container.function_body_cursor is None
                 and child.filter_type is not cqltypes.FilterType.STRING
             ):
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + " expects a piece type designator or string but got a '"
-                    + child.__class__.__name__
-                    + "' with filter type '"
-                    + child.filter_type
-                    + "'"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects a piece type designator or string but got a ",
+                    child.__class__.__name__.join("''"),
+                    " with filter type ",
+                    child.filter_type.join("''"),
                 )
             return
         if not isinstance(child, PieceDesignator):
@@ -6245,19 +6340,18 @@ class AssignPromotion(structure.Argument):
             # string.  Perhaps it must be there for CQL-6.1 syntax.
             # CQL parsing does not ban promotion to king or pawn.
             if child.filter_type is not cqltypes.FilterType.STRING:
-                raise basenode.NodeError(
-                    self.__class__.__name__
-                    + " expects a piece type designator or string but got a '"
-                    + child.__class__.__name__
-                    + "'"
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects a piece type designator or string but got a ",
+                    child.__class__.__name__.join("''"),
                 )
             return
         if _type_designator_piece_re.fullmatch(child.match_.group()) is None:
-            raise basenode.NodeError(
-                self.__class__.__name__
-                + " expects a piece type designator or string but got a '"
-                + child.match_.group()
-                + "' piece designator"
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects a piece type designator or string but got a ",
+                child.match_.group().join("''"),
+                " piece designator",
             )
 
 
@@ -6283,10 +6377,9 @@ class CountFilter(structure.Argument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        structure.raise_if_not_number_of_children(self, 1)
-        structure.raise_if_not_filter_type(
+        self.raise_if_not_number_of_children(1)
+        self.raise_if_not_filter_type(
             self.children[0],
-            self,
             cqltypes.FilterType.SET | cqltypes.FilterType.STRING,
         )
 
@@ -6300,8 +6393,8 @@ class AnythingElse(structure.CQLObject):
     def place_node_in_tree(self):
         """Delegate then raise NodeError for unexpected token."""
         super().place_node_in_tree()
-        raise basenode.NodeError(
-            "Unexpected '" + self.match_.group() + "' found"
+        self.raise_nodeerror(
+            "Unexpected ", self.match_.group().join("''"), " found"
         )
 
 
@@ -6324,9 +6417,9 @@ class EndOfStream(structure.Complete):
         if not isinstance(
             self.parent, (querycontainer.QueryContainer, cql.CQL)
         ):
-            raise basenode.NodeError("Unexpected end of statement found")
+            self.raise_nodeerror("Unexpected end of statement found")
         if not self.parent.children:
-            raise basenode.NodeError(
+            self.raise_nodeerror(
                 "There must be at least one filter in the query"
             )
         # This copes with simple non-filter text in a query which is seen
@@ -6338,8 +6431,10 @@ class EndOfStream(structure.Complete):
                 isinstance(child, Variable)
                 and child.filter_type is cqltypes.FilterType.ANY
             ):
-                raise basenode.NodeError(
-                    "Variable '" + child.name + "' has not been assigned"
+                self.raise_nodeerror(
+                    "Variable ",
+                    child.name.join("''"),
+                    " has not been assigned",
                 )
         self.parent = None
 
@@ -6409,53 +6504,6 @@ def _string_or_parentheses_comment(match_, container, general, after_move):
             break
         node = node.parent
     return general(match_=match_, container=container)
-
-
-def _raise_if_primary_and_secondary_parameter_present(filter_):
-    """Raise NodeError if filter_ has 'primary' and 'secondary parameters."""
-    if (
-        len(
-            set(
-                c
-                for c in filter_.children
-                if c.__class__ in (PrimaryParameter, SecondaryParameter)
-            )
-        )
-        > 1
-    ):
-        raise basenode.NodeError(
-            filter_.__class__.__name__
-            + ": cannot have both 'primary' and 'secondary' parameters"
-        )
-
-
-def _raise_if_dash_or_take_arguments_are_not_filter_type_set(filter_):
-    """Raise NodeError if first two arguments of filter_ are not sets.
-
-    Dash and Take instances can have up to four arguments, the last two
-    being AssignPromotion and TargetParenthesisLeft instances.
-
-    """
-    for item, child in enumerate(filter_.children):
-        if item < 2:
-            if (
-                filter_.container.function_body_count is not None
-                and isinstance(child, (structure.VariableName, Dictionary))
-            ):
-                continue
-            if child.filter_type is not cqltypes.FilterType.SET:
-                if child.filter_type:
-                    name = child.filter_type.name.lower()
-                else:
-                    name = str(None)
-                raise basenode.NodeError(
-                    filter_.__class__.__name__
-                    + ": expects a '"
-                    + cqltypes.FilterType.SET.name.lower()
-                    + "' but got a '"
-                    + name
-                    + "'"
-                )
 
 
 def _is_local_dictionary(filter_):

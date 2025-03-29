@@ -219,7 +219,11 @@ class BaseNode:
         calls _verify_children_and_set_own_types to do the task.
         """
         verified = self.container.verified
-        assert self not in verified
+        if self in verified:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " instance has already been verified",
+            )
         verified.add(self)
         if set_node_completed:
             self.completed = True
@@ -477,3 +481,7 @@ class BaseNode:
 
         """
         return False
+
+    def raise_nodeerror(self, *message_str):
+        """Raise a NodeError with concatenated *message_str."""
+        raise NodeError("".join(message_str))

@@ -64,6 +64,24 @@ class CQLParameter:
                 return
         self._container.parameters.add(self)
 
+    def _raise_if_match_groupdict_item_is_none(self, item):
+        """Raise NodeError if cursor is not expected class."""
+        if self.match_[item] is not None:
+            return
+        raise CQLParameterError(
+            "".join(
+                (
+                    "'",
+                    self.__class__.__name__,
+                    "' expects item '",
+                    item,
+                    "' to be part of match but it is a '",
+                    None.__class__.__name__,
+                    "' in match's groupdict",
+                )
+            )
+        )
+
 
 class _NoDuplicateParameter(CQLParameter):
     """Base class of parameter classes where duplicates are not allowed."""
@@ -104,7 +122,7 @@ class GameNumber(_NoDuplicateParameter):
     def __init__(self, match_=None, container=None):
         """Initialise gamenumber cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["gamenumber"] is not None
+        self._raise_if_match_groupdict_item_is_none("gamenumber")
         self._parameter_value = self.match_["gamenumber"].split()
 
 
@@ -124,7 +142,7 @@ class Input(_NoDuplicateParameter):
     def __init__(self, match_=None, container=None):
         """Initialise input cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["input"] is not None
+        self._raise_if_match_groupdict_item_is_none("input")
         self._parameter_value = self.match_["input"]
 
 
@@ -138,7 +156,7 @@ class MatchCount(_NoDuplicateParameter):
     def __init__(self, match_=None, container=None):
         """Initialise matchcount cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["matchcount"] is not None
+        self._raise_if_match_groupdict_item_is_none("matchcount")
         self._parameter_value = self.match_["matchcount"].split()
 
     def _set_parameter(self):
@@ -158,7 +176,7 @@ class MatchString(CQLParameter):
     def __init__(self, match_=None, container=None):
         """Initialise matchstring cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["matchstring"] is not None
+        self._raise_if_match_groupdict_item_is_none("matchstring")
         self._parameter_value = self.match_["matchstring"]
 
 
@@ -168,7 +186,7 @@ class Output(_NoDuplicateParameter):
     def __init__(self, match_=None, container=None):
         """Initialise output cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["output"] is not None
+        self._raise_if_match_groupdict_item_is_none("output")
         self._parameter_value = self.match_["output"]
 
 
@@ -182,7 +200,7 @@ class ResultDraw(CQLParameter):
     def __init__(self, match_=None, container=None):
         """Initialise result draw cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["result_draw"] is not None
+        self._raise_if_match_groupdict_item_is_none("result_draw")
 
 
 class ResultLoss(CQLParameter):
@@ -195,7 +213,7 @@ class ResultLoss(CQLParameter):
     def __init__(self, match_=None, container=None):
         """Initialise result loss cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["result_loss"] is not None
+        self._raise_if_match_groupdict_item_is_none("result_loss")
 
 
 class ResultWin(CQLParameter):
@@ -208,7 +226,7 @@ class ResultWin(CQLParameter):
     def __init__(self, match_=None, container=None):
         """Initialise result win cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["result_win"] is not None
+        self._raise_if_match_groupdict_item_is_none("result_win")
 
 
 class Quiet(CQLParameter):
@@ -232,7 +250,7 @@ class SortMatchCount(_NoDuplicateParameter):
     def __init__(self, match_=None, container=None):
         """Initialise 'sort matchcount' cql parameter attributes."""
         super().__init__(match_=match_, container=container)
-        assert match_["sort_matchcount"] is not None
+        self._raise_if_match_groupdict_item_is_none("sort_matchcount")
         self._parameter_value = self.match_["sort_matchcount"].split()
 
     def _set_parameter(self):

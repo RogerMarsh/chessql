@@ -102,13 +102,18 @@ def _definition(name, container, definition_):
     if name in container.definitions:
         if not isinstance(container.definitions[name], definition_):
             raise DefinitionError(
-                "'"
-                + name
-                + "' is already a '"
-                + container.definitions[name].__class__.__name__
-                + "' name so cannot be a '"
-                + definition_.__class__.__name__
-                + "' name"
+                "".join(
+                    (
+                        name.join("''"),
+                        " is already a ",
+                        container.definitions[name].__class__.__name__.join(
+                            "''"
+                        ),
+                        " name so cannot be a ",
+                        definition_.__class__.__name__.join("''"),
+                        " name",
+                    )
+                )
             )
         return
     container.definitions[name] = definition_(name)
@@ -133,6 +138,19 @@ class _Definition:
         """Return self._definition_type."""
         return self._definition_type
 
+    def _raise_definition_error(self, *message_str):
+        """Raise a DefinitionError with concatenated *message_str."""
+        raise DefinitionError("".join(message_str))
+
+    def _raise_value_type_error(self, value, type_):
+        """Raise exception with value is not type_ description."""
+        self._raise_definition_error(
+            value.__class__.__name__.join("''"),
+            " instance is not a ",
+            type_.join("''"),
+            " type",
+        )
+
 
 class Function(_Definition):
     """Set name of function."""
@@ -153,7 +171,8 @@ class Function(_Definition):
     @parameters.setter
     def parameters(self, value):
         """Bind self._parameters to value."""
-        assert isinstance(value, (tuple, list))
+        if not isinstance(value, (tuple, list)):
+            self._raise_value_type_error(value, "tuple or list")
         self._parameters = value
 
     @property
@@ -190,18 +209,19 @@ class _Variable(_Definition):
     @filter_type.setter
     def filter_type(self, value):
         """Bind self._filter_type to value if current value is ANY."""
-        assert value in FilterType
+        if value not in FilterType:
+            self._raise_value_type_error(value, "filter")
         if value is not FilterType.ANY:
             if self._filter_type is not FilterType.ANY:
                 if self._filter_type is not value:
-                    raise DefinitionError(
-                        "'"
-                        + self._name
-                        + "' is already a '"
-                        + self._filter_type.name.lower()
-                        + "' filter so cannot be set as a '"
-                        + value.name.lower()
-                        + "' filter"
+                    self._raise_definition_error(
+                        "'",
+                        self._name,
+                        "' is already a '",
+                        self._filter_type.name.lower(),
+                        "' filter so cannot be set as a '",
+                        value.name.lower(),
+                        "' filter",
                     )
         self._filter_type = value
 
@@ -213,18 +233,19 @@ class _Variable(_Definition):
     @persistence_type.setter
     def persistence_type(self, value):
         """Bind self._persistence_type to value if current value is ANY."""
-        assert value & PersistenceType.ANY == value
+        if value & PersistenceType.ANY != value:
+            self._raise_value_type_error(value, "allowed persistence")
         if value is not PersistenceType.ANY:
             if self._persistence_type is not PersistenceType.ANY:
                 if self._persistence_type is not value:
-                    raise DefinitionError(
-                        "'"
-                        + self._name
-                        + "' is already '"
-                        + self._persistence_type.name.lower()
-                        + "' so cannot be set as '"
-                        + value.name.lower()
-                        + "'"
+                    self._raise_definition_error(
+                        "'",
+                        self._name,
+                        "' is already '",
+                        self._persistence_type.name.lower(),
+                        "' so cannot be set as '",
+                        value.name.lower(),
+                        "'",
                     )
         self._persistence_type = value
 
@@ -259,18 +280,18 @@ class Variable(_Variable):
     @variable_type.setter
     def variable_type(self, value):
         """Bind self._variable_type to value if current value is ANY."""
-        assert value in VariableType
+        if value not in VariableType:
+            self._raise_value_type_error(value, "variable")
         if value is not VariableType.ANY:
             if self._variable_type is not VariableType.ANY:
                 if self._variable_type is not value:
-                    raise DefinitionError(
-                        "'"
-                        + self._name
-                        + "' is already a '"
-                        + self._variable_type.name.lower()
-                        + "' variable so cannot be set as a '"
-                        + value.name.lower()
-                        + "' variable"
+                    self._raise_definition_error(
+                        self._name.join("''"),
+                        " is already a ",
+                        self._variable_type.name.lower().join("''"),
+                        " variable so cannot be set as a ",
+                        value.name.lower().join("''"),
+                        " variable",
                     )
         self._variable_type = value
 
@@ -283,7 +304,8 @@ class Variable(_Variable):
         processed.
 
         """
-        assert value in VariableType
+        if value not in VariableType:
+            self._raise_value_type_error(value, "variable")
         return value is self._variable_type or value in VariableType.ANY
 
 
@@ -316,18 +338,18 @@ class Dictionary(_Variable):
     @key_filter_type.setter
     def key_filter_type(self, value):
         """Bind self._key_filter_type to value if current value is ANY."""
-        assert value in FilterType
+        if value not in FilterType:
+            self._raise_value_type_error(value, "filter")
         if value is not FilterType.ANY:
             if self._key_filter_type is not FilterType.ANY:
                 if self._key_filter_type is not value:
-                    raise DefinitionError(
-                        "'"
-                        + self._name
-                        + "' key is already a '"
-                        + self._key_filter_type.name.lower()
-                        + "' filter so cannot be a '"
-                        + value.name.lower()
-                        + "' filter"
+                    self._raise_definition_error(
+                        self._name.join("''"),
+                        " key is already a ",
+                        self._key_filter_type.name.lower().join("''"),
+                        " filter so cannot be a ",
+                        value.name.lower().join("''"),
+                        " filter",
                     )
         self._key_filter_type = value
 

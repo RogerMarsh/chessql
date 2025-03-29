@@ -83,10 +83,6 @@ _comment_re = re.compile(
 )
 
 
-class TokenError(Exception):
-    """Exception raised for problems in deducing tokens from query."""
-
-
 def populate_container(container, string, *args):
     """Populate container instance from parsed query in string."""
     container.place_node_in_tree()
@@ -99,7 +95,7 @@ def populate_container(container, string, *args):
             for key, value in token.groupdict().items()
             if value is not None
         }
-        raise_if_not_single_match_groupdict_entry(token, classes)
+        container.raise_if_not_single_match_groupdict_entry(token, classes)
         for value in classes.values():
             value(
                 match_=token,
@@ -166,7 +162,7 @@ def parse_debug(string, tree_only=False, tokens_only=False):
             for key, value in token.groupdict().items()
             if value is not None
         }
-        raise_if_not_single_match_groupdict_entry(token, classes)
+        container.raise_if_not_single_match_groupdict_entry(token, classes)
         for value in classes.values():
             if not tree_only:
                 if not tokens_only:
@@ -217,7 +213,13 @@ def _remove_comments(string, container):
     # function when the filter pointed at by the cursor is a subclass of
     # ParenthesizedArguments.  However this loses the ability to verify
     # the syntax of the affected filters in the pattern.
-    assert isinstance(container, querycontainer.QueryContainer)
+    if not isinstance(container, querycontainer.QueryContainer):
+        container.raise_nodeerror(
+            "_remove_comments() function expects container to be a ",
+            querycontainer.QueryContainer.__class__.__name__.join("''"),
+            " but it is a ",
+            container.__class__.__name__.join("''"),
+        )
     block_comment = tokenmap.filters.BlockComment
     line_comment = tokenmap.filters.LineComment
     no_comments = []
@@ -239,14 +241,3 @@ def _remove_comments(string, container):
         else:
             no_comments.append(group())
     return "".join(no_comments)
-
-
-def raise_if_not_single_match_groupdict_entry(token, entries):
-    """Raise TokenError if entries has more than one item for token."""
-    if len(entries) != 1:
-        raise TokenError(
-            "A single groupdict entry is expected frpm match on '"
-            + token.group()
-            + "' but got "
-            + str(len(entries))
-        )

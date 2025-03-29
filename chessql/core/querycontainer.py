@@ -26,8 +26,22 @@ class _QueryParameters(basenode.BaseNode):
 
     def __init__(self, match_=None, container=None):
         """Delegate then set details for root of node tree."""
-        assert match_ is None
-        assert container is None
+        if match_ is not None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects match_ to be a ",
+                None.__class__.__name__.join("''"),
+                " but it is a ",
+                match_.__class__.__name__.join("''"),
+            )
+        if container is not None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects container to be a ",
+                None.__class__.__name__.join("''"),
+                " but it is a ",
+                container.__class__.__name__.join("''"),
+            )
         self._cursor = self
 
         super().__init__(match_=match_, container=self)
@@ -54,7 +68,14 @@ class _QueryParameters(basenode.BaseNode):
     @cursor.setter
     def cursor(self, value):
         """Bind self._cursor to value."""
-        assert isinstance(value, basenode.BaseNode)
+        if not isinstance(value, basenode.BaseNode):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects cursor to be a ",
+                basenode.BaseNode.__name__.join("''"),
+                " but it is a ",
+                value.__class__.__name__.join("''"),
+            )
         self._cursor = value
 
     @property
@@ -159,15 +180,15 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
         """Verify container is self with one child, then clear children."""
         container = self.container
         if container is not self:
-            raise basenode.NodeError(
+            self.raise_nodeerror(
                 "'container' object is not 'self' QueryContainer node."
             )
         if len(container.children) != 1:
-            raise basenode.NodeError(
+            self.raise_nodeerror(
                 "'container' object does not have exactly one child node."
             )
         if container.children[0] is not self:
-            raise basenode.NodeError(
+            self.raise_nodeerror(
                 "The child object of 'container' object is not 'self'."
             )
         container.children.clear()
@@ -209,3 +230,15 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
             elif isinstance(item.parameter_value, list):
                 trace[-1].append(" ".join(item.parameter_value))
         return [" ".join(t) for t in sorted(trace)]
+
+    def raise_if_not_single_match_groupdict_entry(self, token, entries):
+        """Raise NodeError if entries has more than one item for token."""
+        if len(entries) != 1:
+            self.raise_nodeerror(
+                "'",
+                self.__class__.__name__,
+                "' a single groupdict entry is expected frpm match on '",
+                token.group(),
+                "' but got ",
+                str(len(entries)),
+            )
