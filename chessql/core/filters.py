@@ -1331,14 +1331,23 @@ class TakeLR(_DashOrTake):
         self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-def take_lr(match_=None, container=None):
-    """Return a TakeLI or TakeLR instance depending on match_ detail.
+def take_li(match_=None, container=None):
+    """Return a TakeII or TakeLI instance depending on match_ detail.
 
-    A TakeLI instance is returned if character following match_.group()
-    is a '=' or '('.  Otherwise return a TakeLR instance.
+    A TakeII instance is returned if character preceding match_.group()
+    is a ':'.  Otherwise return a TakeLI instance.
 
     """
-    if match_.string[match_.end()] in "=(":
+    if _is_lhs_implicit(match_):
+        return TakeII(match_=match_, container=container)
+    return TakeLI(match_=match_, container=container)
+
+
+def take_lr(match_=None, container=None):
+    """Return a Take[II|IR|LI|LR|] instance depending on match_ detail."""
+    if _is_lhs_implicit(match_):
+        return take_ir(match_=match_, container=container)
+    if _is_rhs_implicit(match_):
         return TakeLI(match_=match_, container=container)
     return TakeLR(match_=match_, container=container)
 
@@ -1350,7 +1359,7 @@ def take_ir(match_=None, container=None):
     is a '=' or '('.  Otherwise return a TakeLR instance.
 
     """
-    if match_.string[match_.end()] in "=(":
+    if _is_rhs_implicit(match_):
         return TakeII(match_=match_, container=container)
     return TakeIR(match_=match_, container=container)
 
@@ -1538,14 +1547,23 @@ class DashLR(_DashOrTake):
         self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-def dash_lr(match_=None, container=None):
-    """Return a DashLI or DashLR instance depending on match_ detail.
+def dash_li(match_=None, container=None):
+    """Return a DashII or DashLI instance depending on match_ detail.
 
-    A DashLI instance is returned if character following match_.group()
-    is a '=' or '('.  Otherwise return a DashLR instance.
+    A DashII instance is returned if character preceding match_.group()
+    is a ':'.  Otherwise return a DashLI instance.
 
     """
-    if match_.string[match_.end()] in "=(":
+    if _is_lhs_implicit(match_):
+        return DashII(match_=match_, container=container)
+    return DashLI(match_=match_, container=container)
+
+
+def dash_lr(match_=None, container=None):
+    """Return a Dash[II|IR|LI|LR|] instance depending on match_ detail."""
+    if _is_lhs_implicit(match_):
+        return dash_ir(match_=match_, container=container)
+    if _is_rhs_implicit(match_):
         return DashLI(match_=match_, container=container)
     return DashLR(match_=match_, container=container)
 
@@ -1557,7 +1575,7 @@ def dash_ir(match_=None, container=None):
     is a '=' or '('.  Otherwise return a DashLR instance.
 
     """
-    if match_.string[match_.end()] in "=(":
+    if _is_rhs_implicit(match_):
         return DashII(match_=match_, container=container)
     return DashIR(match_=match_, container=container)
 
@@ -6520,3 +6538,21 @@ def _is_local_dictionary(filter_):
         cqltypes.PersistenceType.LOCAL
         in filter_.container.definitions[filter_.name].persistence_type
     )
+
+
+def _is_lhs_implicit(match_):
+    """Return True if character before match_implies implicit lhs.
+
+    Relevant to '--' and '[x]' filters.
+
+    """
+    return match_.string[match_.start() - 1] in ":"
+
+
+def _is_rhs_implicit(match_):
+    """Return True if character after match_implies implicit rhs.
+
+    Relevant to '--' and '[x]' filters.
+
+    """
+    return match_.string[match_.end()] in "=("

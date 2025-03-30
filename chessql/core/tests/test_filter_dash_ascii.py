@@ -245,8 +245,11 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    def test_147_dash_ascii_18_or_01_implicit_lhs(self):
+    def test_147_dash_ascii_18_or_01_implicit_lhs_01_space(self):
         self.verify("b| --", [], returncode=1)
+
+    def test_147_dash_ascii_18_or_01_implicit_lhs_02_nospace(self):
+        self.verify("b|--", [], returncode=1)
 
     def test_147_dash_ascii_18_or_02_given_lhs(self):
         self.verify(
@@ -260,9 +263,21 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    def test_147_dash_ascii_19_colon_01_implicit_lhs(self):
+    def test_147_dash_ascii_19_colon_01_implicit_lhs_01_space(self):
         self.verify(
             "currentposition: --",
+            [
+                (3, "Colon"),
+                (4, "CurrentPosition"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_ascii_19_colon_01_implicit_lhs_02_nospace(self):
+        self.verify(
+            "currentposition:--",
             [
                 (3, "Colon"),
                 (4, "CurrentPosition"),
@@ -284,8 +299,11 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    def test_147_dash_ascii_20_or_01_implicit_rhs(self):
+    def test_147_dash_ascii_20_or_01_implicit_rhs_01_space(self):
         self.verify("-- |b", [], returncode=1)
+
+    def test_147_dash_ascii_20_or_01_implicit_rhs_02_nospace(self):
+        self.verify("--|b", [], returncode=1)
 
     def test_147_dash_ascii_20_or_02_given_rhs(self):
         self.verify(
@@ -337,6 +355,18 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_21_ambiguous_02_given_04_parenthesizedset(self):
         self.verify("--(k)--", [], returncode=1)
+
+    def test_147_dash_ascii_21_ambiguous_02_given_05_parenthesizedset(self):
+        self.verify("--(k)--", [], returncode=1)
+
+    def test_147_dash_ascii_21_ambiguous_02_given_06_and_01_no_spaces(self):
+        self.verify("--and--", [], returncode=1)
+
+    def test_147_dash_ascii_21_ambiguous_02_given_06_and_02_left_space(self):
+        self.verify("-- and--", [], returncode=1)
+
+    def test_147_dash_ascii_21_ambiguous_02_given_06_and_03_right_space(self):
+        self.verify("--and --", [])
 
 
 if __name__ == "__main__":

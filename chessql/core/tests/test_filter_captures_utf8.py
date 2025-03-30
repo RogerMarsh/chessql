@@ -245,8 +245,11 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_take_utf8_18_or_01_implicit_lhs(self):
+    def test_215_take_utf8_18_or_01_implicit_lhs_01_space(self):
         self.verify("b| ×", [], returncode=1)
+
+    def test_215_take_utf8_18_or_01_implicit_lhs_02_nospace(self):
+        self.verify("b|×", [], returncode=1)
 
     def test_215_take_utf8_18_or_02_given_lhs(self):
         self.verify(
@@ -260,9 +263,21 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_take_utf8_19_colon_01_implicit_lhs(self):
+    def test_215_take_utf8_19_colon_01_implicit_lhs_01_space(self):
         self.verify(
             "currentposition: ×",
+            [
+                (3, "Colon"),
+                (4, "CurrentPosition"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_19_colon_01_implicit_lhs_02_nospace(self):
+        self.verify(
+            "currentposition:×",
             [
                 (3, "Colon"),
                 (4, "CurrentPosition"),
@@ -284,8 +299,11 @@ class FilterCapturesUTF8(verify.Verify):
             ],
         )
 
-    def test_215_take_utf8_20_or_01_implicit_rhs(self):
+    def test_215_take_utf8_20_or_01_implicit_rhs_01_space(self):
         self.verify("× |b", [], returncode=1)
+
+    def test_215_take_utf8_20_or_01_implicit_rhs_02_nospace(self):
+        self.verify("×|b", [], returncode=1)
 
     def test_215_take_utf8_20_or_02_given_rhs(self):
         self.verify(
@@ -313,6 +331,42 @@ class FilterCapturesUTF8(verify.Verify):
 
     def test_215_take_utf8_20_or_04_implicit_rhs_given_lhs(self):
         self.verify("R× |b", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_01_implicit_01_dash_ascii(self):
+        self.verify("×--", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_01_implicit_02_dash_utf8(self):
+        self.verify("×――", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_01_implicit_03_take_ascii(self):
+        self.verify("×[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_01_implicit_04_take_utf8(self):
+        self.verify("××", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_01_piecedesignator(self):
+        self.verify("×k×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_02_set(self):
+        self.verify("×to×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_03_compoundset(self):
+        self.verify("×{1 k}×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_04_parenthesizedset(self):
+        self.verify("×(k)×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_05_parenthesizedset(self):
+        self.verify("×(k)×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_06_and_01_no_spaces(self):
+        self.verify("×and×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_06_and_02_left_space(self):
+        self.verify("× and×", [], returncode=1)
+
+    def test_215_take_utf8_21_ambiguous_02_given_06_and_03_right_space(self):
+        self.verify("×and ×", [])
 
 
 if __name__ == "__main__":
