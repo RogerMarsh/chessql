@@ -4858,7 +4858,7 @@ class Sqrt(structure.Argument):
     _precedence = cqltypes.Precedence.P90
 
 
-class Square(structure.VariableName, structure.Argument):
+class Square(structure.SquareIn):
     """Represent 'square', without 'all' parameter, set filter.
 
     The optional 'all' keyword is not present,
@@ -4866,40 +4866,18 @@ class Square(structure.VariableName, structure.Argument):
     The value of a square variable is a Set filter.
     """
 
-    _precedence = cqltypes.Precedence.P30
-    _child_count = 2
-
-    def __init__(self, match_=None, container=None):
-        """Delegate then register the set variable name for square filter."""
-        super().__init__(match_=match_, container=container)
-        self.name = match_.groupdict()["square"]
-        self._register_variable_type(cqltypes.VariableType.SET)
-        self.set_variable_types(
-            cqltypes.VariableType.SET, cqltypes.FilterType.SET
-        )
-        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
+    _filter_type = cqltypes.FilterType.SET
 
 
-class SquareAll(structure.VariableName, structure.Argument):
+class SquareAll(structure.SquareIn):
     """Represent 'square', with 'all' parameter, logical filter.
 
     The optional 'all' keyword is present,
 
-    The value of a square all variable is a Set filter.
+    The value of a square all variable is a Logical filter.
     """
 
-    _precedence = cqltypes.Precedence.P30
-    _child_count = 2
-
-    def __init__(self, match_=None, container=None):
-        """Delegate then register set variable name for squareall filter."""
-        super().__init__(match_=match_, container=container)
-        self.name = match_.groupdict()["square"]
-        self._register_variable_type(cqltypes.VariableType.SET)
-        self.set_variable_types(
-            cqltypes.VariableType.SET, cqltypes.FilterType.SET
-        )
-        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
+    _filter_type = cqltypes.FilterType.LOGICAL
 
 
 def square(match_=None, container=None):
@@ -6087,7 +6065,7 @@ class Union(structure.InfixLeft):
 # BracketLeft added into tests to allow 'D[pathcount]=to', for example, to
 # be accepted.  More work needed because there are no restrictions on what
 # is inside the '[]'.
-class Assign(structure.Infix):
+class Assign(structure.InfixLeft):
     """Represent '=', variable assignment, logical filter.
 
     CQLi-1.0.3 describes '=' as 'Boolean' with the RHS as a 'Numeric',
@@ -6108,7 +6086,11 @@ class Assign(structure.Infix):
     # P30 gives an exception for 'v=k or q' but P90, the same as '+=' and
     # similar, does not give exception when combined with changes to
     # class hierarchy.
-    _precedence = cqltypes.Precedence.P90
+    # The CQL-6.0.4 and CQL-6.1 idealmate and modelmate examples fail
+    # parsing at precedence P90 citing a problem with the 'In' class.
+    # No exception occurs at P65 (just below 'In' precedence P70) combined
+    # with change in class hierarchy.
+    _precedence = cqltypes.Precedence.P65
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""

@@ -1304,6 +1304,40 @@ class ModifyAssign(CQLObject):
             self.raise_if_not_same_filter_type("assign")
 
 
+class SquareIn(VariableName, Argument):
+    """Represent 'square in', with or without 'all' parameter, filter.
+
+    Filter type is the _filter_type of a subclass, not the filter_type from
+    the definition of the associated variable.
+    """
+
+    _precedence = cqltypes.Precedence.P30
+    _child_count = 2
+
+    def __init__(self, match_=None, container=None):
+        """Delegate then register the set variable name for square filter."""
+        super().__init__(match_=match_, container=container)
+        self.name = match_.groupdict()["square"]
+        self._register_variable_type(cqltypes.VariableType.SET)
+        self.set_variable_types(
+            cqltypes.VariableType.SET, cqltypes.FilterType.SET
+        )
+        self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
+
+    @property
+    def filter_type(self):
+        """Return filter_type for class."""
+        return self._filter_type
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        self.raise_if_not_number_of_children(2)
+        self.raise_if_not_filter_type(
+            self.children[0],
+            cqltypes.FilterType.SET,
+        )
+
+
 def set_persistent_variable_filter_type(lhs, rhs):
     """Set filter type of lhs from rhs if not already set.
 

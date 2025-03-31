@@ -128,6 +128,50 @@ class FilterAssignLogical(verify.Verify):
             ],
         )
 
+    # Not sure of equivalence with CQL-6.2 by eyeball but the chessql
+    # tree structure is identical to CQLi-1.0.3 though some item names
+    # are different.
+    def test_218_assign_01_square_in(self):
+        self.verify(
+            "v=square w in A A in Q",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Square"),
+                (5, "PieceDesignator"),
+                (5, "In"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_218_assign_02_square_in_nonsense_01(self):
+        self.verify("square v=w in A A in Q", [], returncode=1)
+
+    def test_218_assign_02_square_in_nonsense_02(self):
+        self.verify("square w in v=A A in Q", [], returncode=1)
+
+    def test_218_assign_02_square_in_nonsense_03(self):
+        self.verify("square w in A v=A in Q", [], returncode=1)
+
+    def test_218_assign_02_square_in_nonsense_04(self):
+        self.verify("square w in A A in v=Q", [], returncode=1)
+
+    def test_218_assign_03_square_all_in(self):
+        self.verify("v=square all w in A A in Q", [], returncode=1)
+
+    def test_218_assign_04_square_all_in_nonsense_01(self):
+        self.verify("square all v=w in A A in Q", [], returncode=1)
+
+    def test_218_assign_04_square_all_in_nonsense_02(self):
+        self.verify("square all w in v=A A in Q", [], returncode=1)
+
+    def test_218_assign_04_square_all_in_nonsense_03(self):
+        self.verify("square all w in A v=A in Q", [], returncode=1)
+
+    def test_218_assign_04_square_all_in_nonsense_04(self):
+        self.verify("square all w in A A in v=Q", [], returncode=1)
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner

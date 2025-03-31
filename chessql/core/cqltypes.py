@@ -374,6 +374,7 @@ class Precedence(enum.Enum):
     P40 = 40
     P50 = 50
     P60 = 60
+    P65 = 65
     P70 = 70
     P80 = 80
     P90 = 90
