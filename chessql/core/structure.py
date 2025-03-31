@@ -1074,13 +1074,7 @@ class MoveInfix(Infix):
     def place_node_in_tree(self):
         """Make prior sibling a child of self, assert cursor is parent."""
         parent = self.parent
-        if parent is not self.container.cursor:
-            self.raise_nodeerror(
-                self.__class__.__name__.join("''"),
-                " expects it's parent, a ",
-                parent.__class__.__name__.join("''"),
-                ", to be the cursor but the cursor is some other node",
-            )
+        self._raise_if_parent_is_not_cursor(parent)
         if self.precedence is not None:
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),

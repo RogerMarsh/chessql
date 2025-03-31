@@ -16,7 +16,6 @@ from . import verify
 
 class FilterAssignLogical(verify.Verify):
 
-    # chessql wrong.
     def test_216_assign_01_then_or_01_plain(self):
         self.verify(
             "v=k or q",

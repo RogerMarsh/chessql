@@ -6087,7 +6087,7 @@ class Union(structure.InfixLeft):
 # BracketLeft added into tests to allow 'D[pathcount]=to', for example, to
 # be accepted.  More work needed because there are no restrictions on what
 # is inside the '[]'.
-class Assign(structure.MoveInfix):
+class Assign(structure.Infix):
     """Represent '=', variable assignment, logical filter.
 
     CQLi-1.0.3 describes '=' as 'Boolean' with the RHS as a 'Numeric',
@@ -6105,7 +6105,10 @@ class Assign(structure.MoveInfix):
 
     # '=' has the same precedence as 'find', and others, according to CQLi
     # but no precedence is given in CQL's Table of Precedence.
-    # _precedence = cqltypes.Precedence.P30
+    # P30 gives an exception for 'v=k or q' but P90, the same as '+=' and
+    # similar, does not give exception when combined with changes to
+    # class hierarchy.
+    _precedence = cqltypes.Precedence.P90
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
@@ -6194,8 +6197,11 @@ class Assign(structure.MoveInfix):
 
     def place_node_in_tree(self):
         """Delegate then vefify LHS is a variable."""
-        super().place_node_in_tree()
-        if isinstance(self.parent, Assign):
+        parent = self.parent
+        self._raise_if_parent_is_not_cursor(parent)
+        self._swap_tree_position(parent.parent)
+        self._verify_and_set_filter_type(parent)
+        if isinstance(parent, Assign):
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
                 " cannot chain variable assignment",
