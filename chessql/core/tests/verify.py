@@ -152,6 +152,32 @@ class Verify(unittest.TestCase):
         self.assertEqual(process.returncode, 1)
         return self.verify_chessql(string, classname_structure)
 
+    def verify_tolerant(self, string, classname_structure):
+        """Verify string produces parse success although technically illegal.
+
+        Run 'cql' in a subprocess to verify the string is accepted by cql
+        parser.
+
+        Call self.verify_chessql().  The classname_structure argument is
+        set depending on chessql attitude to query.
+
+        '--or --' for example.
+
+        """
+        process = subprocess.run(
+            shlex.split(_CQL_PREFIX) + [string],
+            stdout=subprocess.DEVNULL,
+        )
+        self.assertEqual(process.returncode, 0)
+        if classname_structure:
+            return self.verify_chessql(string, classname_structure)
+        self.assertRaisesRegex(
+            NodeError,
+            ".*$",
+            parser.parse,
+            *(_CHESSQL_PREFIX + string,),
+        )
+
     def verify_assign(
         self, string, classname_structure, name, variable_type, filter_type
     ):
@@ -238,6 +264,13 @@ if __name__ == "__main__":
             )
             self.assertEqual(
                 isinstance(value, querycontainer.QueryContainer), True
+            )
+
+        def test_verify_tolerant(self):
+            """Unittest for returncode 0 from cql job when query tolerated."""
+            value = self.verify_tolerant("--or --", [])
+            self.assertEqual(
+                isinstance(value, querycontainer.QueryContainer), False
             )
 
         def test_verify_run_fail(self):

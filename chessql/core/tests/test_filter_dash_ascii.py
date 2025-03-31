@@ -366,7 +366,7 @@ class FilterDashASCII(verify.Verify):
         self.verify("-- and--", [], returncode=1)
 
     def test_147_dash_ascii_21_ambiguous_02_given_06_and_03_right_space(self):
-        self.verify("--and --", [])
+        self.verify_tolerant("--and --", [])
 
 
 if __name__ == "__main__":

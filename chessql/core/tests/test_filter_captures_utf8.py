@@ -366,7 +366,7 @@ class FilterCapturesUTF8(verify.Verify):
         self.verify("× and×", [], returncode=1)
 
     def test_215_take_utf8_21_ambiguous_02_given_06_and_03_right_space(self):
-        self.verify("×and ×", [])
+        self.verify_tolerant("×and ×", [])
 
 
 if __name__ == "__main__":

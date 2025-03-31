@@ -366,7 +366,7 @@ class FilterCapturesASCII(verify.Verify):
         self.verify("[x] and[x]", [], returncode=1)
 
     def test_214_take_ascii_21_ambiguous_02_given_06_and_03_right_space(self):
-        self.verify("[x]and [x]", [])
+        self.verify_tolerant("[x]and [x]", [])
 
 
 if __name__ == "__main__":
