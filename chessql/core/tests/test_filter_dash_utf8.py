@@ -16,13 +16,101 @@ from . import verify
 
 class FilterDashUTF8(verify.Verify):
 
-    def test_148_dash_utf8_01(self):
+    def test_147_dash_utf8_01_plain_01_bare(self):
         self.verify(
             "――",
             [(3, "DashII"), (4, "AnySquare"), (4, "AnySquare")],
         )
 
-    def test_148_dash_utf8_02_left(self):
+    def test_147_dash_utf8_01_plain_02_parentheses_01(self):
+        self.verify(
+            "(――)",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_02_parentheses_02(self):
+        self.verify(
+            "( ――)",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_02_parentheses_03(self):
+        self.verify(
+            "(―― )",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_02_parentheses_04(self):
+        self.verify(
+            "( ―― )",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_03_braces_01(self):
+        self.verify(
+            "{――}",
+            [
+                (3, "BraceLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_03_braces_02(self):
+        self.verify(
+            "{ ――}",
+            [
+                (3, "BraceLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_03_braces_03(self):
+        self.verify(
+            "{―― }",
+            [
+                (3, "BraceLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_147_dash_utf8_01_plain_03_braces_04(self):
+        self.verify(
+            "{ ―― }",
+            [
+                (3, "BraceLeft"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_148_dash_utf8_02_left_01_plain(self):
         self.verify(
             "e2――",
             [
@@ -32,7 +120,22 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_03_right(self):
+    def test_148_dash_utf8_02_left_02_compound_set(self):
+        self.verify(
+            "{2 e2}――",
+            [
+                (3, "DashLI"),
+                (4, "BraceLeft"),
+                (5, "Integer"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_148_dash_utf8_02_left_03_compound_not_set(self):
+        self.verify("{e2 2}――", [], returncode=1)
+
+    def test_148_dash_utf8_03_right_01_plain(self):
         self.verify(
             "――Qa4",
             [
@@ -42,7 +145,22 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_04_left_right(self):
+    def test_148_dash_utf8_03_right_02_compound_set(self):
+        self.verify(
+            "――{3 e4}",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "BraceLeft"),
+                (5, "Integer"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_03_right_03_compound_not_set(self):
+        self.verify("――{e4 3}", [], returncode=1)
+
+    def test_148_dash_utf8_04_left_right_01_plain(self):
         self.verify(
             "r――Qa4",
             [
@@ -51,6 +169,23 @@ class FilterDashUTF8(verify.Verify):
                 (4, "PieceDesignator"),
             ],
         )
+
+    def test_148_dash_utf8_04_left_right_02_compound_set(self):
+        self.verify(
+            "{2 e2}――{3 e4}",
+            [
+                (3, "DashLR"),
+                (4, "BraceLeft"),
+                (5, "Integer"),
+                (5, "PieceDesignator"),
+                (4, "BraceLeft"),
+                (5, "Integer"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_04_left_right_03_compound_not_set(self):
+        self.verify("{e2 2}――{e4 3}", [], returncode=1)
 
     def test_148_dash_utf8_05_promote_01(self):
         self.verify(
@@ -70,6 +205,162 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_05_promote_03(self):
         self.verify("――=check", [], returncode=1)
 
+    def test_148_dash_utf8_05_promote_04_lhs_01_plus(self):
+        self.verify("2+――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_02_minus_01_no_space(self):
+        self.verify("2――-=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_02_minus_02_space(self):
+        self.verify("2- ――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_03_multiply(self):
+        self.verify("2*――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_04_divide(self):
+        self.verify("2/――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_05_modulus_01_no_space(self):
+        self.verify("2%――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_05_modulus_02_space(self):
+        self.verify("2% ――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_06_equals(self):
+        self.verify("2==――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_07_gt(self):
+        self.verify("2>――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_08_ge(self):
+        self.verify("2>=――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_09_lt_02_space(self):
+        self.verify("2< ――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_10_le(self):
+        self.verify("2<=――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_11_ne(self):
+        self.verify("2!=――=q", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_04_lhs_12_and(self):
+        self.verify(
+            "2 and ――=q",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_05_promote_04_lhs_13_or(self):
+        self.verify(
+            "2 or ――=q",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_05_promote_05_rhs_01_plus(self):
+        self.verify("――=q+2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_02_minus(self):
+        self.verify(
+            "――=q-2",
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_05_promote_05_rhs_03_multiply(self):
+        self.verify("――=q*2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_04_divide(self):
+        self.verify("――=q/2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_05_modulus_01_no_space(self):
+        self.verify("――=q%2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_05_modulus_02_space(self):
+        self.verify("――=q %2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_06_equals(self):
+        self.verify("――=q==2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_07_gt(self):
+        self.verify("――=q>2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_08_ge(self):
+        self.verify("――=q>=2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_09_lt_01_no_space(self):
+        self.verify("――=q<2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_09_lt_02_space(self):
+        self.verify("――=q <2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_10_le(self):
+        self.verify("――=q<=2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_11_ne(self):
+        self.verify("――=q!=2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_12_and_01_plain(self):
+        self.verify("――=q and 2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_12_and_02_parentheses(self):
+        self.verify(
+            "(――=q) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_05_promote_05_rhs_13_or_01_plain(self):
+        self.verify("――=q or 2", [], returncode=1)
+
+    def test_148_dash_utf8_05_promote_05_rhs_13_or_02_parentheses(self):
+        self.verify(
+            "(――=q) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
     def test_148_dash_utf8_06_left_promote_01(self):
         self.verify(
             "e2――=b",
@@ -87,6 +378,162 @@ class FilterDashUTF8(verify.Verify):
 
     def test_148_dash_utf8_06_left_promote_03(self):
         self.verify("e2――=check", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_01_plus(self):
+        self.verify("2+e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_02_minus_01_no_space(self):
+        self.verify("2-e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_02_minus_02_space(self):
+        self.verify("2- e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_03_multiply(self):
+        self.verify("2*e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_04_divide(self):
+        self.verify("2/e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_05_mod_01_no_space(self):
+        self.verify("2%e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_05_mod_02_space(self):
+        self.verify("2% e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_06_equals(self):
+        self.verify("2==e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_07_gt(self):
+        self.verify("2>e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_08_ge(self):
+        self.verify("2>=e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_09_lt_02_space(self):
+        self.verify("2< e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_10_le(self):
+        self.verify("2<=e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_11_ne(self):
+        self.verify("2!=e2――=q", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_12_and(self):
+        self.verify(
+            "2 and e2――=q",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_06_left_promote_04_lhs_13_or(self):
+        self.verify(
+            "2 or e2――=q",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_01_plus(self):
+        self.verify("e2――=q+2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_02_minus(self):
+        self.verify(
+            "e2――=q-2",
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_03_multiply(self):
+        self.verify("e2――=q*2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_04_divide(self):
+        self.verify("e2――=q/2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_05_mod_01_no_space(self):
+        self.verify("e2――=q%2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_05_mod_02_space(self):
+        self.verify("e2――=q %2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_06_equals(self):
+        self.verify("e2――=q==2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_07_gt(self):
+        self.verify("e2――=q>2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_08_ge(self):
+        self.verify("e2――=q>=2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_09_lt_01_no_space(self):
+        self.verify("e2――=q<2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_09_lt_02_space(self):
+        self.verify("e2――=q <2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_10_le(self):
+        self.verify("e2――=q<=2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_11_ne(self):
+        self.verify("e2――=q!=2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_12_and_01_plain(self):
+        self.verify("e2――=q and 2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_12_and_02_parentheses(self):
+        self.verify(
+            "(e2――=q) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLI"),
+                (6, "PieceDesignator"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_13_or_01_plain(self):
+        self.verify("e2――=q or 2", [], returncode=1)
+
+    def test_148_dash_utf8_06_left_promote_05_rhs_13_or_02_parentheses(self):
+        self.verify(
+            "(e2――=q) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLI"),
+                (6, "PieceDesignator"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_148_dash_utf8_07_right_promote_01(self):
         self.verify(
@@ -106,6 +553,162 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_07_right_promote_03(self):
         self.verify("――Qa4=check", [], returncode=1)
 
+    def test_148_dash_utf8_07_right_promote_04_lhs_01_plus(self):
+        self.verify("2+――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_02_minus_01_no_space(self):
+        self.verify("2――-Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_02_minus_02_space(self):
+        self.verify("2- ――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_03_multiply(self):
+        self.verify("2*――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_04_divide(self):
+        self.verify("2/――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_05_mod_01_no_space(self):
+        self.verify("2%――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_05_mod_02_space(self):
+        self.verify("2% ――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_06_equals(self):
+        self.verify("2==――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_07_gt(self):
+        self.verify("2>――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_08_ge(self):
+        self.verify("2>=――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_09_lt_02_space(self):
+        self.verify("2< ――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_10_le(self):
+        self.verify("2<=――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_11_ne(self):
+        self.verify("2!=――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_12_and(self):
+        self.verify(
+            "2 and ――Qa4=q",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_07_right_promote_04_lhs_13_or(self):
+        self.verify(
+            "2 or ――Qa4=q",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_01_plus(self):
+        self.verify("――Qa4=q+2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_02_minus(self):
+        self.verify(
+            "――Qa4=q-2",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_03_multiply(self):
+        self.verify("――Qa4=q*2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_04_divide(self):
+        self.verify("――Qa4=q/2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_05_mod_01_no_space(self):
+        self.verify("――Qa4=q%2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_05_mod_02_space(self):
+        self.verify("――Qa4=q %2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_06_equals(self):
+        self.verify("――Qa4=q==2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_07_gt(self):
+        self.verify("――Qa4=q>2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_08_ge(self):
+        self.verify("――Qa4=q>=2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_09_lt_01_no_space(self):
+        self.verify("――Qa4=q<2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_09_lt_02_space(self):
+        self.verify("――Qa4=q <2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_10_le(self):
+        self.verify("――Qa4=q<=2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_11_ne(self):
+        self.verify("――Qa4=q!=2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_12_and_01_plain(self):
+        self.verify("――Qa4=q and 2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_12_and_02_parentheses(self):
+        self.verify(
+            "(――Qa4=q) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashIR"),
+                (6, "AnySquare"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_13_or_01_plain(self):
+        self.verify("――Qa4=q or 2", [], returncode=1)
+
+    def test_148_dash_utf8_07_right_promote_05_rhs_13_or_02_parentheses(self):
+        self.verify(
+            "(――Qa4=q) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashIR"),
+                (6, "AnySquare"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
     def test_148_dash_utf8_08_left_right_promote_01(self):
         self.verify(
             "r――Qa4=R",
@@ -124,7 +727,179 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_08_left_right_promote_03(self):
         self.verify("r――Qa4=check", [], returncode=1)
 
-    def test_148_dash_utf8_09_target(self):
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_01_plus(self):
+        self.verify("2+e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_02_minus_01_no_space(
+        self,
+    ):
+        self.verify("2-e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_02_minus_02_space(
+        self,
+    ):
+        self.verify("2- e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_03_multiply(self):
+        self.verify("2*e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_04_divide(self):
+        self.verify("2/e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("2%e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_05_mod_02_space(self):
+        self.verify("2% e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_06_equals(self):
+        self.verify("2==e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_07_gt(self):
+        self.verify("2>e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_08_ge(self):
+        self.verify("2>=e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_09_lt_01_no_space(
+        self,
+    ):
+        self.verify("2<e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_09_lt_02_space(self):
+        self.verify("2< e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_10_le(self):
+        self.verify("2<=e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_11_ne(self):
+        self.verify("2!=e2――Qa4=q", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_12_and(self):
+        self.verify(
+            "2 and e2――Qa4=q",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_08_left_right_promote_04_lhs_13_or(self):
+        self.verify(
+            "2 or e2――Qa4=q",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_01_plus(self):
+        self.verify("e2――Qa4=q+2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_02_minus(self):
+        self.verify(
+            "e2――Qa4=q-2",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_03_multiply(self):
+        self.verify("e2――Qa4=q*2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_04_divide(self):
+        self.verify("e2――Qa4=q/2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("e2――Qa4=q%2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_05_mod_02_space(self):
+        self.verify("e2――Qa4=q %2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_06_equals(self):
+        self.verify("e2――Qa4=q==2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_07_gt(self):
+        self.verify("e2――Qa4=q>2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_08_ge(self):
+        self.verify("e2――Qa4=q>=2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_09_lt_01_no_space(
+        self,
+    ):
+        self.verify("e2――Qa4=q<2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_09_lt_02_space(self):
+        self.verify("e2――Qa4=q <2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_10_le(self):
+        self.verify("e2――Qa4=q<=2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_11_ne(self):
+        self.verify("e2――Qa4=q!=2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_12_and_01_plain(self):
+        self.verify("e2――Qa4=q and 2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_12_and_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――Qa4=q) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLR"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_13_or_01_plain(self):
+        self.verify("e2――Qa4=q or 2", [], returncode=1)
+
+    def test_148_dash_utf8_08_left_right_promote_05_rhs_13_or_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――Qa4=q) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLR"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_09_target_01_plain(self):
         self.verify(
             "――(btm)",
             [
@@ -136,7 +911,187 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_10_left_target(self):
+    def test_148_dash_utf8_09_target_04_lhs_01_plus(self):
+        self.verify("2+――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_02_minus_01_no_space(self):
+        self.verify("2――-(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_02_minus_02_space(self):
+        self.verify("2- ――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_03_multiply(self):
+        self.verify("2*――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_04_divide(self):
+        self.verify("2/――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_05_mod_01_no_space(self):
+        self.verify("2%――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% ――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_06_equals(self):
+        self.verify("2==――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_07_gt(self):
+        self.verify("2>――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_08_ge(self):
+        self.verify("2>=――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< ――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_10_le(self):
+        self.verify("2<=――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_11_ne(self):
+        self.verify("2!=――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and ――(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_09_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or ――(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_09_target_05_rhs_01_plus(self):
+        self.verify("――(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_02_minus(self):
+        self.verify(
+            "――(btm)-2",
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_09_target_05_rhs_03_multiply(self):
+        self.verify("――(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_04_divide(self):
+        self.verify("――(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_05_mod_01_no_space(self):
+        self.verify("――(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_05_mod_02_space(self):
+        self.verify("――(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_06_equals(self):
+        self.verify("――(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_07_gt(self):
+        self.verify("――(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_08_ge(self):
+        self.verify("――(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_09_lt_01_no_space(self):
+        self.verify("――(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_09_lt_02_space(self):
+        self.verify("――(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_10_le(self):
+        self.verify("――(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_09_target_05_rhs_11_ne(self):
+        self.verify("――(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_09_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "――(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_09_target_05_rhs_12_and_02_parentheses(self):
+        self.verify(
+            "(――(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_09_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "――(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_09_target_05_rhs_13_or_02_parentheses(self):
+        self.verify(
+            "(――(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_10_left_target_01_plain(self):
         self.verify(
             "P――(btm)",
             [
@@ -148,7 +1103,187 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_11_right_target(self):
+    def test_148_dash_utf8_10_left_target_04_lhs_01_plus(self):
+        self.verify("2+e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_02_minus_01_no_space(self):
+        self.verify("2-e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_02_minus_02_space(self):
+        self.verify("2- e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_03_multiply(self):
+        self.verify("2*e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_04_divide(self):
+        self.verify("2/e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_05_mod_01_no_space(self):
+        self.verify("2%e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_06_equals(self):
+        self.verify("2==e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_07_gt(self):
+        self.verify("2>e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_08_ge(self):
+        self.verify("2>=e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_10_le(self):
+        self.verify("2<=e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_11_ne(self):
+        self.verify("2!=e2――(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and e2――(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_10_left_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or e2――(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_10_left_target_05_rhs_01_plus(self):
+        self.verify("e2――(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_02_minus(self):
+        self.verify(
+            "e2――(btm)-2",
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_10_left_target_05_rhs_03_multiply(self):
+        self.verify("e2――(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_04_divide(self):
+        self.verify("e2――(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_05_mod_01_no_space(self):
+        self.verify("e2――(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_05_mod_02_space(self):
+        self.verify("e2――(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_06_equals(self):
+        self.verify("e2――(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_07_gt(self):
+        self.verify("e2――(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_08_ge(self):
+        self.verify("e2――(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_09_lt_01_no_space(self):
+        self.verify("e2――(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_09_lt_02_space(self):
+        self.verify("e2――(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_10_le(self):
+        self.verify("e2――(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_10_left_target_05_rhs_11_ne(self):
+        self.verify("e2――(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_10_left_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "e2――(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_10_left_target_05_rhs_12_and_02_parentheses(self):
+        self.verify(
+            "(e2――(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLI"),
+                (6, "PieceDesignator"),
+                (6, "AnySquare"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_10_left_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "e2――(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_10_left_target_05_rhs_13_or_02_parentheses(self):
+        self.verify(
+            "(e2――(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLI"),
+                (6, "PieceDesignator"),
+                (6, "AnySquare"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_11_right_target_01_plain(self):
         self.verify(
             "――N(btm)",
             [
@@ -160,7 +1295,187 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_12_left_right_target(self):
+    def test_148_dash_utf8_11_right_target_04_lhs_01_plus(self):
+        self.verify("2+――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_02_minus_01_no_space(self):
+        self.verify("2――-Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_02_minus_02_space(self):
+        self.verify("2- ――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_03_multiply(self):
+        self.verify("2*――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_04_divide(self):
+        self.verify("2/――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_05_mod_01_no_space(self):
+        self.verify("2%――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% ――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_06_equals(self):
+        self.verify("2==――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_07_gt(self):
+        self.verify("2>――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_08_ge(self):
+        self.verify("2>=――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< ――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_10_le(self):
+        self.verify("2<=――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_11_ne(self):
+        self.verify("2!=――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and ――Qa4(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_11_right_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or ――Qa4(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_11_right_target_05_rhs_01_plus(self):
+        self.verify("――Qa4(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_02_minus(self):
+        self.verify(
+            "――Qa4(btm)-2",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_11_right_target_05_rhs_03_multiply(self):
+        self.verify("――Qa4(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_04_divide(self):
+        self.verify("――Qa4(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_05_mod_01_no_space(self):
+        self.verify("――Qa4(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_05_mod_02_space(self):
+        self.verify("――Qa4(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_06_equals(self):
+        self.verify("――Qa4(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_07_gt(self):
+        self.verify("――Qa4(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_08_ge(self):
+        self.verify("――Qa4(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_09_lt_01_no_space(self):
+        self.verify("――Qa4(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_09_lt_02_space(self):
+        self.verify("――Qa4(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_10_le(self):
+        self.verify("――Qa4(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_11_right_target_05_rhs_11_ne(self):
+        self.verify("――Qa4(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_11_right_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "――Qa4(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_11_right_target_05_rhs_12_and_02_parentheses(self):
+        self.verify(
+            "(――Qa4(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashIR"),
+                (6, "AnySquare"),
+                (6, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_11_right_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "――Qa4(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_11_right_target_05_rhs_13_or_02_parentheses(self):
+        self.verify(
+            "(――Qa4(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashIR"),
+                (6, "AnySquare"),
+                (6, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_12_left_right_target_01_plain(self):
         self.verify(
             "r――N(btm)",
             [
@@ -172,7 +1487,203 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_13_promote_target(self):
+    def test_148_dash_utf8_12_left_right_target_04_lhs_01_plus(self):
+        self.verify("2+e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_02_minus_01_no_space(
+        self,
+    ):
+        self.verify("2-e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_02_minus_02_space(
+        self,
+    ):
+        self.verify("2- e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_03_multiply(self):
+        self.verify("2*e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_04_divide(self):
+        self.verify("2/e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("2%e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_06_equals(self):
+        self.verify("2==e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_07_gt(self):
+        self.verify("2>e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_08_ge(self):
+        self.verify("2>=e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_09_lt_01_no_space(
+        self,
+    ):
+        self.verify("2<e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_10_le(self):
+        self.verify("2<=e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_11_ne(self):
+        self.verify("2!=e2――Qa4(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and e2――Qa4(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_12_left_right_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or e2――Qa4(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_01_plus(self):
+        self.verify("e2――Qa4(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_02_minus(self):
+        self.verify(
+            "e2――Qa4(btm)-2",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_03_multiply(self):
+        self.verify("e2――Qa4(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_04_divide(self):
+        self.verify("e2――Qa4(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("e2――Qa4(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_05_mod_02_space(self):
+        self.verify("e2――Qa4(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_06_equals(self):
+        self.verify("e2――Qa4(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_07_gt(self):
+        self.verify("e2――Qa4(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_08_ge(self):
+        self.verify("e2――Qa4(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_09_lt_01_no_space(
+        self,
+    ):
+        self.verify("e2――Qa4(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_09_lt_02_space(self):
+        self.verify("e2――Qa4(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_10_le(self):
+        self.verify("e2――Qa4(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_11_ne(self):
+        self.verify("e2――Qa4(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_12_left_right_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "e2――Qa4(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_12_and_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――Qa4(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLR"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_12_left_right_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "e2――Qa4(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_12_left_right_target_05_rhs_13_or_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――Qa4(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLR"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_13_promote_target_01_plain(self):
         self.verify(
             "――=Q(btm)",
             [
@@ -186,7 +1697,207 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_14_promote_left_target(self):
+    def test_148_dash_utf8_13_promote_target_04_lhs_01_plus(self):
+        self.verify("2+――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_02_minus_01_no_space(
+        self,
+    ):
+        self.verify("2――-=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_02_minus_02_space(self):
+        self.verify("2- ――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_03_multiply(self):
+        self.verify("2*――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_04_divide(self):
+        self.verify("2/――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_05_mod_01_no_space(self):
+        self.verify("2%――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% ――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_06_equals(self):
+        self.verify("2==――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_07_gt(self):
+        self.verify("2>――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_08_ge(self):
+        self.verify("2>=――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< ――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_10_le(self):
+        self.verify("2<=――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_11_ne(self):
+        self.verify("2!=――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and ――=q(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_13_promote_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or ――=q(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_01_plus(self):
+        self.verify("――=q(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_02_minus(self):
+        self.verify(
+            "――=q(btm)-2",
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_03_multiply(self):
+        self.verify("――=q(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_04_divide(self):
+        self.verify("――=q(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_05_mod_01_no_space(self):
+        self.verify("――=q(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_05_mod_02_space(self):
+        self.verify("――=q(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_06_equals(self):
+        self.verify("――=q(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_07_gt(self):
+        self.verify("――=q(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_08_ge(self):
+        self.verify("――=q(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_09_lt_01_no_space(self):
+        self.verify("――=q(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_09_lt_02_space(self):
+        self.verify("――=q(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_10_le(self):
+        self.verify("――=q(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_11_ne(self):
+        self.verify("――=q(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_13_promote_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "――=q(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_12_and_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(――=q(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_13_promote_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "――=q(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_13_promote_target_05_rhs_13_or_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(――=q(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_promote_left_target_01_plain(self):
         self.verify(
             "P――=Q(btm)",
             [
@@ -200,7 +1911,211 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_15_promote_right_target(self):
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_01_plus(self):
+        self.verify("2+e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_02_minus_01_no_space(
+        self,
+    ):
+        self.verify("2-e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_02_minus_02_space(self):
+        self.verify("2- e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_03_multiply(self):
+        self.verify("2*e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_04_divide(self):
+        self.verify("2/e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("2%e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_06_equals(self):
+        self.verify("2==e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_07_gt(self):
+        self.verify("2>e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_08_ge(self):
+        self.verify("2>=e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_10_le(self):
+        self.verify("2<=e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_11_ne(self):
+        self.verify("2!=e2――=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and e2――=q(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_l_promote_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or e2――=q(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_01_plus(self):
+        self.verify("e2――=q(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_02_minus(self):
+        self.verify(
+            "e2――=q(btm)-2",
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_03_multiply(self):
+        self.verify("e2――=q(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_04_divide(self):
+        self.verify("e2――=q(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("e2――=q(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_05_mod_02_space(self):
+        self.verify("e2――=q(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_06_equals(self):
+        self.verify("e2――=q(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_07_gt(self):
+        self.verify("e2――=q(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_08_ge(self):
+        self.verify("e2――=q(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_09_lt_01_no_space(self):
+        self.verify("e2――=q(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_09_lt_02_space(self):
+        self.verify("e2――=q(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_10_le(self):
+        self.verify("e2――=q(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_11_ne(self):
+        self.verify("e2――=q(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "e2――=q(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_12_and_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――=q(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLI"),
+                (6, "PieceDesignator"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "e2――=q(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_l_promote_target_05_rhs_13_or_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――=q(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLI"),
+                (6, "PieceDesignator"),
+                (6, "AnySquare"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_promote_right_target_01_plain(self):
         self.verify(
             "――N=Q(btm)",
             [
@@ -214,7 +2129,211 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_16_promote_left_right_target(self):
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_01_plus(self):
+        self.verify("2+――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_02_minus_01_no_space(
+        self,
+    ):
+        self.verify("2――-Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_02_minus_02_space(self):
+        self.verify("2- ――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_03_multiply(self):
+        self.verify("2*――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_04_divide(self):
+        self.verify("2/――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("2%――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% ――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_06_equals(self):
+        self.verify("2==――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_07_gt(self):
+        self.verify("2>――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_08_ge(self):
+        self.verify("2>=――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_09_lt_01_no_space(self):
+        self.verify("2<――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< ――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_10_le(self):
+        self.verify("2<=――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_11_ne(self):
+        self.verify("2!=――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and ――Qa4=q(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_r_promote_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or ――Qa4=q(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_01_plus(self):
+        self.verify("――Qa4=q(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_02_minus(self):
+        self.verify(
+            "――Qa4=q(btm)-2",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_03_multiply(self):
+        self.verify("――Qa4=q(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_04_divide(self):
+        self.verify("――Qa4=q(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("――Qa4=q(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_05_mod_02_space(self):
+        self.verify("――Qa4=q(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_06_equals(self):
+        self.verify("――Qa4=q(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_07_gt(self):
+        self.verify("――Qa4=q(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_08_ge(self):
+        self.verify("――Qa4=q(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_09_lt_01_no_space(self):
+        self.verify("――Qa4=q(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_09_lt_02_space(self):
+        self.verify("――Qa4=q(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_10_le(self):
+        self.verify("――Qa4=q(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_11_ne(self):
+        self.verify("――Qa4=q(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "――Qa4=q(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_12_and_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(――Qa4=q(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashIR"),
+                (6, "AnySquare"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "――Qa4=q(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_r_promote_target_05_rhs_13_or_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(――Qa4=q(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashIR"),
+                (6, "AnySquare"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_promote_left_right_target_01_plain(self):
         self.verify(
             "r――N=Q(btm)",
             [
@@ -225,6 +2344,216 @@ class FilterDashUTF8(verify.Verify):
                 (5, "PieceDesignator"),
                 (4, "TargetParenthesisLeft"),
                 (5, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_01_plus(self):
+        self.verify("2+e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_02_minus_01_no_space(
+        self,
+    ):
+        self.verify("2-e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_02_minus_02_space(
+        self,
+    ):
+        self.verify("2- e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_03_multiply(self):
+        self.verify("2*e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_04_divide(self):
+        self.verify("2/e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("2%e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_05_mod_02_space(self):
+        self.verify("2% e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_06_equals(self):
+        self.verify("2==e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_07_gt(self):
+        self.verify("2>e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_08_ge(self):
+        self.verify("2>=e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_09_lt_01_no_space(
+        self,
+    ):
+        self.verify("2<e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_09_lt_02_space(self):
+        self.verify("2< e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_10_le(self):
+        self.verify("2<=e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_11_ne(self):
+        self.verify("2!=e2――Qa4=q(btm)", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_12_and(self):
+        self.verify(
+            "2 and e2――Qa4=q(btm)",
+            [
+                (3, "And"),
+                (4, "Integer"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_04_lhs_13_or(self):
+        self.verify(
+            "2 or e2――Qa4=q(btm)",
+            [
+                (3, "Or"),
+                (4, "Integer"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_01_plus(self):
+        self.verify("e2――Qa4=q(btm)+2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_02_minus(self):
+        self.verify(
+            "e2――Qa4=q(btm)-2",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "UnaryMinus"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_03_multiply(self):
+        self.verify("e2――Qa4=q(btm)*2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_04_divide(self):
+        self.verify("e2――Qa4=q(btm)/2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_05_mod_01_no_space(
+        self,
+    ):
+        self.verify("e2――Qa4=q(btm)%2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_05_mod_02_space(self):
+        self.verify("e2――Qa4=q(btm) %2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_06_equals(self):
+        self.verify("e2――Qa4=q(btm)==2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_07_gt(self):
+        self.verify("e2――Qa4=q(btm)>2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_08_ge(self):
+        self.verify("e2――Qa4=q(btm)>=2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_09_lt_01_no_space(
+        self,
+    ):
+        self.verify("e2――Qa4=q(btm)<2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_09_lt_02_space(self):
+        self.verify("e2――Qa4=q(btm) <2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_10_le(self):
+        self.verify("e2――Qa4=q(btm)<=2", [], returncode=1)
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_11_ne(self):
+        self.verify("e2――Qa4=q(btm)!=2", [], returncode=1)
+
+    # chessql wrong.
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_12_and_01_plain(self):
+        self.verify(
+            "e2――Qa4=q(btm) and 2",
+            [
+                (3, "And"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_12_and_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――Qa4=q(btm)) and 2",
+            [
+                (3, "And"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLR"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    # chessql wrong.
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_13_or_01_plain(self):
+        self.verify(
+            "e2――Qa4=q(btm) or 2",
+            [
+                (3, "Or"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_05_rhs_13_or_02_parentheses(
+        self,
+    ):
+        self.verify(
+            "(e2――Qa4=q(btm)) or 2",
+            [
+                (3, "Or"),
+                (4, "ParenthesisLeft"),
+                (5, "DashLR"),
+                (6, "PieceDesignator"),
+                (6, "PieceDesignator"),
+                (6, "AssignPromotion"),
+                (7, "PieceDesignator"),
+                (6, "TargetParenthesisLeft"),
+                (7, "BTM"),
+                (4, "Integer"),
             ],
         )
 

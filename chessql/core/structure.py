@@ -764,6 +764,25 @@ class Argument(CQLObject):
         self.container.cursor = self
 
 
+class LeftParenthesisInfix(CQLObject):
+    """Subclass of CQLObject for keywords with implied block to next Infix.
+
+    The query 'countmoves -- == 1' is equivalent to '(countmoves --) == 1'.
+
+    This class exists to allow filters represented by Infix instances to
+    spot ancestor filters like 'countmoves' and adjust the cursor so the
+    query is not seen as 'countmoves (-- == 1)'.
+    """
+
+    def is_countmoves(self):
+        """Return True if self is an instance of filters.CountMoves.
+
+        To cope with 'countmoves legal -- == 1 and 'legal -- == 1'.
+
+        """
+        return False
+
+
 class BindArgument(Argument):
     """The variable argument for 'isbound', 'isunbound' and 'unbind'."""
 
@@ -903,6 +922,36 @@ class Infix(CQLObject):
         self.children[-1].parent = self
         self.container.cursor = self
 
+    def _end_left_parenthesis_infix_block(self):
+        """Adjust cursor if a LeftParenthesisInfix ancestor is found.
+
+        Four sets of statements are handled: 'countmoves legal --',
+        'countmoves --', 'legal --', and 'pseudolegal --', where '--'
+        could be any of the '--' or '[x]' variants; where followed by
+        an infix operator.
+
+        """
+        countmoves_loop_done = False
+        while True:
+            # The obvious thing to do is start node at 'self' but that
+            # attracts a pylint E1101 no-member report at the following
+            # 'node.is_countmoves()'.  That statement is unreachable for
+            # an Infix instance, so start node at 'self.parent' instead
+            # because self is an Infix instance.
+            node = self.parent
+            while node:
+                if isinstance(node, BlockLeft) and not node.complete():
+                    break
+                if isinstance(node, LeftParenthesisInfix) and node.full():
+                    if node.is_countmoves() or countmoves_loop_done:
+                        self._swap_tree_position(node.parent)
+                        return True
+                node = node.parent
+            if countmoves_loop_done:
+                break
+            countmoves_loop_done = True
+        return False
+
     def _verify_and_set_filter_type(self, node):
         """Verify children and set filter type for ancestors of node."""
         # The test on CompleteParameterArguments causes the two 'colon'
@@ -950,6 +999,8 @@ class InfixLeft(Infix):
         ancestor = parent.parent
         self._raise_if_parent_is_not_cursor(parent)
         self._raise_if_precedence_is_none()
+        if self._end_left_parenthesis_infix_block():
+            return
         while True:
             if isinstance(ancestor, BlockLeft):
                 break
@@ -1006,6 +1057,8 @@ class InfixRight(Infix):
         ancestor = parent.parent
         self._raise_if_parent_is_not_cursor(parent)
         self._raise_if_precedence_is_none()
+        if self._end_left_parenthesis_infix_block():
+            return
         while True:
             if isinstance(ancestor, BlockLeft):
                 break
@@ -1052,20 +1105,15 @@ class InfixRight(Infix):
         return
 
 
+# Name is inappropriate now because this class no longer has anything to
+# do with the '--' and '[x]' filters (see filters._DashOrTake class).
 class MoveInfix(Infix):
-    """Subclass of Infix for '--' and '[x]' symbol operators.
+    """Subclass of Infix for '→', '←', '∊', and '=?' operators.
 
-    The '--' and '[x]' filters may have either, or both, promotion and
-    target conditions in addition to the LHS and RHS filters accepted by
-    InfixLeft.
-
-    The promotion condition is idicated by a trailing '=' clause, and the
-    target condition is indicated by a trailing '(...)' clause.  The '='
-    clause appears first if both are present.
-
-    The filter_type of final filter in target condition becomes filter type
-    of the MoveInfix instance.  The absence of target conditions cause the
-    MoveInfix instance to be a logical filter.
+    '->' is the ascii version of '→'.
+    '<-' is the ascii version of '←'.
+    '[element]' is the ascii version of '∊'.
+    '=?' is ascii with no utf8 equivalent.
     """
 
     _filter_type = cqltypes.FilterType.LOGICAL

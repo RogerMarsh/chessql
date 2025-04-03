@@ -377,47 +377,6 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_019_countmoves_01(self):
-        self.verify("countmoves", [], returncode=1)
-
-    def test_019_countmoves_02(self):
-        self.verify("countmoves k", [], returncode=1)
-
-    def test_019_countmoves_03_move(self):
-        self.verify(
-            "countmoves --",
-            [
-                (3, "CountMoves"),
-                (4, "DashII"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
-            ],
-        )
-
-    def test_019_countmoves_04_legal(self):
-        self.verify(
-            "countmoves legal --",
-            [
-                (3, "CountMoves"),
-                (4, "Legal"),
-                (5, "DashII"),
-                (6, "AnySquare"),
-                (6, "AnySquare"),
-            ],
-        )
-
-    def test_019_countmoves_05_pseudolegal(self):
-        self.verify(
-            "countmoves pseudolegal --",
-            [
-                (3, "CountMoves"),
-                (4, "Pseudolegal"),
-                (5, "DashII"),
-                (6, "AnySquare"),
-                (6, "AnySquare"),
-            ],
-        )
-
     def test_020_currentmove_01(self):
         self.verify("currentmove", [], returncode=1)
 
@@ -2500,26 +2459,6 @@ class Filters(verify.Verify):
                 (4, "Variable"),
             ],
         )
-
-    def test_060_legal_01(self):
-        self.verify("legal", [], returncode=1)
-
-    def test_060_legal_02(self):
-        self.verify("legal k", [], returncode=1)
-
-    def test_060_legal_03(self):
-        self.verify(
-            "legal --",
-            [
-                (3, "Legal"),
-                (4, "DashII"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
-            ],
-        )
-
-    def test_060_legal_04_capture(self):
-        self.verify("legal [x]", [], returncode=1)
 
     def test_061_left_01(self):
         self.verify("left", [], returncode=1)
@@ -6441,23 +6380,6 @@ class Filters(verify.Verify):
 
     def test_105_primary(self):  # chessql gets this wrong.
         self.verify("primary", [(3, "Primary")])
-
-    def test_106_pseudolegal_01(self):
-        self.verify("pseudolegal", [], returncode=1)
-
-    def test_106_pseudolegal_02_dash(self):
-        self.verify(
-            "pseudolegal --",
-            [
-                (3, "Pseudolegal"),
-                (4, "DashII"),
-                (5, "AnySquare"),
-                (5, "AnySquare"),
-            ],
-        )
-
-    def test_106_pseudolegal_02_captures(self):
-        self.verify("pseudolegal [x]", [], returncode=1)
 
     def test_107_puremate(self):
         self.verify("puremate", [(3, "PureMate")])

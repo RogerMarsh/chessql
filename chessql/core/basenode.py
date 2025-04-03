@@ -298,7 +298,7 @@ class BaseNode:
             if name is None:
                 name = str(None)
             return "f: " + name
-        except NodeError as exc:
+        except (NodeError, IndexError) as exc:
             return str(exc)
 
     def _str_variable_type(self):

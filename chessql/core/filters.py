@@ -1174,7 +1174,29 @@ class BeforeNE(structure.ComparePosition, structure.InfixRight):
 
 
 class _DashOrTake(structure.InfixLeft):
-    """Represent shared behaviour of '--' and '[x]' filters."""
+    """Represent shared behaviour of '--' and '[x]' filters.
+
+    The '--' and '[x]' filters may have either, or both, promotion and
+    target conditions in addition to the LHS and RHS filters accepted by
+    InfixLeft.
+
+    The promotion condition is idicated by a trailing '=' clause, and the
+    target condition is indicated by a trailing '(...)' clause.  The '='
+    clause appears first if both are present.
+
+    The filter_type of final filter in target condition becomes filter type
+    of the _DashOrTake instance.  The absence of target conditions cause the
+    _DashOrTake instance to be a logical filter.
+    """
+
+    def _end_left_parenthesis_infix_block(self):
+        """Override, do nothing.
+
+        Class LeftParenthesisInfix is introduced to protect _DashOrTake
+        instances from disruption by other Infix class instances.
+
+        This protection is not required for _DashOrTake instances.
+        """
 
     def _raise_if_dash_or_take_arguments_are_not_filter_type_set(self):
         """Raise NodeError if first two arguments of filter_ are not sets.
@@ -2207,10 +2229,18 @@ class Count(structure.NoArgumentsParameter):
                 return
 
 
-class CountMoves(structure.Argument):
+class CountMoves(structure.Argument, structure.LeftParenthesisInfix):
     """Represent 'countmoves' numeric filter."""
 
     _filter_type = cqltypes.FilterType.NUMERIC
+
+    def is_countmoves(self):
+        """Override, return True.
+
+        To cope with 'countmoves legal -- == 1 and 'legal -- == 1'.
+
+        """
+        return True
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
@@ -3476,8 +3506,8 @@ def left(match_=None, container=None):
     return Left(match_=match_, container=container)
 
 
-class Legal(structure.Argument):
-    """Represent 'legal' set filter or parameter to 'move' filter."""
+class Legal(structure.Argument, structure.LeftParenthesisInfix):
+    """Represent 'legal' set filter."""
 
     _filter_type = cqltypes.FilterType.SET
 
@@ -4451,7 +4481,7 @@ class Promote(structure.ParameterArgument):
         return isinstance(self.parent, Move)
 
 
-class Pseudolegal(structure.Argument):
+class Pseudolegal(structure.Argument, structure.LeftParenthesisInfix):
     """Represent 'pseudolegal' set filter."""
 
     _filter_type = cqltypes.FilterType.SET
@@ -6534,7 +6564,7 @@ def _is_lhs_implicit(match_):
     Relevant to '--' and '[x]' filters.
 
     """
-    return match_.string[match_.start() - 1] in ":"
+    return match_.string[match_.start() - 1] in "({:"
 
 
 def _is_rhs_implicit(match_):
@@ -6543,4 +6573,4 @@ def _is_rhs_implicit(match_):
     Relevant to '--' and '[x]' filters.
 
     """
-    return match_.string[match_.end()] in "=("
+    return match_.string[match_.end()] in "+-*/%><!)}=("
