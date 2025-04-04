@@ -14,7 +14,7 @@ import unittest
 from . import verify
 
 
-class FilterCapturesUTF8(verify.Verify):
+class FilterTakeUTF8(verify.Verify):
 
     def test_215_take_utf8_01_plain_01_bare(self):
         self.verify(
@@ -2699,6 +2699,7 @@ class FilterCapturesUTF8(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(FilterCapturesUTF8))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterTakeUTF8))

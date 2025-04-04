@@ -1,4 +1,4 @@
-# test_assign_logical.py
+# test_filter_assign_logical.py
 # Copyright 2025 Roger Marsh
 # Licence: See LICENCE (BSD licence)
 
@@ -174,6 +174,7 @@ class FilterAssignLogical(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(FilterAssignLogical))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterAssignLogical))

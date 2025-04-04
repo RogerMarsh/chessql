@@ -358,6 +358,7 @@ class FilterPath(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(FilterPath))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterPath))

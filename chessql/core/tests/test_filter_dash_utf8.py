@@ -2699,6 +2699,7 @@ class FilterDashUTF8(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(FilterDashUTF8))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterDashUTF8))

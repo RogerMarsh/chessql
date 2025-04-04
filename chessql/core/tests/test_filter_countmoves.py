@@ -14,7 +14,7 @@ from .. import cqltypes
 from .. import filters
 
 
-class Filters(verify.Verify):
+class FilterCountMoves(verify.Verify):
 
     def test_019_countmoves_01(self):
         self.verify("countmoves", [], returncode=1)
@@ -688,6 +688,7 @@ class Filters(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(Filters))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterCountMoves))

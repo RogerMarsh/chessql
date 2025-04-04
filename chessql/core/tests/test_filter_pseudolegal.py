@@ -14,7 +14,7 @@ from .. import cqltypes
 from .. import filters
 
 
-class Filters(verify.Verify):
+class FilterPseudolegal(verify.Verify):
 
     def test_106_pseudolegal_01(self):
         self.verify("pseudolegal", [], returncode=1)
@@ -52,6 +52,7 @@ class Filters(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(Filters))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterPseudolegal))

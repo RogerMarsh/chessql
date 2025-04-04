@@ -14,7 +14,7 @@ import unittest
 from . import verify
 
 
-class FilterCapturesASCII(verify.Verify):
+class FilterTakeASCII(verify.Verify):
 
     def test_214_take_ascii_01_plain_01_bare(self):
         self.verify(
@@ -2701,6 +2701,7 @@ class FilterCapturesASCII(verify.Verify):
 
 
 if __name__ == "__main__":
-    runner = unittest.TextTestRunner
-    loader = unittest.defaultTestLoader.loadTestsFromTestCase
-    runner().run(loader(FilterCapturesASCII))
+    if verify.is_cql_on_path():
+        runner = unittest.TextTestRunner
+        loader = unittest.defaultTestLoader.loadTestsFromTestCase
+        runner().run(loader(FilterTakeASCII))
