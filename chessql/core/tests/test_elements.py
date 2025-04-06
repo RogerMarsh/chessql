@@ -576,7 +576,7 @@ class PatternElement(unittest.TestCase):
         self.assertEqual(elements.SQUARE_SEPARATOR, r"(?P<square_separator>),")
 
     def test_backslash(self):
-        self.assertEqual(elements.BACKSLASH, r"(?P<backslash>)\\")
+        self.assertEqual(elements.BACKSLASH, r'(?P<backslash>)\\[n"tr\\]')
 
     def test_bracket_left(self):
         self.assertEqual(elements.BRACKET_LEFT, r"(?P<bracket_left>)\[")

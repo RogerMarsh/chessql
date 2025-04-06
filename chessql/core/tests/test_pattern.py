@@ -766,7 +766,7 @@ class Pattern(unittest.TestCase):
                     r")|(",
                     r"(?P<variable>[a-zA-Z0-9_$]+)",  # VARIABLE
                     r")|(",
-                    r"(?P<backslash>)\\",  # BACKSLASH
+                    r'(?P<backslash>)\\[n"tr\\]',  # BACKSLASH
                     r")|(",
                     r"(?P<any_square>)(?:\.|\u25a6)",  # ANY_SQUARE
                     r")|(",

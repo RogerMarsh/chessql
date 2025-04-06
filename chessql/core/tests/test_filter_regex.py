@@ -73,20 +73,25 @@ class FilterRegex(verify.Verify):
     def test_186_pattern_match_12_position(self):
         self.verify('"king"~~currentposition', [], returncode=1)
 
-    def xtest_187_backslash_string_01_backslash(self):  # wrong.
-        self.verify(r"\\", [])
+    def test_187_backslash_string_01_backslash(self):
+        con = self.verify(r"\\", [(3, "Backslash")])
+        self.assertEqual(con.children[-1].children[-1].match_.group(), r"\\")
 
-    def xtest_187_backslash_string_02_newline(self):  # wrong.
-        self.verify(r"\n", [])
+    def test_187_backslash_string_02_newline(self):
+        con = self.verify(r"\n", [(3, "Backslash")])
+        self.assertEqual(con.children[-1].children[-1].match_.group(), r"\n")
 
-    def xtest_187_backslash_string_03_quote(self):  # wrong.
-        self.verify(r"\n", [])
+    def test_187_backslash_string_03_quote(self):
+        con = self.verify(r"\"", [(3, "Backslash")])
+        self.assertEqual(con.children[-1].children[-1].match_.group(), r"\"")
 
-    def xtest_187_backslash_string_04_tab(self):  # wrong.
-        self.verify(r"\t", [])
+    def test_187_backslash_string_04_tab(self):
+        con = self.verify(r"\t", [(3, "Backslash")])
+        self.assertEqual(con.children[-1].children[-1].match_.group(), r"\t")
 
-    def xtest_187_backslash_string_05_return(self):  # wrong.
-        self.verify(r"\r", [])
+    def test_187_backslash_string_05_return(self):
+        con = self.verify(r"\r", [(3, "Backslash")])
+        self.assertEqual(con.children[-1].children[-1].match_.group(), r"\r")
 
     def test_187_backslash_string_06_digit(self):
         self.verify(r"\1", [(3, "RegexCapturedGroup")])
@@ -99,6 +104,36 @@ class FilterRegex(verify.Verify):
 
     def test_187_backslash_string_09_quoted(self):
         self.verify(r'"\a"', [(3, "String")])
+
+    def test_187_backslash_string_10_concatenate_backslash(self):
+        self.verify(
+            r'"pin"+\\',
+            [(3, "Plus"), (4, "String"), (4, "Backslash")],
+        )
+
+    def test_187_backslash_string_11_concatenate_newline(self):
+        self.verify(
+            r'"pin"+\n',
+            [(3, "Plus"), (4, "String"), (4, "Backslash")],
+        )
+
+    def test_187_backslash_string_12_concatenate_quote(self):
+        self.verify(
+            r'"pin"+\"',
+            [(3, "Plus"), (4, "String"), (4, "Backslash")],
+        )
+
+    def test_187_backslash_string_13_concatenate_tab(self):
+        self.verify(
+            r'"pin"+\t',
+            [(3, "Plus"), (4, "String"), (4, "Backslash")],
+        )
+
+    def test_187_backslash_string_13_concatenate_tab(self):
+        self.verify(
+            r'"pin"+\r',
+            [(3, "Plus"), (4, "String"), (4, "Backslash")],
+        )
 
 
 if __name__ == "__main__":

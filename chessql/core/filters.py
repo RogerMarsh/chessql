@@ -5597,12 +5597,9 @@ def variable_assign(match_=None, container=None):
 # All these are represented by specific classes: a bare '\' indicates an
 # error.
 class Backslash(structure.CQLObject):
-    r"""Represent '\' not caught elsewhere for specific purposes."""
+    r"""Represent escaped strings '\\', '\"', '\n', '\r', and '\t'."""
 
-    def place_node_in_tree(self):
-        r"""Delegate then raise NodeError because bare '\' not allowed."""
-        super().place_node_in_tree()
-        self.raise_nodeerror(r"Unexpected bare '\' found")
+    _filter_type = cqltypes.FilterType.STRING
 
 
 # CQL documentation says '▦', or '.', is equivalent to 'a-h1-8' so why

@@ -196,8 +196,7 @@ COUNT_FILTER = r"(?P<count_filter>)#"  # 6.0.4 index of symbols, '#'.
 # Definition not used because the PIECE_DESIGNATOR pattern handles it.
 SQUARE_SEPARATOR = r"(?P<square_separator>),"
 
-# Not used.  Intended for various escape sequences.
-BACKSLASH = r"(?P<backslash>)\\"
+BACKSLASH = r'(?P<backslash>)\\[n"tr\\]'
 
 # 6.0.4 slice a string.  6.1 dictionary key.
 # According to comments in .filters module the piece designator and
