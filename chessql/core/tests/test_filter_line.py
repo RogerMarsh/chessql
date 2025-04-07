@@ -643,11 +643,13 @@ class FilterLine(verify.Verify):
     def test_062_line_45_regex_line_arrow_14_space_within_range_03(self):
         self.verify("line --> check{2 , 4}", [], returncode=1)
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_01_bare(self):
         self.verify_declare_fail(
             "line --> 3", [(3, "Line"), (4, "ArrowForward"), (5, "Integer")]
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_02_hide_in_parentheses(self):
         self.verify_declare_fail(
             "line --> (3)",
@@ -659,6 +661,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_062_line_46_integer_03_hide_in_braces(self):
         self.verify_declare_fail(
             "line --> {3}",
@@ -670,7 +673,8 @@ class FilterLine(verify.Verify):
             ],
         )
 
-    def test_062_line_46_integer_04_bare_plus(self):  # '+' is add.
+    # CQL-6.2 says 'technically legal' and gives syntax error.
+    def test_062_line_46_integer_04_bare_plus(self):
         self.verify_declare_fail(
             "line --> 3+4",
             [
@@ -682,8 +686,9 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     # '(3)+' is constituent of 'line'. '(4)' is new filter after 'line'.
-    def xtest_062_line_46_integer_05_hide_in_parentheses_plus_01(self):
+    def test_062_line_46_integer_05_hide_in_parentheses_plus_01(self):
         self.verify_declare_fail(
             "line --> (3)+(4)",
             [
@@ -697,6 +702,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'technically legal' and gives syntax error.
     def test_062_line_46_integer_05_hide_in_parentheses_plus_02(self):
         self.verify_declare_fail(
             "line --> (3+4)",
@@ -710,6 +716,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     # The constituent of '-->' is the '+' filter adding two compound filters.
     def test_062_line_46_integer_06_hide_in_braces_plus_01(self):
         self.verify_declare_fail(
@@ -725,6 +732,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'technically legal' and gives syntax error.
     def test_062_line_46_integer_06_hide_in_braces_plus_02(self):
         self.verify_declare_fail(
             "line --> {3+4}",
@@ -738,7 +746,8 @@ class FilterLine(verify.Verify):
             ],
         )
 
-    def test_062_line_46_integer_07_bare_star(self):  # '*' is multiply.
+    # CQL-6.2 says 'technically legal' and gives syntax error.
+    def test_062_line_46_integer_07_bare_star(self):
         self.verify_declare_fail(
             "line --> 3*4",
             [
@@ -750,6 +759,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     # '(3)*' is constituent of 'line'. '(4)' is new filter after 'line'.
     def test_062_line_46_integer_08_hide_in_parentheses_star_01(self):
         self.verify_declare_fail(
@@ -765,6 +775,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'technically legal' and gives syntax error.
     def test_062_line_46_integer_08_hide_in_parentheses_star_02(self):
         self.verify_declare_fail(
             "line --> (3*4)",
@@ -778,6 +789,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     # The constituent of '-->' is the '*' filter multiplying two compound
     # filters.
     def test_062_line_46_integer_09_hide_in_braces_star_01(self):
@@ -794,6 +806,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'technically legal' and gives syntax error.
     def test_062_line_46_integer_09_hide_in_braces_star_02(self):
         self.verify_declare_fail(
             "line --> {3*4}",
@@ -807,6 +820,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_10_bare_plus_repeat(self):
         self.verify_declare_fail(
             "line --> 3+",
@@ -818,6 +832,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_11_hide_in_parentheses_plus_repeat(self):
         self.verify_declare_fail(
             "line --> (3)+",
@@ -830,6 +845,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_062_line_46_integer_12_hide_in_braces_plus_repeat(self):
         self.verify_declare_fail(
             "line --> {3}+",
@@ -842,6 +858,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_13_bare_star_repeat(self):
         self.verify_declare_fail(
             "line --> 3*",
@@ -853,6 +870,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_14_hide_in_parentheses_star_repeat(self):
         self.verify_declare_fail(
             "line --> (3)*",
@@ -865,6 +883,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_062_line_46_integer_15_hide_in_braces_star_repeat(self):
         self.verify_declare_fail(
             "line --> {3}*",
@@ -877,6 +896,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_16_bare_optional(self):
         self.verify_declare_fail(
             "line --> 3?",
@@ -888,6 +908,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_46_integer_17_hide_in_parentheses_optional(self):
         self.verify_declare_fail(
             "line --> (3)?",
@@ -900,6 +921,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_062_line_46_integer_18_hide_in_braces_optional(self):
         self.verify_declare_fail(
             "line --> {3}?",
@@ -939,6 +961,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_48_integer_variable_01_bare(self):
         self.verify_declare_fail(
             "v=3 line --> v",
@@ -952,6 +975,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    # CQL-6.2 says 'likely error' and gives syntax error.
     def test_062_line_48_integer_variable_02_hide_in_parentheses(self):
         self.verify_declare_fail(
             "v=3 line --> (v)",
@@ -1277,6 +1301,69 @@ class FilterLine(verify.Verify):
                 (8, "AnySquare"),
             ],
         )
+
+    # The structure below "Line" may be better as:
+    #     4  PlusRepeat
+    #     5  RegexRepeat
+    #     6  ArrowForward
+    #     7  PieceDesignator
+    # or perhaps it should be below ArrowForward.
+    def test_062_line_55_repeat_multiple_fixed_01_plus(self):
+        self.verify(
+            "line --> k{3}+",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "RegexRepeat"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    # CQL-6.2 says 'pointless second +' and gives syntax error.
+    def test_062_line_55_repeat_multiple_fixed_02_plus_plus(self):
+        self.verify_declare_fail(
+            "line --> k{3}++",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "RegexRepeat"),
+                (5, "PlusRepeat"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    def test_062_line_55_repeat_multiple_fixed_03_plus_star(self):
+        self.verify(
+            "line --> k{3}+*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "RegexRepeat"),
+                (5, "PlusRepeat"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_55_repeat_multiple_fixed_04_star(self):
+        self.verify(
+            "line --> k{3}*",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "RegexRepeat"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    def test_062_line_55_repeat_multiple_fixed_05_star_plus(self):
+        self.verify("line --> k{3}*+", [], returncode=1)
+
+    def test_062_line_55_repeat_multiple_fixed_06_star_star(self):
+        self.verify("line --> k{3}**", [], returncode=1)
 
 
 if __name__ == "__main__":
