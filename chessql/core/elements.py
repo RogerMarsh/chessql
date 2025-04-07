@@ -796,7 +796,7 @@ EXISTENTIAL_PIECE_VARIABLE = "".join(
 )
 UNIVERSAL_SQUARE_VARIABLE = "".join(
     (
-        r"(?:\[forall\]|\u2200)",
+        r"(?:\[forall\]|\u2200)\s*",
         r"(?P<universal_square_variable>",
         constants.VARIABLE_NAME_CHARS,
         r"+)(?=\s*(?:\[element\]|\u220a))",
@@ -804,7 +804,7 @@ UNIVERSAL_SQUARE_VARIABLE = "".join(
 )
 UNIVERSAL_PIECE_VARIABLE = "".join(
     (
-        r"(?:\[forall\]|\u2200)",
+        r"(?:\[forall\]|\u2200)\s*",
         r"(?:\[Aa\]|\u25ed)",
         r"(?P<universal_piece_variable>",
         constants.VARIABLE_NAME_CHARS,

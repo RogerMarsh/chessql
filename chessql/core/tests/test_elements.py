@@ -1731,7 +1731,7 @@ class PatternElement(unittest.TestCase):
             elements.UNIVERSAL_SQUARE_VARIABLE,
             "".join(
                 (
-                    r"(?:\[forall\]|\u2200)",
+                    r"(?:\[forall\]|\u2200)\s*",
                     r"(?P<universal_square_variable>",
                     r"[a-zA-Z0-9_$]",
                     r"+)(?=\s*(?:\[element\]|\u220a))",
@@ -1744,7 +1744,7 @@ class PatternElement(unittest.TestCase):
             elements.UNIVERSAL_PIECE_VARIABLE,
             "".join(
                 (
-                    r"(?:\[forall\]|\u2200)",
+                    r"(?:\[forall\]|\u2200)\s*",
                     r"(?:\[Aa\]|\u25ed)",
                     r"(?P<universal_piece_variable>",
                     r"[a-zA-Z0-9_$]",

@@ -2628,6 +2628,24 @@ class Element(structure.MoveInfix):
 
     _filter_type = cqltypes.FilterType.SET | cqltypes.FilterType.LOGICAL
 
+    def _verify_children_and_set_own_types(self):
+        """Verify filter has two arguments and the second is a SET filter."""
+        # Note the instance filter type remains the default SET|LOGICAL
+        # and is not resolved to one of the two.  This should be done at
+        # some point.
+        self.raise_if_not_number_of_children(self.child_count)
+        if self.container.function_body_cursor is not None:
+            return
+        rhs = self.children[-1]
+        if rhs.filter_type is not cqltypes.FilterType.SET:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects a ",
+                cqltypes.FilterType.SET.name.join("''"),
+                " domain but got a ",
+                rhs.filter_type.name.join("''"),
+            )
+
 
 # 'elo' does not have an implicit search filter, unlike many of the other
 # PGN Tag filters.
