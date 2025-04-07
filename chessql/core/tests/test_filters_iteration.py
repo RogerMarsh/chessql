@@ -101,16 +101,16 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_169_square_ascii_07_integer_set(self):  # chessql accepts.
+    def test_169_square_ascii_07_integer_set(self):
         self.verify("x [element] 1 k", [], returncode=1)
 
-    def test_169_square_ascii_08_string_set(self):  # chessql accepts.
+    def test_169_square_ascii_08_string_set(self):
         self.verify('x [element] "w" k', [], returncode=1)
 
-    def test_169_square_ascii_09_logical_set(self):  # chessql accepts.
+    def test_169_square_ascii_09_logical_set(self):
         self.verify("x [element] true k", [], returncode=1)
 
-    def test_169_square_ascii_10_position_set(self):  # chessql accepts.
+    def test_169_square_ascii_10_position_set(self):
         self.verify("x [element] currentposition k", [], returncode=1)
 
     def test_170_square_utf8_01(self):
@@ -200,16 +200,16 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_170_square_utf8_07_integer_set(self):  # chessql accepts.
+    def test_170_square_utf8_07_integer_set(self):
         self.verify("x ∊ 1 k", [], returncode=1)
 
-    def test_170_square_utf8_08_string_set(self):  # chessql accepts.
+    def test_170_square_utf8_08_string_set(self):
         self.verify('x ∊ "w" k', [], returncode=1)
 
-    def test_170_square_utf8_09_logical_set(self):  # chessql accepts.
+    def test_170_square_utf8_09_logical_set(self):
         self.verify("x ∊ true k", [], returncode=1)
 
-    def test_170_square_utf8_10_position_set(self):  # chessql accepts.
+    def test_170_square_utf8_10_position_set(self):
         self.verify("x ∊ currentposition k", [], returncode=1)
 
     def test_171_universal_square_ascii_01_01(self):
@@ -233,9 +233,9 @@ class FiltersIteration(verify.Verify):
     def test_171_universal_square_ascii_06(self):
         self.verify("[forall]. k", [], returncode=1)
 
-    def test_171_universal_square_ascii_07_set_01_set_01(self):
+    def test_171_universal_square_ascii_07_set_01_set_01_no_space(self):
         self.verify(
-            "[forall]x[element]. k",
+            "[forall]x[element].k",
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
@@ -245,7 +245,8 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_171_universal_square_ascii_07_set_01_set_02(self):  # wrong.
+    # No 'all space' test because it is same as 'allowed space' test.
+    def test_171_universal_square_ascii_07_set_01_set_03_allowed_space(self):
         self.verify(
             "[forall] x [element] . k",
             [
@@ -253,6 +254,21 @@ class FiltersIteration(verify.Verify):
                 (4, "Element"),
                 (5, "UniversalSquareVariable"),
                 (5, "AnySquare"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_171_universal_square_ascii_07_set_01_set_04_missing_space(self):
+        self.verify("[forall]x[element]Qk", [], returncode=1)
+
+    def test_171_universal_square_ascii_07_set_01_set_05_forced_space(self):
+        self.verify(
+            "[forall]x[element]Q k",
+            [
+                (3, "UniversalSquareIterator"),
+                (4, "Element"),
+                (5, "UniversalSquareVariable"),
+                (5, "PieceDesignator"),
                 (4, "PieceDesignator"),
             ],
         )
@@ -306,29 +322,29 @@ class FiltersIteration(verify.Verify):
         )
 
     def test_172_universal_square_utf8_01_01(self):
-        self.verify("[forall]", [], returncode=1)
+        self.verify("∀", [], returncode=1)
 
     def test_172_universal_square_utf8_01_02(self):
-        self.verify("[forall]∊", [], returncode=1)
+        self.verify("∀∊", [], returncode=1)
 
     def test_172_universal_square_utf8_02(self):
-        self.verify("[forall]x∊", [], returncode=1)
+        self.verify("∀x∊", [], returncode=1)
 
     def test_172_universal_square_utf8_03(self):
-        self.verify("[forall]x∊.", [], returncode=1)
+        self.verify("∀x∊.", [], returncode=1)
 
     def test_172_universal_square_utf8_04(self):
-        self.verify("[forall]∊. k", [], returncode=1)
+        self.verify("∀∊. k", [], returncode=1)
 
     def test_172_universal_square_utf8_05(self):
-        self.verify("[forall]∊. k", [], returncode=1)
+        self.verify("∀∊. k", [], returncode=1)
 
     def test_172_universal_square_utf8_06(self):
-        self.verify("[forall]. k", [], returncode=1)
+        self.verify("∀. k", [], returncode=1)
 
-    def test_172_universal_square_utf8_07_set_01_set_01(self):
+    def test_172_universal_square_utf8_07_set_01_set_01_no_space(self):
         self.verify(
-            "[forall]x∊. k",
+            "∀x∊.k",
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
@@ -338,21 +354,37 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_172_universal_square_utf8_07_set_01_set_02(self):  # wrong.
+    # No 'all space' test because it is same as 'allowed space' test.
+    def test_172_universal_square_utf8_07_set_01_set_03_allowed_space(self):
         self.verify(
-            "[forall] x ∊ . k",
+            "∀ x ∊ . k",
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
                 (5, "UniversalSquareVariable"),
                 (5, "AnySquare"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_172_universal_square_utf8_07_set_01_set_04_missing_space(self):
+        self.verify("∀x∊Qk", [], returncode=1)
+
+    def test_172_universal_square_utf8_07_set_01_set_05_forced_space(self):
+        self.verify(
+            "∀x∊Q k",
+            [
+                (3, "UniversalSquareIterator"),
+                (4, "Element"),
+                (5, "UniversalSquareVariable"),
+                (5, "PieceDesignator"),
                 (4, "PieceDesignator"),
             ],
         )
 
     def test_172_universal_square_utf8_07_set_02_integer(self):
         self.verify(
-            "[forall]x∊. 1",
+            "∀x∊. 1",
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
@@ -364,7 +396,7 @@ class FiltersIteration(verify.Verify):
 
     def test_172_universal_square_utf8_07_set_03_string(self):
         self.verify(
-            '[forall]x∊. "w"',
+            '∀x∊. "w"',
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
@@ -376,7 +408,7 @@ class FiltersIteration(verify.Verify):
 
     def test_172_universal_square_utf8_07_set_04_logical(self):
         self.verify(
-            "[forall]x∊. false",
+            "∀x∊. false",
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
@@ -388,7 +420,7 @@ class FiltersIteration(verify.Verify):
 
     def test_172_universal_square_utf8_07_set_05_position(self):
         self.verify(
-            "[forall]x∊. currentposition",
+            "∀x∊. currentposition",
             [
                 (3, "UniversalSquareIterator"),
                 (4, "Element"),
@@ -431,7 +463,7 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_173_universal_square_utf8_07_set_01_set_02(self):  # wrong.
+    def test_173_universal_square_utf8_07_set_01_set_02(self):
         self.verify(
             "∀ x [element] . k",
             [
@@ -524,7 +556,7 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_174_universal_square_utf8_07_set_01_set_02(self):  # wrong.
+    def test_174_universal_square_utf8_07_set_01_set_02(self):
         self.verify(
             "∀ x ∊ . k",
             [
@@ -602,7 +634,7 @@ class FiltersIteration(verify.Verify):
     def test_175_piece_ascii_04(self):
         self.verify("[element]. k", [], returncode=1)
 
-    def test_175_piece_ascii_05(self):  # chessql accepts.
+    def test_175_piece_ascii_05(self):
         self.verify("[Aa]y. k", [], returncode=1)
 
     def test_175_piece_ascii_06_set_01_set_01(self):
@@ -690,16 +722,16 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_175_piece_ascii_07_integer_set(self):  # chessql accepts.
+    def test_175_piece_ascii_07_integer_set(self):
         self.verify("[Aa]y [element] 1 k", [], returncode=1)
 
-    def test_175_piece_ascii_08_string_set(self):  # chessql accepts.
+    def test_175_piece_ascii_08_string_set(self):
         self.verify('[Aa]y [element] "w" k', [], returncode=1)
 
-    def test_175_piece_ascii_09_logical_set(self):  # chessql accepts.
+    def test_175_piece_ascii_09_logical_set(self):
         self.verify("[Aa]y [element] true k", [], returncode=1)
 
-    def test_175_piece_ascii_10_position_set(self):  # chessql accepts.
+    def test_175_piece_ascii_10_position_set(self):
         self.verify("[Aa]y [element] currentposition k", [], returncode=1)
 
     def test_176_piece_utf8_01(self):
@@ -808,16 +840,16 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_176_piece_utf8_07_integer_set(self):  # chessql accepts.
+    def test_176_piece_utf8_07_integer_set(self):
         self.verify("◭y ∊ 1 k", [], returncode=1)
 
-    def test_176_piece_utf8_08_string_set(self):  # chessql accepts.
+    def test_176_piece_utf8_08_string_set(self):
         self.verify('◭y ∊ "w" k', [], returncode=1)
 
-    def test_176_piece_utf8_09_logical_set(self):  # chessql accepts.
+    def test_176_piece_utf8_09_logical_set(self):
         self.verify("◭y ∊ true k", [], returncode=1)
 
-    def test_176_piece_utf8_10_position_set(self):  # chessql accepts.
+    def test_176_piece_utf8_10_position_set(self):
         self.verify("◭y ∊ currentposition k", [], returncode=1)
 
     def test_177_piece_utf8_mix_01(self):
@@ -838,7 +870,7 @@ class FiltersIteration(verify.Verify):
     def test_177_piece_utf8_mix_04(self):
         self.verify("[element]. k", [], returncode=1)
 
-    def test_177_piece_utf8_mix_05(self):  # chessql accepts.
+    def test_177_piece_utf8_mix_05(self):
         self.verify("◭y. k", [], returncode=1)
 
     def test_177_piece_utf8_mix_06_set_01_set_01(self):
@@ -926,16 +958,16 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_177_piece_utf8_mix_07_integer_set(self):  # chessql accepts.
+    def test_177_piece_utf8_mix_07_integer_set(self):
         self.verify("◭y [element] 1 k", [], returncode=1)
 
-    def test_177_piece_utf8_mix_08_string_set(self):  # chessql accepts.
+    def test_177_piece_utf8_mix_08_string_set(self):
         self.verify('◭y [element] "w" k', [], returncode=1)
 
-    def test_177_piece_utf8_mix_09_logical_set(self):  # chessql accepts.
+    def test_177_piece_utf8_mix_09_logical_set(self):
         self.verify("◭y [element] true k", [], returncode=1)
 
-    def test_177_piece_utf8_mix_10_position_set(self):  # chessql accepts.
+    def test_177_piece_utf8_mix_10_position_set(self):
         self.verify("◭y [element] currentposition k", [], returncode=1)
 
     def test_178_piece_ascii_mix_01(self):
@@ -956,7 +988,7 @@ class FiltersIteration(verify.Verify):
     def test_178_piece_ascii_mix_04(self):
         self.verify("∊. k", [], returncode=1)
 
-    def test_178_piece_ascii_mix_05(self):  # chessql accepts.
+    def test_178_piece_ascii_mix_05(self):
         self.verify("[Aa]y. k", [], returncode=1)
 
     def test_178_piece_ascii_mix_06_set_01_set_01(self):
@@ -1044,16 +1076,16 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_178_piece_ascii_mix_07_integer_set(self):  # chessql accepts.
+    def test_178_piece_ascii_mix_07_integer_set(self):
         self.verify("[Aa]y ∊ 1 k", [], returncode=1)
 
-    def test_178_piece_ascii_mix_08_string_set(self):  # chessql accepts.
+    def test_178_piece_ascii_mix_08_string_set(self):
         self.verify('[Aa]y ∊ "w" k', [], returncode=1)
 
-    def test_178_piece_ascii_mix_09_logical_set(self):  # chessql accepts.
+    def test_178_piece_ascii_mix_09_logical_set(self):
         self.verify("[Aa]y ∊ true k", [], returncode=1)
 
-    def test_178_piece_ascii_mix_10_position_set(self):  # chessql accepts.
+    def test_178_piece_ascii_mix_10_position_set(self):
         self.verify("[Aa]y ∊ currentposition k", [], returncode=1)
 
     def test_179_universal_piece_ascii_01_01(self):
@@ -1077,9 +1109,9 @@ class FiltersIteration(verify.Verify):
     def test_179_universal_piece_ascii_06(self):
         self.verify("[forall][Aa]. k", [], returncode=1)
 
-    def test_179_universal_piece_ascii_07_set_01_set_01(self):
+    def test_179_universal_piece_ascii_07_set_01_set_01_no_space(self):
         self.verify(
-            "[forall][Aa]x[element]. k",
+            "[forall][Aa]x[element].k",
             [
                 (3, "UniversalPieceIterator"),
                 (4, "Element"),
@@ -1089,7 +1121,10 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_179_universal_piece_ascii_07_set_01_set_02(self):  # wrong.
+    def test_179_universal_piece_ascii_07_set_01_set_02_all_space(self):
+        self.verify("[forall] [Aa] x [element] . k", [], returncode=1)
+
+    def test_179_universal_piece_ascii_07_set_01_set_03_allowed_space(self):
         self.verify(
             "[forall] [Aa]x [element] . k",
             [
@@ -1097,6 +1132,21 @@ class FiltersIteration(verify.Verify):
                 (4, "Element"),
                 (5, "UniversalPieceVariable"),
                 (5, "AnySquare"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_179_universal_piece_ascii_07_set_01_set_04_missing_space(self):
+        self.verify("[forall][Aa]x[element]Qk", [], returncode=1)
+
+    def test_179_universal_piece_ascii_07_set_01_set_05_forced_space(self):
+        self.verify(
+            "[forall][Aa]x[element]Q k",
+            [
+                (3, "UniversalPieceIterator"),
+                (4, "Element"),
+                (5, "UniversalPieceVariable"),
+                (5, "PieceDesignator"),
                 (4, "PieceDesignator"),
             ],
         )
@@ -1170,9 +1220,9 @@ class FiltersIteration(verify.Verify):
     def test_180_universal_piece_utf8_06(self):
         self.verify("∀◭. k", [], returncode=1)
 
-    def test_180_universal_piece_utf8_07_set_01_set_01(self):
+    def test_180_universal_piece_utf8_07_set_01_set_01_no_space(self):
         self.verify(
-            "∀◭x∊. k",
+            "∀◭x∊.k",
             [
                 (3, "UniversalPieceIterator"),
                 (4, "Element"),
@@ -1182,14 +1232,32 @@ class FiltersIteration(verify.Verify):
             ],
         )
 
-    def test_180_universal_piece_utf8_07_set_01_set_02(self):  # wrong.
+    def test_180_universal_piece_utf8_07_set_01_set_02_all_space(self):
+        self.verify("∀ ◭ x ∊ . k", [], returncode=1)
+
+    def test_180_universal_piece_utf8_07_set_01_set_03_allowed_space(self):
         self.verify(
-            "[forall] [Aa]x ∊ . k",
+            "∀ ◭x ∊ . k",
             [
                 (3, "UniversalPieceIterator"),
                 (4, "Element"),
                 (5, "UniversalPieceVariable"),
                 (5, "AnySquare"),
+                (4, "PieceDesignator"),
+            ],
+        )
+
+    def test_180_universal_piece_utf8_07_set_01_set_04_missing_space(self):
+        self.verify("∀◭x∊Qk", [], returncode=1)
+
+    def test_180_universal_piece_utf8_07_set_01_set_05_forced_space(self):
+        self.verify(
+            "∀◭x∊Q k",
+            [
+                (3, "UniversalPieceIterator"),
+                (4, "Element"),
+                (5, "UniversalPieceVariable"),
+                (5, "PieceDesignator"),
                 (4, "PieceDesignator"),
             ],
         )
