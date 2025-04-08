@@ -120,6 +120,7 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_01_plain_06_rep_03_optional(self):
         self.verify("pseudolegal --?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_01_plain_06_rep_04_exact(self):
         self.verify("pseudolegal --{5}", [], returncode=1)
 
@@ -147,6 +148,7 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_02_left_06_rep_03_optional(self):
         self.verify("pseudolegal e2--?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_02_left_06_rep_04_exact(self):
         self.verify("pseudolegal e2--{5}", [], returncode=1)
 
@@ -174,8 +176,19 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_03_right_06_rep_03_optional(self):
         self.verify("pseudolegal --Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_03_right_06_rep_04_exact(self):
-        self.verify("pseudolegal --Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --Qa4{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_03_right_06_rep_05_range(self):
         self.verify("pseudolegal --Qa4{3,5}", [], returncode=1)
@@ -201,8 +214,19 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_04_lr_06_rep_03_optional(self):
         self.verify("pseudolegal e2--Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_04_lr_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--Qa4{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_04_lr_06_rep_05_range(self):
         self.verify("pseudolegal e2--Qa4{3,5}", [], returncode=1)
@@ -228,8 +252,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_05_prom_06_rep_03_optional(self):
         self.verify("pseudolegal --=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_05_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal --=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_05_prom_06_rep_05_range(self):
         self.verify("pseudolegal --=q{3,5}", [], returncode=1)
@@ -255,8 +292,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_06_left_prom_06_rep_03_optional(self):
         self.verify("pseudolegal e2--=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_06_left_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_06_left_prom_06_rep_05_range(self):
         self.verify("pseudolegal e2--=q{3,5}", [], returncode=1)
@@ -282,8 +332,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_07_right_prom_06_rep_03_optional(self):
         self.verify("pseudolegal --Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_07_right_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal --Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --Qa4=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_07_right_prom_06_rep_05_range(self):
         self.verify("pseudolegal --Qa4=q{3,5}", [], returncode=1)
@@ -309,8 +372,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_08_lr_prom_06_rep_03_optional(self):
         self.verify("pseudolegal e2--Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_08_lr_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--Qa4=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_08_lr_prom_06_rep_05_range(self):
         self.verify("pseudolegal e2--Qa4=q{3,5}", [], returncode=1)
@@ -340,8 +416,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_09_target_06_rep_03_optional(self):
         self.verify("pseudolegal --(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_09_target_06_rep_04_exact(self):
-        self.verify("pseudolegal --(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_09_target_06_rep_05_range(self):
         self.verify("pseudolegal --(o-o){3,5}", [], returncode=1)
@@ -367,8 +456,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_10_left_target_06_rep_03_optional(self):
         self.verify("pseudolegal e2--(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_10_left_target_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_10_left_target_06_rep_05_range(self):
         self.verify("pseudolegal e2--(o-o){3,5}", [], returncode=1)
@@ -396,8 +498,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_11_right_target_06_rep_03_optional(self):
         self.verify("pseudolegal --Qa4(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_11_right_target_06_rep_04_exact(self):
-        self.verify("pseudolegal --Qa4(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --Qa4(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_11_right_target_06_rep_05_range(self):
         self.verify("pseudolegal --Qa4(o-o){3,5}", [], returncode=1)
@@ -427,8 +542,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_12_lr_target_06_rep_03_optional(self):
         self.verify("pseudolegal e2--Qa4(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_12_lr_target_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--Qa4(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--Qa4(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_12_lr_target_06_rep_05_range(self):
         self.verify("pseudolegal e2--Qa4(o-o){3,5}", [], returncode=1)
@@ -458,8 +586,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_13_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal --=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_13_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal --=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_13_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal --=q(o-o){3,5}", [], returncode=1)
@@ -485,8 +628,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_14_l_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal e2--=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_14_l_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_14_l_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal e2--=q(o-o){3,5}", [], returncode=1)
@@ -516,8 +674,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_15_r_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal --Qa4=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_15_r_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal --Qa4=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal --Qa4=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_15_r_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal --Qa4=q(o-o){3,5}", [], returncode=1)
@@ -547,8 +720,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_06_da_16_lr_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal e2--Qa4=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_06_da_16_lr_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal e2--Qa4=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2--Qa4=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_06_da_16_lr_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal e2--Qa4=q(o-o){3,5}", [], returncode=1)
@@ -578,6 +766,7 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_01_plain_06_rep_03_optional(self):
         self.verify("pseudolegal ――?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_01_plain_06_rep_04_exact(self):
         self.verify("pseudolegal ――{5}", [], returncode=1)
 
@@ -605,6 +794,7 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_02_left_06_rep_03_optional(self):
         self.verify("pseudolegal e2――?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_02_left_06_rep_04_exact(self):
         self.verify("pseudolegal e2――{5}", [], returncode=1)
 
@@ -632,8 +822,19 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_03_right_06_rep_03_optional(self):
         self.verify("pseudolegal ――Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_03_right_06_rep_04_exact(self):
-        self.verify("pseudolegal ――Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――Qa4{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_03_right_06_rep_05_range(self):
         self.verify("pseudolegal ――Qa4{3,5}", [], returncode=1)
@@ -659,8 +860,19 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_04_lr_06_rep_03_optional(self):
         self.verify("pseudolegal e2――Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_04_lr_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――Qa4{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_04_lr_06_rep_05_range(self):
         self.verify("pseudolegal e2――Qa4{3,5}", [], returncode=1)
@@ -686,8 +898,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_05_prom_06_rep_03_optional(self):
         self.verify("pseudolegal ――=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_05_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal ――=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_05_prom_06_rep_05_range(self):
         self.verify("pseudolegal ――=q{3,5}", [], returncode=1)
@@ -713,8 +938,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_06_left_prom_06_rep_03_optional(self):
         self.verify("pseudolegal e2――=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_06_left_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_06_left_prom_06_rep_05_range(self):
         self.verify("pseudolegal e2――=q{3,5}", [], returncode=1)
@@ -740,8 +978,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_07_right_prom_06_rep_03_optional(self):
         self.verify("pseudolegal ――Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_07_right_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal ――Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――Qa4=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_07_right_prom_06_rep_05_range(self):
         self.verify("pseudolegal ――Qa4=q{3,5}", [], returncode=1)
@@ -767,8 +1018,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_08_lr_prom_06_rep_03_optional(self):
         self.verify("pseudolegal e2――Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_08_lr_prom_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――Qa4=q{5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_08_lr_prom_06_rep_05_range(self):
         self.verify("pseudolegal e2――Qa4=q{3,5}", [], returncode=1)
@@ -798,8 +1062,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_09_target_06_rep_03_optional(self):
         self.verify("pseudolegal ――(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_09_target_06_rep_04_exact(self):
-        self.verify("pseudolegal ――(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_09_target_06_rep_05_range(self):
         self.verify("pseudolegal ――(o-o){3,5}", [], returncode=1)
@@ -825,8 +1102,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_10_left_target_06_rep_03_optional(self):
         self.verify("pseudolegal e2――(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_10_left_target_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_10_left_target_06_rep_05_range(self):
         self.verify("pseudolegal e2――(o-o){3,5}", [], returncode=1)
@@ -854,8 +1144,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_11_right_target_06_rep_03_optional(self):
         self.verify("pseudolegal ――Qa4(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_11_right_target_06_rep_04_exact(self):
-        self.verify("pseudolegal ――Qa4(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――Qa4(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_11_right_target_06_rep_05_range(self):
         self.verify("pseudolegal ――Qa4(o-o){3,5}", [], returncode=1)
@@ -885,8 +1188,21 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_12_lr_target_06_rep_03_optional(self):
         self.verify("pseudolegal e2――Qa4(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_12_lr_target_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――Qa4(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――Qa4(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_12_lr_target_06_rep_05_range(self):
         self.verify("pseudolegal e2――Qa4(o-o){3,5}", [], returncode=1)
@@ -916,8 +1232,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_13_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal ――=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_13_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal ――=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_13_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal ――=q(o-o){3,5}", [], returncode=1)
@@ -943,8 +1274,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_14_l_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal e2――=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_14_l_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_14_l_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal e2――=q(o-o){3,5}", [], returncode=1)
@@ -974,8 +1320,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_15_r_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal ――Qa4=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_15_r_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal ――Qa4=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal ――Qa4=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_15_r_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal ――Qa4=q(o-o){3,5}", [], returncode=1)
@@ -1005,8 +1366,23 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_07_du_16_lr_prom_targ_06_rep_03_optional(self):
         self.verify("pseudolegal e2――Qa4=q(o-o)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_106_pseudolegal_07_du_16_lr_prom_targ_06_rep_04_exact(self):
-        self.verify("pseudolegal e2――Qa4=q(o-o){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "pseudolegal e2――Qa4=q(o-o){5}",
+            [
+                (3, "Pseudolegal"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "OO"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_106_pseudolegal_07_du_16_lr_prom_targ_06_rep_05_range(self):
         self.verify("pseudolegal e2――Qa4=q(o-o){3,5}", [], returncode=1)

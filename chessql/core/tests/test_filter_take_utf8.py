@@ -222,6 +222,7 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_01_plain_06_repeat_03_optional(self):
         self.verify("×?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_01_plain_06_repeat_04_exact(self):
         self.verify("×{5}", [], returncode=1)
 
@@ -274,6 +275,7 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_02_left_06_repeat_03_optional(self):
         self.verify("e2×?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_02_left_06_repeat_04_exact(self):
         self.verify("e2×{5}", [], returncode=1)
 
@@ -326,8 +328,18 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_03_right_06_repeat_03_optional(self):
         self.verify("×Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_03_right_06_repeat_04_exact(self):
-        self.verify("×Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×Qa4{5}",
+            [
+                (3, "TakeIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_03_right_06_repeat_05_range(self):
         self.verify("×Qa4{3,5}", [], returncode=1)
@@ -380,8 +392,18 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_04_left_right_06_repeat_03_optional(self):
         self.verify("e2×Qa4?", [], returncode=1)
 
-    def test_215_take_utf8_04_left_right_06_repeat_04_exact(self):
-        self.verify("e2×Qa4{5}", [], returncode=1)
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
+    def test_215_take_utf8_04_left_right_06_repeat_03_optional(self):
+        self.verify_declare_fail(
+            "e2×Qa4{5}",
+            [
+                (3, "TakeLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_04_left_right_06_repeat_05_range(self):
         self.verify("e2×Qa4{3,5}", [], returncode=1)
@@ -581,8 +603,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_05_promote_06_repeat_03_optional(self):
         self.verify("×=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_05_promote_06_repeat_04_exact(self):
-        self.verify("×=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×=q{5}",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_05_promote_06_repeat_05_range(self):
         self.verify("×=q{3,5}", [], returncode=1)
@@ -782,8 +816,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_06_left_promote_06_repeat_03_optional(self):
         self.verify("e2×=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_06_left_promote_06_repeat_04_exact(self):
-        self.verify("e2×=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×=q{5}",
+            [
+                (3, "TakeLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_06_left_promote_06_repeat_05_range(self):
         self.verify("e2×=q{3,5}", [], returncode=1)
@@ -983,8 +1029,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_07_right_promote_06_repeat_03_optional(self):
         self.verify("×Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_07_right_promote_06_repeat_04_exact(self):
-        self.verify("×Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×Qa4=q{5}",
+            [
+                (3, "TakeIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_07_right_promote_06_repeat_05_range(self):
         self.verify("×Qa4=q{3,5}", [], returncode=1)
@@ -1200,8 +1258,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_08_left_right_promote_06_repeat_03_optional(self):
         self.verify("e2×Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_08_left_right_promote_06_repeat_04_exact(self):
-        self.verify("e2×Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×Qa4=q{5}",
+            [
+                (3, "TakeLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_08_left_right_promote_06_repeat_05_range(self):
         self.verify("e2×Qa4=q{3,5}", [], returncode=1)
@@ -1354,7 +1424,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_09_target_05_rhs_11_ne(self):
         self.verify("×(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_09_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "×(btm) and 2",
@@ -1384,7 +1453,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_09_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "×(btm) or 2",
@@ -1423,8 +1491,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_09_target_06_repeat_03_optional(self):
         self.verify("×(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_09_target_06_repeat_04_exact(self):
-        self.verify("×(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×(btm){5}",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_09_target_06_repeat_05_range(self):
         self.verify("×(btm){3,5}", [], returncode=1)
@@ -1573,7 +1653,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_10_left_target_05_rhs_11_ne(self):
         self.verify("e2×(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_10_left_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2×(btm) and 2",
@@ -1603,7 +1682,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_10_left_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2×(btm) or 2",
@@ -1642,8 +1720,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_10_left_target_06_repeat_03_optional(self):
         self.verify("e2×(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_10_left_target_06_repeat_04_exact(self):
-        self.verify("e2×(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×(btm){5}",
+            [
+                (3, "TakeLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_10_left_target_06_repeat_05_range(self):
         self.verify("e2×(btm){3,5}", [], returncode=1)
@@ -1792,7 +1882,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_11_right_target_05_rhs_11_ne(self):
         self.verify("×Qa4(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_11_right_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "×Qa4(btm) and 2",
@@ -1822,7 +1911,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_11_right_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "×Qa4(btm) or 2",
@@ -1861,8 +1949,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_11_right_target_06_repeat_03_optional(self):
         self.verify("×Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_11_right_target_06_repeat_04_exact(self):
-        self.verify("×Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×Qa4(btm){5}",
+            [
+                (3, "TakeIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_11_right_target_06_repeat_05_range(self):
         self.verify("×Qa4(btm){3,5}", [], returncode=1)
@@ -2023,7 +2123,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_12_left_right_target_05_rhs_11_ne(self):
         self.verify("e2×Qa4(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_12_left_right_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2×Qa4(btm) and 2",
@@ -2055,7 +2154,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_12_left_right_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2×Qa4(btm) or 2",
@@ -2096,8 +2194,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_12_left_right_target_06_repeat_03_optional(self):
         self.verify("e2×Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_12_left_right_target_06_repeat_04_exact(self):
-        self.verify("e2×Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×Qa4(btm){5}",
+            [
+                (3, "TakeLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_12_left_right_target_06_repeat_05_range(self):
         self.verify("e2×Qa4(btm){3,5}", [], returncode=1)
@@ -2260,7 +2370,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_13_promote_target_05_rhs_11_ne(self):
         self.verify("×=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_13_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "×=q(btm) and 2",
@@ -2296,7 +2405,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_13_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "×=q(btm) or 2",
@@ -2341,8 +2449,22 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_13_promote_target_06_repeat_03_optional(self):
         self.verify("×=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_13_promote_target_06_repeat_04_exact(self):
-        self.verify("×=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×=q(btm){5}",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_13_promote_target_06_repeat_05_range(self):
         self.verify("×=q(btm){3,5}", [], returncode=1)
@@ -2505,7 +2627,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_14_l_promote_target_05_rhs_11_ne(self):
         self.verify("e2×=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_14_l_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2×=q(btm) and 2",
@@ -2541,7 +2662,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_14_l_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2×=q(btm) or 2",
@@ -2586,8 +2706,22 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_14_l_promote_target_06_repeat_03_optional(self):
         self.verify("e2×=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_14_l_promote_target_06_repeat_04_exact(self):
-        self.verify("e2×=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×=q(btm){5}",
+            [
+                (3, "TakeLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_14_l_promote_target_06_repeat_05_range(self):
         self.verify("e2×=q(btm){3,5}", [], returncode=1)
@@ -2752,7 +2886,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_15_r_promote_target_05_rhs_11_ne(self):
         self.verify("×Qa4=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_15_r_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "×Qa4=q(btm) and 2",
@@ -2788,7 +2921,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_15_r_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "×Qa4=q(btm) or 2",
@@ -2833,8 +2965,22 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_15_r_promote_target_06_repeat_03_optional(self):
         self.verify("×Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_15_r_promote_target_06_repeat_04_exact(self):
-        self.verify("×Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "×Qa4=q(btm){5}",
+            [
+                (3, "TakeIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_15_r_promote_target_06_repeat_05_range(self):
         self.verify("×Qa4=q(btm){3,5}", [], returncode=1)
@@ -3005,7 +3151,6 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_16_lr_promote_target_05_rhs_11_ne(self):
         self.verify("e2×Qa4=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_215_take_utf8_16_lr_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2×Qa4=q(btm) and 2",
@@ -3041,7 +3186,6 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_215_take_utf8_16_lr_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2×Qa4=q(btm) or 2",
@@ -3086,8 +3230,22 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_16_lr_promote_target_06_repeat_03_optional(self):
         self.verify("e2×Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_215_take_utf8_16_lr_promote_target_06_repeat_04_exact(self):
-        self.verify("e2×Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×Qa4=q(btm){5}",
+            [
+                (3, "TakeLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_16_lr_promote_target_06_repeat_05_range(self):
         self.verify("e2×Qa4=q(btm){3,5}", [], returncode=1)

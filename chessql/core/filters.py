@@ -1006,7 +1006,11 @@ class TargetConditionsEnd(structure.CQLObject):
         children = self.parent.children
         del children[-1]
         parent_parent = self.parent.parent
-        if isinstance(parent_parent, structure.MoveInfix):
+        if isinstance(self.parent, TargetParenthesisLeft):
+            self.parent.filter_type = children[-1].filter_type
+        if isinstance(
+            parent_parent, (structure.MoveInfix, structure.DashOrTake)
+        ):
             parent_parent.filter_type = children[-1].filter_type
         self.parent.completed = True
         container.cursor = self.parent
@@ -1173,60 +1177,7 @@ class BeforeNE(structure.ComparePosition, structure.InfixRight):
     _precedence = cqltypes.Precedence.P30  # from 'ancestor'.
 
 
-class _DashOrTake(structure.InfixLeft):
-    """Represent shared behaviour of '--' and '[x]' filters.
-
-    The '--' and '[x]' filters may have either, or both, promotion and
-    target conditions in addition to the LHS and RHS filters accepted by
-    InfixLeft.
-
-    The promotion condition is idicated by a trailing '=' clause, and the
-    target condition is indicated by a trailing '(...)' clause.  The '='
-    clause appears first if both are present.
-
-    The filter_type of final filter in target condition becomes filter type
-    of the _DashOrTake instance.  The absence of target conditions cause the
-    _DashOrTake instance to be a logical filter.
-    """
-
-    def _end_left_parenthesis_infix_block(self):
-        """Override, do nothing.
-
-        Class LeftParenthesisInfix is introduced to protect _DashOrTake
-        instances from disruption by other Infix class instances.
-
-        This protection is not required for _DashOrTake instances.
-        """
-
-    def _raise_if_dash_or_take_arguments_are_not_filter_type_set(self):
-        """Raise NodeError if first two arguments of filter_ are not sets.
-
-        Dash and Take instances can have up to four arguments, the last two
-        being AssignPromotion and TargetParenthesisLeft instances.
-
-        """
-        for item, child in enumerate(self.children):
-            if item < 2:
-                if (
-                    self.container.function_body_count is not None
-                    and isinstance(child, (structure.VariableName, Dictionary))
-                ):
-                    continue
-                if child.filter_type is not cqltypes.FilterType.SET:
-                    if child.filter_type:
-                        name = child.filter_type.name.lower()
-                    else:
-                        name = str(None)
-                    self.raise_nodeerror(
-                        self.__class__.__name__.join("''"),
-                        " expects a ",
-                        cqltypes.FilterType.SET.name.lower().join("''"),
-                        " but got a ",
-                        name.join("''"),
-                    )
-
-
-class TakeII(_DashOrTake):
+class TakeII(structure.DashOrTake):
     """Represent '[x]' ('×') filter like F [x] G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1257,7 +1208,7 @@ class TakeII(_DashOrTake):
         self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class TakeLI(_DashOrTake):
+class TakeLI(structure.DashOrTake):
     """Represent '[x]' ('×') filter like F[x] G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1293,7 +1244,7 @@ class TakeLI(_DashOrTake):
         return self._precedence
 
 
-class TakeIR(_DashOrTake):
+class TakeIR(structure.DashOrTake):
     """Represent '[x]' ('×') filter like F [x]G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1326,7 +1277,7 @@ class TakeIR(_DashOrTake):
         self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class TakeLR(_DashOrTake):
+class TakeLR(structure.DashOrTake):
     """Represent '[x]' ('×') filter like F[x]G.
 
     F and G are set filters where whitespace between them and '[x]' matters.
@@ -1433,7 +1384,7 @@ class AttackedArrow(structure.MoveInfix):
     _filter_type = cqltypes.FilterType.SET
 
 
-class DashII(_DashOrTake):
+class DashII(structure.DashOrTake):
     """Represent '--' ('―') filter like F -- G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1467,7 +1418,7 @@ class DashII(_DashOrTake):
         self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class DashLI(_DashOrTake):
+class DashLI(structure.DashOrTake):
     """Represent '--' ('―') filter like F-- G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1505,7 +1456,7 @@ class DashLI(_DashOrTake):
         return self._precedence
 
 
-class DashIR(_DashOrTake):
+class DashIR(structure.DashOrTake):
     """Represent '--' ('―') filter like F --G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -1540,7 +1491,7 @@ class DashIR(_DashOrTake):
         self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
-class DashLR(_DashOrTake):
+class DashLR(structure.DashOrTake):
     """Represent '--' ('―') filter like F--G.
 
     F and G are set filters where whitespace between them and '--' matters.
@@ -2353,7 +2304,7 @@ def diagonal(match_=None, container=None):
     return Diagonal(match_=match_, container=container)
 
 
-class Dictionary(structure.Complete, structure.VariableTypeSetter):
+class Dictionary(structure.Complete, structure.DictionaryName):
     """Represent 'dictionary' logical filter, and the 'local' variant.
 
     All keys in a dictionary must be one type, and all values too.  But

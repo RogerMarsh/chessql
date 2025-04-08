@@ -748,6 +748,25 @@ class VariableName(VariableTypeSetter):
         return True
 
 
+class DictionaryName(VariableTypeSetter):
+    """Subclass of VariableTypeSetter for user defined dictionary names.
+
+    The various types of dictionary have behaviour which differs from
+    function and variable in CQL.
+    """
+
+    # Introduced to allow filters._DashOrTake to become structure.DashOrTake
+    # so InfixLeft.place_node_in_tree() can refer to it easily.
+    # VariableName already exists for variable and additions to dictionary
+    # behaviour in CQL may make this necessary in future anyway.
+    # Tests with BaseNode.is_node__dashortake_instance(), which returns
+    # False, and _DashOrTake.is_node__dashortake_instance(), which returns
+    # True, show the unittest ERROR outcomes can be replaced by fewer
+    # unittest FAIL outcomes in different tests which passed before.
+    # The problem is constructively changed to one involving the relative
+    # precedence of 'and', 'or', and the various '--'-like filters.
+
+
 class Argument(CQLObject):
     """Subclass of CQLObject for keywords with unparenthesized argument.
 
@@ -1019,7 +1038,7 @@ class InfixLeft(Infix):
             self._verify_and_set_filter_type(parent)
             return
         # For 'if 1 + 2 then k' (legal nonsense left association in 'if').
-        if ancestor.complete():
+        if ancestor.complete() and not isinstance(ancestor, DashOrTake):
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
                 " expects to swap places in an incomplete ",
@@ -1106,7 +1125,7 @@ class InfixRight(Infix):
 
 
 # Name is inappropriate now because this class no longer has anything to
-# do with the '--' and '[x]' filters (see filters._DashOrTake class).
+# do with the '--' and '[x]' filters (see DashOrTake class).
 class MoveInfix(Infix):
     """Subclass of Infix for '→', '←', '∊', and '=?' operators.
 
@@ -1131,6 +1150,59 @@ class MoveInfix(Infix):
             )
         self._swap_tree_position(parent.parent)
         self._verify_and_set_filter_type(parent)
+
+
+class DashOrTake(InfixLeft):
+    """Represent shared behaviour of '--' and '[x]' filters.
+
+    The '--' and '[x]' filters may have either, or both, promotion and
+    target conditions in addition to the LHS and RHS filters accepted by
+    InfixLeft.
+
+    The promotion condition is idicated by a trailing '=' clause, and the
+    target condition is indicated by a trailing '(...)' clause.  The '='
+    clause appears first if both are present.
+
+    The filter_type of final filter in target condition becomes filter type
+    of the DashOrTake instance.  The absence of target conditions cause the
+    DashOrTake instance to be a logical filter.
+    """
+
+    def _end_left_parenthesis_infix_block(self):
+        """Override, do nothing.
+
+        Class LeftParenthesisInfix is introduced to protect DashOrTake
+        instances from disruption by other Infix class instances.
+
+        This protection is not required for DashOrTake instances.
+        """
+
+    def _raise_if_dash_or_take_arguments_are_not_filter_type_set(self):
+        """Raise NodeError if first two arguments of filter_ are not sets.
+
+        Dash and Take instances can have up to four arguments, the last two
+        being AssignPromotion and TargetParenthesisLeft instances.
+
+        """
+        for item, child in enumerate(self.children):
+            if item < 2:
+                if (
+                    self.container.function_body_count is not None
+                    and isinstance(child, (VariableName, DictionaryName))
+                ):
+                    continue
+                if child.filter_type is not cqltypes.FilterType.SET:
+                    if child.filter_type:
+                        name = child.filter_type.name.lower()
+                    else:
+                        name = str(None)
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " expects a ",
+                        cqltypes.FilterType.SET.name.lower().join("''"),
+                        " but got a ",
+                        name.join("''"),
+                    )
 
 
 class Numeric(InfixLeft):

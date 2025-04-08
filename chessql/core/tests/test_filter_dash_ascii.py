@@ -200,8 +200,9 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_01_plain_05_brace_repeat_01_bare(self):
         self.verify("{}", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_01_plain_05_brace_repeat_02_one_element(self):
-        self.verify("{2}", [], returncode=1)
+        self.verify_declare_fail("{2}", [(3, "BraceLeft"), (4, "Integer")])
 
     def test_147_dash_ascii_01_plain_05_brace_repeat_03_two_elements_01(self):
         self.verify("{2,4}", [], returncode=1)
@@ -252,6 +253,7 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_01_plain_06_repeat_03_optional(self):
         self.verify("--?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_01_plain_06_repeat_04_exact(self):
         self.verify("--{5}", [], returncode=1)
 
@@ -304,6 +306,7 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_02_left_06_repeat_03_optional(self):
         self.verify("e2--?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_02_left_06_repeat_04_exact(self):
         self.verify("e2--{5}", [], returncode=1)
 
@@ -356,8 +359,18 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_03_right_06_repeat_03_optional(self):
         self.verify("--Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_03_right_06_repeat_04_exact(self):
-        self.verify("--Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--Qa4{5}",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_03_right_06_repeat_05_range(self):
         self.verify("--Qa4{3,5}", [], returncode=1)
@@ -410,8 +423,18 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_04_left_right_06_repeat_03_optional(self):
         self.verify("e2--Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_04_left_right_06_repeat_04_exact(self):
-        self.verify("e2--Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--Qa4{5}",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_04_left_right_06_repeat_05_range(self):
         self.verify("e2--Qa4{3,5}", [], returncode=1)
@@ -611,8 +634,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_05_promote_06_repeat_03_optional(self):
         self.verify("--=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_05_promote_06_repeat_04_exact(self):
-        self.verify("--=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--=q{5}",
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_05_promote_06_repeat_05_range(self):
         self.verify("--=q{3,5}", [], returncode=1)
@@ -812,8 +847,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_06_left_promote_06_repeat_03_optional(self):
         self.verify("e2--=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_06_left_promote_06_repeat_04_exact(self):
-        self.verify("e2--=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--=q{5}",
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_06_left_promote_06_repeat_05_range(self):
         self.verify("e2--=q{3,5}", [], returncode=1)
@@ -1015,8 +1062,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_07_right_promote_06_repeat_03_optional(self):
         self.verify("--Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_07_right_promote_06_repeat_04_exact(self):
-        self.verify("--Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--Qa4=q{5}",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_07_right_promote_06_repeat_05_range(self):
         self.verify("--Qa4=q{3,5}", [], returncode=1)
@@ -1232,8 +1291,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_08_left_right_promote_06_repeat_03_optional(self):
         self.verify("e2--Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_08_left_right_promote_06_repeat_04_exact(self):
-        self.verify("e2--Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--Qa4=q{5}",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_08_left_right_promote_06_repeat_05_range(self):
         self.verify("e2--Qa4=q{3,5}", [], returncode=1)
@@ -1386,7 +1457,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_09_target_05_rhs_11_ne(self):
         self.verify("--(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_09_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "--(btm) and 2",
@@ -1416,7 +1486,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_09_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "--(btm) or 2",
@@ -1455,8 +1524,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_09_target_06_repeat_03_optional(self):
         self.verify("--(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_09_target_06_repeat_04_exact(self):
-        self.verify("--(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--(btm){5}",
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_09_target_06_repeat_05_range(self):
         self.verify("--(btm){3,5}", [], returncode=1)
@@ -1605,7 +1686,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_10_left_target_05_rhs_11_ne(self):
         self.verify("e2--(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_10_left_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2--(btm) and 2",
@@ -1635,7 +1715,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_10_left_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2--(btm) or 2",
@@ -1674,8 +1753,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_10_left_target_06_repeat_03_optional(self):
         self.verify("e2--(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_10_left_target_06_repeat_04_exact(self):
-        self.verify("e2--(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--(btm){5}",
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_10_left_target_06_repeat_05_range(self):
         self.verify("e2--(btm){3,5}", [], returncode=1)
@@ -1824,7 +1915,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_11_right_target_05_rhs_11_ne(self):
         self.verify("--Qa4(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_11_right_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "--Qa4(btm) and 2",
@@ -1854,7 +1944,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_11_right_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "--Qa4(btm) or 2",
@@ -1893,8 +1982,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_11_right_target_06_repeat_03_optional(self):
         self.verify("--Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_11_right_target_06_repeat_04_exact(self):
-        self.verify("--Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--Qa4(btm){5}",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_11_right_target_06_repeat_05_range(self):
         self.verify("--Qa4(btm){3,5}", [], returncode=1)
@@ -2055,7 +2156,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_12_left_right_target_05_rhs_11_ne(self):
         self.verify("e2--Qa4(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_12_left_right_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2--Qa4(btm) and 2",
@@ -2087,7 +2187,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_12_left_right_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2--Qa4(btm) or 2",
@@ -2128,8 +2227,20 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_12_left_right_target_06_repeat_03_optional(self):
         self.verify("e2--Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_12_left_right_target_06_repeat_04_exact(self):
-        self.verify("e2--Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--Qa4(btm){5}",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_12_left_right_target_06_repeat_05_range(self):
         self.verify("e2--Qa4(btm){3,5}", [], returncode=1)
@@ -2292,7 +2403,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_13_promote_target_05_rhs_11_ne(self):
         self.verify("--=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_13_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "--=q(btm) and 2",
@@ -2328,7 +2438,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_13_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "--=q(btm) or 2",
@@ -2373,8 +2482,22 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_13_promote_target_06_repeat_03_optional(self):
         self.verify("--=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_13_promote_target_06_repeat_04_exact(self):
-        self.verify("--=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--=q(btm){5}",
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_13_promote_target_06_repeat_05_range(self):
         self.verify("--=q(btm){3,5}", [], returncode=1)
@@ -2537,7 +2660,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_14_l_promote_target_05_rhs_11_ne(self):
         self.verify("e2--=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_14_l_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2--=q(btm) and 2",
@@ -2573,7 +2695,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_14_l_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2--=q(btm) or 2",
@@ -2618,8 +2739,22 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_14_l_promote_target_06_repeat_03_optional(self):
         self.verify("e2--=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_14_l_promote_target_06_repeat_04_exact(self):
-        self.verify("e2--=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--=q(btm){5}",
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_14_l_promote_target_06_repeat_05_range(self):
         self.verify("e2--=q(btm){3,5}", [], returncode=1)
@@ -2786,7 +2921,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_15_r_promote_target_05_rhs_11_ne(self):
         self.verify("--Qa4=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_15_r_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "--Qa4=q(btm) and 2",
@@ -2822,7 +2956,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_15_r_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "--Qa4=q(btm) or 2",
@@ -2867,8 +3000,22 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_15_r_promote_target_06_repeat_03_optional(self):
         self.verify("--Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_15_r_promote_target_06_repeat_04_exact(self):
-        self.verify("--Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "--Qa4=q(btm){5}",
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_15_r_promote_target_06_repeat_05_range(self):
         self.verify("--Qa4=q(btm){3,5}", [], returncode=1)
@@ -3041,7 +3188,6 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_16_lr_promote_target_05_rhs_11_ne(self):
         self.verify("e2--Qa4=q(btm)!=2", [], returncode=1)
 
-    # chessql wrong.
     def test_147_dash_ascii_16_lr_promote_target_05_rhs_12_and_01_plain(self):
         self.verify(
             "e2--Qa4=q(btm) and 2",
@@ -3077,7 +3223,6 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
-    # chessql wrong.
     def test_147_dash_ascii_16_lr_promote_target_05_rhs_13_or_01_plain(self):
         self.verify(
             "e2--Qa4=q(btm) or 2",
@@ -3122,8 +3267,22 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_16_lr_promote_target_06_repeat_03_optional(self):
         self.verify("e2--Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_147_dash_ascii_16_lr_promote_target_06_repeat_04_exact(self):
-        self.verify("e2--Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "e2--Qa4=q(btm){5}",
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_147_dash_ascii_16_lr_promote_target_06_repeat_05_range(self):
         self.verify("e2--Qa4=q(btm){3,5}", [], returncode=1)

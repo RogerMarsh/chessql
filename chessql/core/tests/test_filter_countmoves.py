@@ -788,6 +788,7 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_01_plain_06_rep_03_optional(self):
         self.verify("countmoves --?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_01_plain_06_rep_04_exact(self):
         self.verify("countmoves --{5}", [], returncode=1)
 
@@ -815,6 +816,7 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_02_left_06_rep_03_optional(self):
         self.verify("countmoves e2--?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_02_left_06_rep_04_exact(self):
         self.verify("countmoves e2--{5}", [], returncode=1)
 
@@ -842,8 +844,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_03_right_06_rep_03_optional(self):
         self.verify("countmoves --Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_03_right_06_rep_04_exact(self):
-        self.verify("countmoves --Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_03_right_06_rep_05_range(self):
         self.verify("countmoves --Qa4{3,5}", [], returncode=1)
@@ -869,8 +882,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_04_lr_06_rep_03_optional(self):
         self.verify("countmoves e2--Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_04_lr_06_rep_04_exact(self):
-        self.verify("countmoves e2--Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_04_lr_06_rep_05_range(self):
         self.verify("countmoves e2--Qa4{3,5}", [], returncode=1)
@@ -896,8 +920,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_05_prom_06_rep_03_optional(self):
         self.verify("countmoves --=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_05_prom_06_rep_04_exact(self):
-        self.verify("countmoves --=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_05_prom_06_rep_05_range(self):
         self.verify("countmoves --=q{3,5}", [], returncode=1)
@@ -923,8 +960,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_06_left_prom_06_rep_03_optional(self):
         self.verify("countmoves e2--=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_06_left_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2--=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_06_left_prom_06_rep_05_range(self):
         self.verify("countmoves e2--=q{3,5}", [], returncode=1)
@@ -950,8 +1000,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_07_right_prom_06_rep_03_optional(self):
         self.verify("countmoves --Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_07_right_prom_06_rep_04_exact(self):
-        self.verify("countmoves --Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_07_right_prom_06_rep_05_range(self):
         self.verify("countmoves --Qa4=q{3,5}", [], returncode=1)
@@ -977,8 +1040,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_08_lr_prom_06_rep_03_optional(self):
         self.verify("countmoves e2--Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_08_lr_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2--Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_08_lr_prom_06_rep_05_range(self):
         self.verify("countmoves e2--Qa4=q{3,5}", [], returncode=1)
@@ -1008,8 +1084,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_09_target_06_rep_03_optional(self):
         self.verify("countmoves --(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_09_target_06_rep_04_exact(self):
-        self.verify("countmoves --(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_09_target_06_rep_05_range(self):
         self.verify("countmoves --(btm){3,5}", [], returncode=1)
@@ -1035,8 +1124,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_10_left_target_06_rep_03_optional(self):
         self.verify("countmoves e2--(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_10_left_target_06_rep_04_exact(self):
-        self.verify("countmoves e2--(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_10_left_target_06_rep_05_range(self):
         self.verify("countmoves e2--(btm){3,5}", [], returncode=1)
@@ -1062,8 +1164,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_11_right_target_06_rep_03_optional(self):
         self.verify("countmoves --Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_11_right_target_06_rep_04_exact(self):
-        self.verify("countmoves --Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_11_right_target_06_rep_05_range(self):
         self.verify("countmoves --Qa4(btm){3,5}", [], returncode=1)
@@ -1091,8 +1206,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_12_lr_target_06_rep_03_optional(self):
         self.verify("countmoves e2--Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_12_lr_target_06_rep_04_exact(self):
-        self.verify("countmoves e2--Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_12_lr_target_06_rep_05_range(self):
         self.verify("countmoves e2--Qa4(btm){3,5}", [], returncode=1)
@@ -1122,8 +1250,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_13_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves --=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_13_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves --=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_13_prom_targ_06_rep_05_range(self):
         self.verify("countmoves --=q(btm){3,5}", [], returncode=1)
@@ -1149,8 +1292,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_14_l_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2--=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_14_l_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2--=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_14_l_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2--=q(btm){3,5}", [], returncode=1)
@@ -1180,8 +1338,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_15_r_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves --Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_15_r_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves --Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves --Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_15_r_prom_targ_06_rep_05_range(self):
         self.verify("countmoves --Qa4=q(btm){3,5}", [], returncode=1)
@@ -1211,8 +1384,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_06_da_16_lr_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2--Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_06_da_16_lr_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2--Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2--Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_06_da_16_lr_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2--Qa4=q(btm){3,5}", [], returncode=1)
@@ -1296,8 +1484,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_03_right_06_rep_03_optional(self):
         self.verify("countmoves ――Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_03_right_06_rep_04_exact(self):
-        self.verify("countmoves ――Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_03_right_06_rep_05_range(self):
         self.verify("countmoves ――Qa4{3,5}", [], returncode=1)
@@ -1323,8 +1522,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_04_lr_06_rep_03_optional(self):
         self.verify("countmoves e2――Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_04_lr_06_rep_04_exact(self):
-        self.verify("countmoves e2――Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_04_lr_06_rep_05_range(self):
         self.verify("countmoves e2――Qa4{3,5}", [], returncode=1)
@@ -1350,8 +1560,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_05_prom_06_rep_03_optional(self):
         self.verify("countmoves ――=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_05_prom_06_rep_04_exact(self):
-        self.verify("countmoves ――=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_05_prom_06_rep_05_range(self):
         self.verify("countmoves ――=q{3,5}", [], returncode=1)
@@ -1377,8 +1600,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_06_left_prom_06_rep_03_optional(self):
         self.verify("countmoves e2――=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_06_left_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2――=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_06_left_prom_06_rep_05_range(self):
         self.verify("countmoves e2――=q{3,5}", [], returncode=1)
@@ -1404,8 +1640,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_07_right_prom_06_rep_03_optional(self):
         self.verify("countmoves ――Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_07_right_prom_06_rep_04_exact(self):
-        self.verify("countmoves ――Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_07_right_prom_06_rep_05_range(self):
         self.verify("countmoves ――Qa4=q{3,5}", [], returncode=1)
@@ -1431,8 +1680,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_08_lr_prom_06_rep_03_optional(self):
         self.verify("countmoves e2――Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_08_lr_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2――Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_08_lr_prom_06_rep_05_range(self):
         self.verify("countmoves e2――Qa4=q{3,5}", [], returncode=1)
@@ -1462,8 +1724,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_09_target_06_rep_03_optional(self):
         self.verify("countmoves ――(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_09_target_06_rep_04_exact(self):
-        self.verify("countmoves ――(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_09_target_06_rep_05_range(self):
         self.verify("countmoves ――(btm){3,5}", [], returncode=1)
@@ -1489,8 +1764,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_10_left_target_06_rep_03_optional(self):
         self.verify("countmoves e2――(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_10_left_target_06_rep_04_exact(self):
-        self.verify("countmoves e2――(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_10_left_target_06_rep_05_range(self):
         self.verify("countmoves e2――(btm){3,5}", [], returncode=1)
@@ -1516,8 +1804,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_11_right_target_06_rep_03_optional(self):
         self.verify("countmoves ――Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_11_right_target_06_rep_04_exact(self):
-        self.verify("countmoves ――Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_11_right_target_06_rep_05_range(self):
         self.verify("countmoves ――Qa4(btm){3,5}", [], returncode=1)
@@ -1545,8 +1846,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_12_lr_target_06_rep_03_optional(self):
         self.verify("countmoves e2――Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_12_lr_target_06_rep_04_exact(self):
-        self.verify("countmoves e2――Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_12_lr_target_06_rep_05_range(self):
         self.verify("countmoves e2――Qa4(btm){3,5}", [], returncode=1)
@@ -1576,8 +1890,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_13_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves ――=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_13_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves ――=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_13_prom_targ_06_rep_05_range(self):
         self.verify("countmoves ――=q(btm){3,5}", [], returncode=1)
@@ -1603,8 +1932,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_14_l_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2――=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_14_l_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2――=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_14_l_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2――=q(btm){3,5}", [], returncode=1)
@@ -1634,8 +1978,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_15_r_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves ――Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_15_r_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves ――Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ――Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_15_r_prom_targ_06_rep_05_range(self):
         self.verify("countmoves ――Qa4=q(btm){3,5}", [], returncode=1)
@@ -1665,8 +2024,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_07_du_16_lr_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2――Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_07_du_16_lr_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2――Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2――Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_07_du_16_lr_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2――Qa4=q(btm){3,5}", [], returncode=1)
@@ -1750,8 +2124,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_03_right_06_rep_03_optional(self):
         self.verify("countmoves [x]Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_03_right_06_rep_04_exact(self):
-        self.verify("countmoves [x]Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x]Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_03_right_06_rep_05_range(self):
         self.verify("countmoves [x]Qa4{3,5}", [], returncode=1)
@@ -1777,8 +2162,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_04_lr_06_rep_03_optional(self):
         self.verify("countmoves e2[x]Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_04_lr_06_rep_04_exact(self):
-        self.verify("countmoves e2[x]Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x]Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_04_lr_06_rep_05_range(self):
         self.verify("countmoves e2[x]Qa4{3,5}", [], returncode=1)
@@ -1804,8 +2200,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_05_prom_06_rep_03_optional(self):
         self.verify("countmoves [x]=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_05_prom_06_rep_04_exact(self):
-        self.verify("countmoves [x]=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x]=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_05_prom_06_rep_05_range(self):
         self.verify("countmoves [x]=q{3,5}", [], returncode=1)
@@ -1831,8 +2240,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_06_left_prom_06_rep_03_optional(self):
         self.verify("countmoves e2[x]=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_06_left_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2[x]=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x]=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_06_left_prom_06_rep_05_range(self):
         self.verify("countmoves e2[x]=q{3,5}", [], returncode=1)
@@ -1858,8 +2280,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_07_right_prom_06_rep_03_optional(self):
         self.verify("countmoves [x]Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_07_right_prom_06_rep_04_exact(self):
-        self.verify("countmoves [x]Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x]Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_07_right_prom_06_rep_05_range(self):
         self.verify("countmoves [x]Qa4=q{3,5}", [], returncode=1)
@@ -1885,8 +2320,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_08_lr_prom_06_rep_03_optional(self):
         self.verify("countmoves e2[x]Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_08_lr_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2[x]Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x]Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_08_lr_prom_06_rep_05_range(self):
         self.verify("countmoves e2[x]Qa4=q{3,5}", [], returncode=1)
@@ -1916,8 +2364,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_09_target_06_rep_03_optional(self):
         self.verify("countmoves [x](btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_09_target_06_rep_04_exact(self):
-        self.verify("countmoves [x](btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x](btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_09_target_06_rep_05_range(self):
         self.verify("countmoves [x](btm){3,5}", [], returncode=1)
@@ -1943,8 +2404,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_10_left_target_06_rep_03_optional(self):
         self.verify("countmoves e2[x](btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_10_left_target_06_rep_04_exact(self):
-        self.verify("countmoves e2[x](btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x](btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_10_left_target_06_rep_05_range(self):
         self.verify("countmoves e2[x](btm){3,5}", [], returncode=1)
@@ -1970,8 +2444,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_11_right_target_06_rep_03_optional(self):
         self.verify("countmoves [x]Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_11_right_target_06_rep_04_exact(self):
-        self.verify("countmoves [x]Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x]Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_11_right_target_06_rep_05_range(self):
         self.verify("countmoves [x]Qa4(btm){3,5}", [], returncode=1)
@@ -1999,8 +2486,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_12_lr_target_06_rep_03_optional(self):
         self.verify("countmoves e2[x]Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_12_lr_target_06_rep_04_exact(self):
-        self.verify("countmoves e2[x]Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x]Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_12_lr_target_06_rep_05_range(self):
         self.verify("countmoves e2[x]Qa4(btm){3,5}", [], returncode=1)
@@ -2030,8 +2530,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_13_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves [x]=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_13_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves [x]=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x]=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_13_prom_targ_06_rep_05_range(self):
         self.verify("countmoves [x]=q(btm){3,5}", [], returncode=1)
@@ -2057,8 +2572,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_14_l_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2[x]=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_14_l_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2[x]=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x]=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_14_l_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2[x]=q(btm){3,5}", [], returncode=1)
@@ -2088,8 +2618,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_15_r_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves [x]Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_15_r_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves [x]Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves [x]Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_15_r_prom_targ_06_rep_05_range(self):
         self.verify("countmoves [x]Qa4=q(btm){3,5}", [], returncode=1)
@@ -2119,8 +2664,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_08_ta_16_lr_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2[x]Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_08_ta_16_lr_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2[x]Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2[x]Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_08_ta_16_lr_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2[x]Qa4=q(btm){3,5}", [], returncode=1)
@@ -2204,8 +2764,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_03_right_06_rep_03_optional(self):
         self.verify("countmoves ×Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_03_right_06_rep_04_exact(self):
-        self.verify("countmoves ×Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_03_right_06_rep_05_range(self):
         self.verify("countmoves ×Qa4{3,5}", [], returncode=1)
@@ -2231,8 +2802,19 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_04_lr_06_rep_03_optional(self):
         self.verify("countmoves e2×Qa4?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_04_lr_06_rep_04_exact(self):
-        self.verify("countmoves e2×Qa4{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×Qa4{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_04_lr_06_rep_05_range(self):
         self.verify("countmoves e2×Qa4{3,5}", [], returncode=1)
@@ -2258,8 +2840,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_05_prom_06_rep_03_optional(self):
         self.verify("countmoves ×=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_05_prom_06_rep_04_exact(self):
-        self.verify("countmoves ×=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_05_prom_06_rep_05_range(self):
         self.verify("countmoves ×=q{3,5}", [], returncode=1)
@@ -2285,8 +2880,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_06_left_prom_06_rep_03_optional(self):
         self.verify("countmoves e2×=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_06_left_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2×=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_06_left_prom_06_rep_05_range(self):
         self.verify("countmoves e2×=q{3,5}", [], returncode=1)
@@ -2312,8 +2920,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_07_right_prom_06_rep_03_optional(self):
         self.verify("countmoves ×Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_07_right_prom_06_rep_04_exact(self):
-        self.verify("countmoves ×Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_07_right_prom_06_rep_05_range(self):
         self.verify("countmoves ×Qa4=q{3,5}", [], returncode=1)
@@ -2339,8 +2960,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_08_lr_prom_06_rep_03_optional(self):
         self.verify("countmoves e2×Qa4=q?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_08_lr_prom_06_rep_04_exact(self):
-        self.verify("countmoves e2×Qa4=q{5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×Qa4=q{5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_08_lr_prom_06_rep_05_range(self):
         self.verify("countmoves e2×Qa4=q{3,5}", [], returncode=1)
@@ -2370,8 +3004,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_09_target_06_rep_03_optional(self):
         self.verify("countmoves ×(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_09_target_06_rep_04_exact(self):
-        self.verify("countmoves ×(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_09_target_06_rep_05_range(self):
         self.verify("countmoves ×(btm){3,5}", [], returncode=1)
@@ -2397,8 +3044,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_10_left_target_06_rep_03_optional(self):
         self.verify("countmoves e2×(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_10_left_target_06_rep_04_exact(self):
-        self.verify("countmoves e2×(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_10_left_target_06_rep_05_range(self):
         self.verify("countmoves e2×(btm){3,5}", [], returncode=1)
@@ -2424,8 +3084,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_11_right_target_06_rep_03_optional(self):
         self.verify("countmoves ×Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_11_right_target_06_rep_04_exact(self):
-        self.verify("countmoves ×Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_11_right_target_06_rep_05_range(self):
         self.verify("countmoves ×Qa4(btm){3,5}", [], returncode=1)
@@ -2453,8 +3126,21 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_12_lr_target_06_rep_03_optional(self):
         self.verify("countmoves e2×Qa4(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_12_lr_target_06_rep_04_exact(self):
-        self.verify("countmoves e2×Qa4(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×Qa4(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_12_lr_target_06_rep_05_range(self):
         self.verify("countmoves e2×Qa4(btm){3,5}", [], returncode=1)
@@ -2484,8 +3170,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_13_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves ×=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_13_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves ×=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_13_prom_targ_06_rep_05_range(self):
         self.verify("countmoves ×=q(btm){3,5}", [], returncode=1)
@@ -2511,8 +3212,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_14_l_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2×=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_14_l_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2×=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_14_l_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2×=q(btm){3,5}", [], returncode=1)
@@ -2542,8 +3258,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_15_r_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves ×Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_15_r_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves ×Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves ×Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_15_r_prom_targ_06_rep_05_range(self):
         self.verify("countmoves ×Qa4=q(btm){3,5}", [], returncode=1)
@@ -2573,8 +3304,23 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_09_tu_16_lr_prom_targ_06_rep_03_optional(self):
         self.verify("countmoves e2×Qa4=q(btm)?", [], returncode=1)
 
+    # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
     def test_019_countmoves_09_tu_16_lr_prom_targ_06_rep_04_exact(self):
-        self.verify("countmoves e2×Qa4=q(btm){5}", [], returncode=1)
+        self.verify_declare_fail(
+            "countmoves e2×Qa4=q(btm){5}",
+            [
+                (3, "CountMoves"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "BTM"),
+                (3, "BraceLeft"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_019_countmoves_09_tu_16_lr_prom_targ_06_rep_05_range(self):
         self.verify("countmoves e2×Qa4=q(btm){3,5}", [], returncode=1)
