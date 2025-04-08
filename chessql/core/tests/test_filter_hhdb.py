@@ -12,6 +12,7 @@ import shlex
 import subprocess
 import re
 
+from . import verify
 from .. import hhdb
 
 # An input file must be specified, but need not exist, with '-parse' option.
