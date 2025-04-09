@@ -905,9 +905,12 @@ def parenthesis_left(match_=None, container=None):
     'line', 'path', or '{'.
 
     """
-    cursor = container.cursor.parent
-    if _is_dash_or_capture(cursor) or _is_dash_or_capture(cursor.parent):
-        return TargetParenthesisLeft(match_=match_, container=container)
+    for cursor in (container.cursor.parent, container.cursor.parent.parent):
+        if _is_dash_or_capture(cursor):
+            if _no_intervening_whitespace(cursor.match_, match_):
+                return TargetParenthesisLeft(
+                    match_=match_, container=container
+                )
     node = container.cursor
     while node:
         if isinstance(node, structure.BlockLeft):
@@ -1199,13 +1202,9 @@ class TakeII(structure.DashOrTake):
     def place_node_in_tree(self):
         """Delegate then append the implied '.' filter."""
         super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        AnySquare(match_=self.match_, container=container).place_node_in_tree()
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
+        AnySquare(
+            match_=self.match_, container=self.container
+        ).place_node_in_tree()
 
 
 class TakeLI(structure.DashOrTake):
@@ -1228,13 +1227,9 @@ class TakeLI(structure.DashOrTake):
     def place_node_in_tree(self):
         """Delegate then append the implied '.' filter."""
         super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        AnySquare(match_=self.match_, container=container).place_node_in_tree()
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
+        AnySquare(
+            match_=self.match_, container=self.container
+        ).place_node_in_tree()
 
     @property
     def precedence(self):
@@ -1266,15 +1261,9 @@ class TakeIR(structure.DashOrTake):
         super().__init__(match_=match_, container=container)
 
     def place_node_in_tree(self):
-        """Delegate then append the implied '.' filter."""
+        """Delegate then set instance precedence to PLOW."""
         super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
         self._precedence = cqltypes.Precedence.PLOW
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
 class TakeLR(structure.DashOrTake):
@@ -1292,16 +1281,6 @@ class TakeLR(structure.DashOrTake):
     # '--'has extremely low precedence and both lhs filter and rhs filter
     # are not implicit.
     _precedence = cqltypes.Precedence.PLOW
-
-    def place_node_in_tree(self):
-        """Delegate then append the implied '.' filter."""
-        super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
 def take_li(match_=None, container=None):
@@ -1409,13 +1388,9 @@ class DashII(structure.DashOrTake):
     def place_node_in_tree(self):
         """Delegate then append the implied '.' filter."""
         super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        AnySquare(match_=self.match_, container=container).place_node_in_tree()
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
+        AnySquare(
+            match_=self.match_, container=self.container
+        ).place_node_in_tree()
 
 
 class DashLI(structure.DashOrTake):
@@ -1440,13 +1415,9 @@ class DashLI(structure.DashOrTake):
     def place_node_in_tree(self):
         """Delegate then append the implied '.' filter."""
         super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-        AnySquare(match_=self.match_, container=container).place_node_in_tree()
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
+        AnySquare(
+            match_=self.match_, container=self.container
+        ).place_node_in_tree()
 
     @property
     def precedence(self):
@@ -1480,15 +1451,9 @@ class DashIR(structure.DashOrTake):
         super().__init__(match_=match_, container=container)
 
     def place_node_in_tree(self):
-        """Delegate then append the implied '.' filter."""
+        """Delegate then set instance precedence to PLOW."""
         super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
         self._precedence = cqltypes.Precedence.PLOW
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
 class DashLR(structure.DashOrTake):
@@ -1508,16 +1473,6 @@ class DashLR(structure.DashOrTake):
     # '--'has extremely low precedence and both lhs filter and rhs filter
     # are not implicit.
     _precedence = cqltypes.Precedence.PLOW
-
-    def place_node_in_tree(self):
-        """Delegate then append the implied '.' filter."""
-        super().place_node_in_tree()
-        container = self.container
-        container.cursor = self
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
 
 
 def dash_li(match_=None, container=None):
@@ -6449,6 +6404,18 @@ def end_of_stream(match_=None, container=None):
             return EndPaths(match_=match_, container=container)
         node = node.parent
     return EndOfStream(match_=match_, container=container)
+
+
+def _no_intervening_whitespace(prior, current):
+    """Return True if no whitespace exists between prior and current.
+
+    The 'prior' and 'current' arguments should be re.Match objects.
+
+    """
+    # pycodestyle E203 whitespace before ':'.
+    # black insists on " : " format.
+    filler = prior.string[prior.end() : current.start()]
+    return not filler or filler.split() == [filler]
 
 
 def _is_dash_or_capture(filter_):

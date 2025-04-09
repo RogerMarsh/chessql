@@ -1168,6 +1168,12 @@ class DashOrTake(InfixLeft):
     DashOrTake instance to be a logical filter.
     """
 
+    def place_node_in_tree(self):
+        """Delegate then set container cursor to self."""
+        super().place_node_in_tree()
+        container = self.container
+        container.cursor = self
+
     def _end_left_parenthesis_infix_block(self):
         """Override, do nothing.
 
@@ -1203,6 +1209,27 @@ class DashOrTake(InfixLeft):
                         " but got a ",
                         name.join("''"),
                     )
+
+    def _raise_if_dash_or_take_has_dash_or_take_argument(self):
+        """Raise NodeError if '--' or '[x]' is one of first two arguments.
+
+        This situation arises from queries like '--(k)--'.
+
+        """
+        for item, child in enumerate(self.children):
+            if item < 2 and isinstance(child, DashOrTake):
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " got a ",
+                    child.__class__.__name__.join("''"),
+                    " argument likely due to missing space between",
+                    " target and next '--' or '[x]' filter",
+                )
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        self._raise_if_dash_or_take_arguments_are_not_filter_type_set()
+        self._raise_if_dash_or_take_has_dash_or_take_argument()
 
 
 class Numeric(InfixLeft):
