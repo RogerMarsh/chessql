@@ -393,7 +393,7 @@ class FilterTakeUTF8(verify.Verify):
         self.verify("e2×Qa4?", [], returncode=1)
 
     # CQL-6.2 always sees pattern '{\d+}' as a repetition specification.
-    def test_215_take_utf8_04_left_right_06_repeat_03_optional(self):
+    def test_215_take_utf8_04_left_right_06_repeat_04_exact(self):
         self.verify_declare_fail(
             "e2×Qa4{5}",
             [
@@ -558,8 +558,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_05_promote_05_rhs_11_ne(self):
         self.verify("×=q!=2", [], returncode=1)
 
+    # From message it seems CQL-6.2 sees this as '×=(q and 2)'.
     def test_215_take_utf8_05_promote_05_rhs_12_and_01_plain(self):
-        self.verify("×=q and 2", [], returncode=1)
+        self.verify_declare_fail(
+            "×=q and 2",
+            [
+                (3, "And"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_05_promote_05_rhs_12_and_02_parentheses(self):
         self.verify(
@@ -576,8 +588,20 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
+    # From message it seems CQL-6.2 sees this as '×=(q or 2)'.
     def test_215_take_utf8_05_promote_05_rhs_13_or_01_plain(self):
-        self.verify("×=q or 2", [], returncode=1)
+        self.verify_declare_fail(
+            "×=q or 2",
+            [
+                (3, "Or"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_05_promote_05_rhs_13_or_02_parentheses(self):
         self.verify(
@@ -771,8 +795,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_06_left_promote_05_rhs_11_ne(self):
         self.verify("e2×=q!=2", [], returncode=1)
 
+    # From message it seems CQL-6.2 sees this as 'e2×=(q and 2)'.
     def test_215_take_utf8_06_left_promote_05_rhs_12_and_01_plain(self):
-        self.verify("e2×=q and 2", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×=q and 2",
+            [
+                (3, "And"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_06_left_promote_05_rhs_12_and_02_parentheses(self):
         self.verify(
@@ -789,8 +825,20 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
+    # From message it seems CQL-6.2 sees this as 'e2×=(q or 2)'.
     def test_215_take_utf8_06_left_promote_05_rhs_13_or_01_plain(self):
-        self.verify("e2×=q or 2", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×=q or 2",
+            [
+                (3, "Or"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_06_left_promote_05_rhs_13_or_02_parentheses(self):
         self.verify(
@@ -984,8 +1032,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_07_right_promote_05_rhs_11_ne(self):
         self.verify("×Qa4=q!=2", [], returncode=1)
 
+    # From message it seems CQL-6.2 sees this as '×Qa4=(q and 2)'.
     def test_215_take_utf8_07_right_promote_05_rhs_12_and_01_plain(self):
-        self.verify("×Qa4=q and 2", [], returncode=1)
+        self.verify_declare_fail(
+            "×Qa4=q and 2",
+            [
+                (3, "And"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_07_right_promote_05_rhs_12_and_02_parentheses(self):
         self.verify(
@@ -1002,8 +1062,20 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
+    # From message it seems CQL-6.2 sees this as '×Qa4=(q or 2)'.
     def test_215_take_utf8_07_right_promote_05_rhs_13_or_01_plain(self):
-        self.verify("×Qa4=q or 2", [], returncode=1)
+        self.verify_declare_fail(
+            "×Qa4=q or 2",
+            [
+                (3, "Or"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_07_right_promote_05_rhs_13_or_02_parentheses(self):
         self.verify(
@@ -1209,8 +1281,20 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_08_left_right_promote_05_rhs_11_ne(self):
         self.verify("e2×Qa4=q!=2", [], returncode=1)
 
+    # From message it seems CQL-6.2 sees this as 'e2×Qa4=(q and 2)'.
     def test_215_take_utf8_08_left_right_promote_05_rhs_12_and_01_plain(self):
-        self.verify("e2×Qa4=q and 2", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×Qa4=q and 2",
+            [
+                (3, "And"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_08_left_right_promote_05_rhs_12_and_02_parentheses(
         self,
@@ -1229,8 +1313,20 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
+    # From message it seems CQL-6.2 sees this as 'e2×Qa4=(q or 2)'.
     def test_215_take_utf8_08_left_right_promote_05_rhs_13_or_01_plain(self):
-        self.verify("e2×Qa4=q or 2", [], returncode=1)
+        self.verify_declare_fail(
+            "e2×Qa4=q or 2",
+            [
+                (3, "Or"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "AssignPromotion"),
+                (6, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
 
     def test_215_take_utf8_08_left_right_promote_05_rhs_13_or_02_parentheses(
         self,
@@ -3370,41 +3466,314 @@ class FilterTakeUTF8(verify.Verify):
     def test_215_take_utf8_20_or_04_implicit_rhs_given_lhs(self):
         self.verify("R× |b", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_01_implicit_01_dash_ascii(self):
+    def test_215_take_utf8_21_pair_01_null_01_dash_ascii(self):
         self.verify("×--", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_01_implicit_02_dash_utf8(self):
+    def test_215_take_utf8_21_pair_01_null_02_dash_utf8(self):
         self.verify("×――", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_01_implicit_03_take_ascii(self):
+    def test_215_take_utf8_21_pair_01_null_03_take_ascii(self):
         self.verify("×[x]", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_01_implicit_04_take_utf8(self):
+    def test_215_take_utf8_21_pair_01_null_04_take_utf8(self):
         self.verify("××", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_01_piecedesignator(self):
+    def test_215_take_utf8_21_pair_02_piece_01_dash_ascii(self):
         self.verify("×k×", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_02_set(self):
+    def test_215_take_utf8_21_pair_03_set_01_dash_ascii(self):
         self.verify("×to×", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_03_compoundset(self):
+    def test_215_take_utf8_21_pair__04_compound_01_dash_ascii(self):
         self.verify("×{1 k}×", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_04_parenthesizedset(self):
+    def test_215_take_utf8_21_pair_05_target_01_dash_ascii_01_no_space(self):
+        self.verify("×(k)--", [], returncode=1)
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_01_dash_ascii_02_l_space(self):
+        self.verify_declare_fail(
+            "× (k)--",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "DashLI"),
+                (4, "ParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_05_target_01_dash_ascii_03_r_space(self):
+        self.verify(
+            "×(k) --",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_01_dash_ascii_04_lr_space(self):
+        self.verify_declare_fail(
+            "× (k) --",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "ParenthesisLeft"),
+                (4, "PieceDesignator"),
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_05_target_02_dash_utf8_01_no_space(self):
+        self.verify("×(k)――", [], returncode=1)
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_02_dash_utf8_02_l_space(self):
+        self.verify_declare_fail(
+            "× (k)――",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "DashLI"),
+                (4, "ParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_05_target_02_dash_utf8_03_r_space(self):
+        self.verify(
+            "×(k) ――",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_02_dash_utf8_04_lr_space(self):
+        self.verify_declare_fail(
+            "× (k) ――",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "ParenthesisLeft"),
+                (4, "PieceDesignator"),
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_05_target_03_take_ascii_01_no_space(self):
+        self.verify("×(k)[x]", [], returncode=1)
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_03_take_ascii_02_l_space(self):
+        self.verify_declare_fail(
+            "× (k)[x]",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "TakeLI"),
+                (4, "ParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_05_target_03_take_ascii_03_r_space(self):
+        self.verify(
+            "×(k) [x]",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_03_take_ascii_04_lr_space(self):
+        self.verify_declare_fail(
+            "× (k) [x]",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "ParenthesisLeft"),
+                (4, "PieceDesignator"),
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_05_target_04_take_utf8_01_no_space(self):
         self.verify("×(k)×", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_05_parenthesizedset(self):
-        self.verify("×(k)×", [], returncode=1)
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_04_take_utf8_02_l_space(self):
+        self.verify_declare_fail(
+            "× (k)×",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "TakeLI"),
+                (4, "ParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (4, "AnySquare"),
+            ],
+        )
 
-    def test_215_take_utf8_21_ambiguous_02_given_06_and_01_no_spaces(self):
+    def test_215_take_utf8_21_pair_05_target_04_take_utf8_03_r_space(self):
+        self.verify(
+            "×(k) ×",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "TargetParenthesisLeft"),
+                (5, "PieceDesignator"),
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    # CQL-6.2 sees pattern '×\s+(' as whitespace between filter and target.
+    def test_215_take_utf8_21_pair_05_target_04_take_utf8_04_lr_space(self):
+        self.verify_declare_fail(
+            "× (k) ×",
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (3, "ParenthesisLeft"),
+                (4, "PieceDesignator"),
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_06_logic_01_dash_ascii_01_no_space(self):
+        self.verify("×and--", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_06_logic_01_dash_ascii_02_l_space(self):
+        self.verify("× and--", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_06_logic_01_dash_ascii_03_r_space(self):
+        self.verify_tolerant("×and --", [])
+
+    def test_215_take_utf8_21_pair_06_logic_01_dash_ascii_04_lr_space(self):
+        self.verify(
+            "× and --",
+            [
+                (3, "And"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_06_logic_02_dash_utf8_01_no_space(self):
+        self.verify("×and――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_06_logic_02_dash_utf8_02_l_space(self):
+        self.verify("× and――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_06_logic_02_dash_utf8_03_r_space(self):
+        self.verify_tolerant("×and ――", [])
+
+    def test_215_take_utf8_21_pair_06_logic_02_dash_utf8_04_lr_space(self):
+        self.verify(
+            "× and ――",
+            [
+                (3, "And"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_06_logic_03_take_ascii_01_no_space(self):
+        self.verify("×and[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_06_logic_03_take_ascii_02_l_space(self):
+        self.verify("× and[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_06_logic_03_take_ascii_03_r_space(self):
+        self.verify_tolerant("×and [x]", [])
+
+    def test_215_take_utf8_21_pair_06_logic_03_take_ascii_04_lr_space(self):
+        self.verify(
+            "× and [x]",
+            [
+                (3, "And"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
+
+    def test_215_take_utf8_21_pair_06_logic_04_take_utf8_01_no_space(self):
         self.verify("×and×", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_06_and_02_left_space(self):
+    def test_215_take_utf8_21_pair_06_logic_04_take_utf8_02_l_space(self):
         self.verify("× and×", [], returncode=1)
 
-    def test_215_take_utf8_21_ambiguous_02_given_06_and_03_right_space(self):
+    def test_215_take_utf8_21_pair_06_logic_04_take_utf8_03_r_space(self):
         self.verify_tolerant("×and ×", [])
+
+    def test_215_take_utf8_21_pair_06_logic_04_take_utf8_04_lr_space(self):
+        self.verify(
+            "× and ×",
+            [
+                (3, "And"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+            ],
+        )
 
     def test_215_take_utf8_22_target_filter_type_01_default(self):
         con = self.verify(
