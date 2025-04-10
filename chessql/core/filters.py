@@ -3430,8 +3430,8 @@ def left(match_=None, container=None):
     return Left(match_=match_, container=container)
 
 
-class Legal(structure.Argument, structure.LeftParenthesisInfix):
-    """Represent 'legal' set filter."""
+class _Legal(structure.LeftParenthesisInfix):
+    """Provide shared behaviour of Legal and Pseudolegal filters."""
 
     _filter_type = cqltypes.FilterType.SET
 
@@ -3445,6 +3445,25 @@ class Legal(structure.Argument, structure.LeftParenthesisInfix):
                 self.children[0].__class__.__name__.join("''"),
                 " filter",
             )
+        for target in self.children[0].children:
+            if not isinstance(target, TargetParenthesisLeft):
+                continue
+            if len(target.children) != 1:
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects '1' target filter but got ",
+                    str(len(target.children)).join("''"),
+                )
+            target.raise_if_not_number_of_children(1)
+            self.raise_if_not_instance(
+                target.children[0],
+                (OO, OOO, Castle, EnPassant),
+                "expects",
+            )
+
+
+class Legal(structure.Argument, _Legal):
+    """Represent 'legal' set filter."""
 
 
 class LegalParameter(MoveParameterImpliesNumeric):
@@ -4405,21 +4424,8 @@ class Promote(structure.ParameterArgument):
         return isinstance(self.parent, Move)
 
 
-class Pseudolegal(structure.Argument, structure.LeftParenthesisInfix):
+class Pseudolegal(structure.Argument, _Legal):
     """Represent 'pseudolegal' set filter."""
-
-    _filter_type = cqltypes.FilterType.SET
-
-    def _verify_children_and_set_own_types(self):
-        """Override, raise NodeError if children verification fails."""
-        self.raise_if_not_number_of_children(1)
-        if not _is_dash(self.children[0]):
-            self.raise_nodeerror(
-                self.__class__.__name__.join("''"),
-                " argument must be a '--' filter, not a ",
-                self.children[0].__class__.__name__.join("''"),
-                " filter",
-            )
 
 
 class PseudolegalParameter(MoveParameterImpliesNumeric):
