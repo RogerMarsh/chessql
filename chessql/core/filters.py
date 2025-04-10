@@ -6295,7 +6295,7 @@ class AssignPromotion(structure.Argument):
                     " expects a piece type designator or string but got a ",
                     child.__class__.__name__.join("''"),
                     " with filter type ",
-                    child.filter_type.join("''"),
+                    child.filter_type.name.join("''"),
                 )
             return
         if not isinstance(child, PieceDesignator):
