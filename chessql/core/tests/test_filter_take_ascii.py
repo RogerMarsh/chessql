@@ -241,6 +241,40 @@ class FilterTakeASCII(verify.Verify):
     def test_214_take_ascii_01_plain_06_repeat_09_force_one_up(self):
         self.verify("[x]{+}", [], returncode=1)
 
+    def test_214_take_ascii_01_plain_08_assign_01_logical_01_space(self):
+        self.verify("v= [x]", [], returncode=1)
+
+    def test_214_take_ascii_01_plain_08_assign_01_logical_02_no_space(self):
+        self.verify("v=[x]", [], returncode=1)
+
+    def test_214_take_ascii_01_plain_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= [x](to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_214_take_ascii_01_plain_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=[x](to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
     def test_214_take_ascii_02_left_01_plain(self):
         self.verify(
             "e2[x]",
@@ -293,6 +327,40 @@ class FilterTakeASCII(verify.Verify):
 
     def test_214_take_ascii_02_left_06_repeat_09_force_one_up(self):
         self.verify("e2[x]{+}", [], returncode=1)
+
+    def test_214_take_ascii_02_left_08_assign_01_logical_01_space(self):
+        self.verify("v= e4[x]", [], returncode=1)
+
+    def test_214_take_ascii_02_left_08_assign_01_logical_02_no_space(self):
+        self.verify("v=e4[x]", [], returncode=1)
+
+    def test_214_take_ascii_02_left_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= e4[x](to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_214_take_ascii_02_left_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=e4[x](to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
 
     def test_214_take_ascii_03_right_01_plain(self):
         self.verify(
@@ -352,6 +420,40 @@ class FilterTakeASCII(verify.Verify):
 
     def test_214_take_ascii_03_right_06_repeat_08_force_zero_up(self):
         self.verify("[x]Qa4{*}", [], returncode=1)
+
+    def test_214_take_ascii_03_right_08_assign_01_logical_01_space(self):
+        self.verify("v= [x]e5", [], returncode=1)
+
+    def test_214_take_ascii_03_right_08_assign_01_logical_02_no_space(self):
+        self.verify("v=[x]e5", [], returncode=1)
+
+    def test_214_take_ascii_03_right_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= [x]e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_214_take_ascii_03_right_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=[x]e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
 
     def test_214_take_ascii_03_right_06_repeat_09_force_one_up(self):
         self.verify("[x]Qa4{+}", [], returncode=1)
@@ -419,6 +521,42 @@ class FilterTakeASCII(verify.Verify):
 
     def test_214_take_ascii_04_left_right_06_repeat_09_force_one_up(self):
         self.verify("e2[x]Qa4{+}", [], returncode=1)
+
+    def test_214_take_ascii_04_left_right_08_assign_01_logical_01_space(self):
+        self.verify("v= e4[x]e5", [], returncode=1)
+
+    def test_214_take_ascii_04_left_right_08_assign_01_logical_02_no_space(
+        self,
+    ):
+        self.verify("v=e4[x]e5", [], returncode=1)
+
+    def test_214_take_ascii_04_left_right_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= e4[x]e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_214_take_ascii_04_left_right_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=e4[x]e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "TakeLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
 
     def test_214_take_ascii_05_promote_01(self):
         self.verify(

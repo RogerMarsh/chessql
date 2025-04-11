@@ -397,10 +397,12 @@ class Precedence(enum.Enum):
     # Has to be greater than precedence of 'not' to stop the 'not' in
     # 'not --' grabbing the implicit LHS set filter to '--'.
     # Precedence of 'not' is P60.
+    # The same reasoning applies to the '=' filter whose precedence has
+    # been set as described in a comment to filters.Assign class.
     # Has to be less than precedence of '|' to allow the '|' in 'k|q--'
     # to take the 'q' from the '--' filter.
     # Precedence of '|' is P160.
-    PLOW = 61
+    PLOW = 66
 
     # One of the precedences allocated to '--' and '[x]' filters.
     # Has to be greater than precedence of ':' to stop the ':' in

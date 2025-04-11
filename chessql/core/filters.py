@@ -6508,7 +6508,7 @@ def _is_lhs_implicit(match_):
     Relevant to '--' and '[x]' filters.
 
     """
-    return match_.string[match_.start() - 1] in "({:"
+    return match_.string[match_.start() - 1] in "({:="
 
 
 def _is_rhs_implicit(match_):

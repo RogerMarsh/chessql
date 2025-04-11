@@ -272,6 +272,40 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_01_plain_06_repeat_09_force_one_up(self):
         self.verify("--{+}", [], returncode=1)
 
+    def test_147_dash_ascii_01_plain_08_assign_01_logical_01_space(self):
+        self.verify("v= --", [], returncode=1)
+
+    def test_147_dash_ascii_01_plain_08_assign_01_logical_02_no_space(self):
+        self.verify("v=--", [], returncode=1)
+
+    def test_147_dash_ascii_01_plain_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= --(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_147_dash_ascii_01_plain_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=--(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashII"),
+                (5, "AnySquare"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
     def test_147_dash_ascii_02_left_01_plain(self):
         self.verify(
             "e2--",
@@ -324,6 +358,40 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_02_left_06_repeat_09_force_one_up(self):
         self.verify("e2--{+}", [], returncode=1)
+
+    def test_147_dash_ascii_02_left_08_assign_01_logical_01_space(self):
+        self.verify("v= e4--", [], returncode=1)
+
+    def test_147_dash_ascii_02_left_08_assign_01_logical_02_no_space(self):
+        self.verify("v=e4--", [], returncode=1)
+
+    def test_147_dash_ascii_02_left_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= e4--(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_147_dash_ascii_02_left_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=e4--(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashLI"),
+                (5, "PieceDesignator"),
+                (5, "AnySquare"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
 
     def test_147_dash_ascii_03_right_01_plain(self):
         self.verify(
@@ -386,6 +454,40 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_03_right_06_repeat_09_force_one_up(self):
         self.verify("--Qa4{+}", [], returncode=1)
+
+    def test_147_dash_ascii_03_right_08_assign_01_logical_01_space(self):
+        self.verify("v= --e5", [], returncode=1)
+
+    def test_147_dash_ascii_03_right_08_assign_01_logical_02_no_space(self):
+        self.verify("v=--e5", [], returncode=1)
+
+    def test_147_dash_ascii_03_right_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= --e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_147_dash_ascii_03_right_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=--e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashIR"),
+                (5, "AnySquare"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
 
     def test_147_dash_ascii_04_left_right_01_plain(self):
         self.verify(
@@ -450,6 +552,42 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_04_left_right_06_repeat_09_force_one_up(self):
         self.verify("e2--Qa4{+}", [], returncode=1)
+
+    def test_147_dash_ascii_04_left_right_08_assign_01_logical_01_space(self):
+        self.verify("v= e4--e5", [], returncode=1)
+
+    def test_147_dash_ascii_04_left_right_08_assign_01_logical_02_no_space(
+        self,
+    ):
+        self.verify("v=e4--e5", [], returncode=1)
+
+    def test_147_dash_ascii_04_left_right_08_assign_02_set_01_space(self):
+        self.verify(
+            "v= e4--e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
+
+    def test_147_dash_ascii_04_left_right_08_assign_02_set_02_no_space(self):
+        self.verify(
+            "v=e4--e5(to)",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "DashLR"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+                (5, "TargetParenthesisLeft"),
+                (6, "To"),
+            ],
+        )
 
     def test_147_dash_ascii_05_promote_01(self):
         self.verify(
