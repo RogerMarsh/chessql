@@ -5046,18 +5046,32 @@ class Unbind(structure.BindArgument):
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
-        child = self.children[0]
-        if not isinstance(child, BracketLeft):
+        subject = self.children[0]
+        if not isinstance(subject, BracketLeft):
             super()._verify_children_and_set_own_types()
         else:
-            child = child.children[0]
-        name = child.name
+            subject = subject.children[0]
+        name = subject.name
         if name not in self.container.definitions:
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
                 " expects the name of an existing dictionary, ",
                 "function, or variable",
             )
+        # Referring to an unbound key, 'D[<key>]' where 'D[<key>]=<value>' has
+        # not been done is ok except for 'unbind D[<key>]'.
+        # 'unbind D' is always ok after 'dictionary D' with or without key
+        # bindings.
+        if subject is self.children[0]:
+            return
+        item = self.container.definitions[name]
+        if isinstance(item, cqltypes.Dictionary):
+            if item.key_filter_type is cqltypes.FilterType.ANY:
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects the name of a bound key to dictionary ",
+                    item.__class__.__name__.join("''"),
+                )
 
 
 class UpperCase(structure.Argument):
@@ -5610,7 +5624,7 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
-        if isinstance(lhs, (structure.VariableName, Dictionary)):
+        if isinstance(lhs, structure.VariableName):
             if (
                 lhs.container.definitions[lhs.name].filter_type
                 is cqltypes.FilterType.ANY
@@ -5657,19 +5671,10 @@ def bracket_right(match_=None, container=None):
     while node:
         if isinstance(node, BracketLeft):
             if len(node.children) > 1 and isinstance(
-                node.children[0], structure.VariableName
+                node.children[0], structure.VariableTypeSetter
             ):
-                for item, child in enumerate(node.children[1:]):
-                    if child.filter_type is cqltypes.FilterType.STRING:
-                        node.raise_nodeerror(
-                            "'",
-                            node.__class__.__name__,
-                            "' cannot index a '",
-                            node.children[0].__class__.__name__,
-                            "' by a '",
-                            node.children[item + 1].__class__.__name__,
-                            "'",
-                        )
+                for child in node.children[1:]:
+                    node.children[0].raise_if_child_cannot_be_index(child)
             return BracketRight(match_=match_, container=container)
         if isinstance(node, ParenthesisLeft):
             node.raise_nodeerror(

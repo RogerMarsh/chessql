@@ -556,6 +556,22 @@ class VariableTypeSetter(Name):
     function and dictionary in CQL.
     """
 
+    def raise_if_child_cannot_be_index(self, child):
+        """Raise NodeError if child cannot be index into self's value.
+
+        This method implements the default test, which is for user defined
+        variables.  In particular the Dictionary subclass must override to
+        implement tests appropriate to user defined dictionaries.
+
+        """
+        if child.filter_type is cqltypes.FilterType.STRING:
+            self.raise_nodeerror(
+                child.__class__.__name__.join("''"),
+                " cannot index a ",
+                self.__class__.__name__.join("''"),
+                " instance",
+            )
+
     # Some of this should be delegated to class Name because it looks to
     # be shared with classes for the 'function' and 'dictionary' filters.
     def _set_variable_filter_type(self, filter_type, nametype="variable"):
@@ -765,6 +781,34 @@ class DictionaryName(VariableTypeSetter):
     # unittest FAIL outcomes in different tests which passed before.
     # The problem is constructively changed to one involving the relative
     # precedence of 'and', 'or', and the various '--'-like filters.
+
+    def raise_if_child_cannot_be_index(self, child):
+        """Raise NodeError if child cannot be index into self's value.
+
+        This method implements the test for user defined dictionaries.
+
+        """
+        if child.filter_type is cqltypes.FilterType.LOGICAL:
+            self.raise_nodeerror(
+                child.__class__.__name__.join("''"),
+                " cannot index a ",
+                self.__class__.__name__.join("''"),
+                " instance",
+            )
+        # Assume dictionary is either PERSISTENT or LOCAL.
+        if (
+            child.filter_type is cqltypes.FilterType.POSITION
+            and self.container.definitions[self.name].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT
+        ):
+            self.raise_nodeerror(
+                child.__class__.__name__.join("''"),
+                " can only index a ",
+                cqltypes.PersistenceType.LOCAL.name.join("''"),
+                " ",
+                self.__class__.__name__.join("''"),
+                " instance",
+            )
 
 
 class Argument(CQLObject):

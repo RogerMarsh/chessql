@@ -941,6 +941,182 @@ class FilterDictionary(verify.Verify):
     def test_027_dictionary_46_piecedesignator_integer_06(self):
         self.verify('dictionary X[ a5 ]=3 X[ a5 ]="a"', [], returncode=1)
 
+    def test_027_dictionary_80_no_value_01_integer_01_literal(self):
+        con = self.verify(
+            "dictionary X X[1]",
+            [
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "Integer"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_01_integer_02_filter(self):
+        con = self.verify(
+            "dictionary X X[ply]",
+            [
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "Ply"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_01_integer_03_variable(self):
+        con = self.verify(
+            "v=3 dictionary X X[v]",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "Variable"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_02_string_01_literal(self):
+        con = self.verify(
+            'dictionary X X["a"]',
+            [
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "String"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_02_string_02_filter(self):
+        con = self.verify(
+            "dictionary X X[fen]",
+            [
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "FEN"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_02_string_03_variable(self):
+        con = self.verify(
+            'v="a" dictionary X X[v]',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "Variable"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_03_set_01_literal(self):
+        # A piece designator.
+        con = self.verify(
+            "dictionary X X[ a ]",
+            [
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "PieceDesignator"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_03_set_02_filter(self):
+        con = self.verify(
+            "dictionary X X[to]",
+            [
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "To"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_03_set_03_variable(self):
+        con = self.verify(
+            "v=k dictionary X X[v]",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "PieceDesignator"),
+                (3, "Dictionary"),
+                (3, "BracketLeft"),
+                (4, "Dictionary"),
+                (4, "Variable"),
+            ],
+        )
+        self.assertEqual(
+            con.definitions["X"].persistence_type
+            is cqltypes.PersistenceType.PERSISTENT,
+            True,
+        )
+
+    def test_027_dictionary_80_no_value_04_position_01_literal(self):
+        # No position literals.
+        # This implies an arbitrary single filter of allowed types is ok.
+        self.verify("dictionary X X[position 0]", [], returncode=1)
+
+    def test_027_dictionary_80_no_value_04_position_02_filter(self):
+        self.verify("dictionary X X[currentposition]", [], returncode=1)
+
+    def test_027_dictionary_80_no_value_04_position_03_variable(self):
+        self.verify("v=initialposition dictionary X X[v]", [], returncode=1)
+
+    def test_027_dictionary_80_no_value_05_logical_01_literal(self):
+        # No logical literals.
+        # This implies an arbitrary single filter of allowed types is ok.
+        self.verify("dictionary X X[1 and 2]", [], returncode=1)
+
+    def test_027_dictionary_80_no_value_05_logical_02_filter(self):
+        self.verify("dictionary X X[true]", [], returncode=1)
+
+    def test_027_dictionary_80_no_value_05_logical_03_variable(self):
+        self.verify("v=false dictionary X X[v]", [], returncode=1)
+
 
 if __name__ == "__main__":
     if verify.is_cql_on_path():
