@@ -806,7 +806,7 @@ class FilterTakeASCII(verify.Verify):
             ],
         )
 
-    def test_214_take_ascii_05_promote_01(self):
+    def test_214_take_ascii_05_promote_01_piece_01_designator(self):
         self.verify(
             "[x]=q",
             [
@@ -817,6 +817,21 @@ class FilterTakeASCII(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_214_take_ascii_05_promote_01_piece_02_string(self):
+        self.verify(
+            '[x]="q"',
+            [
+                (3, "TakeII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_214_take_ascii_05_promote_01_piece_03_string_tolerant(self):
+        self.verify_tolerant('[x]="qa5"', [])
 
     def test_214_take_ascii_05_promote_02(self):
         self.verify("[x]=qa5", [], returncode=1)
@@ -1043,7 +1058,7 @@ class FilterTakeASCII(verify.Verify):
     def test_214_take_ascii_05_promote_06_repeat_09_force_one_up(self):
         self.verify("[x]=q{+}", [], returncode=1)
 
-    def test_214_take_ascii_06_left_promote_01(self):
+    def test_214_take_ascii_06_left_promote_01_piece_01_designator(self):
         self.verify(
             "e2[x]=b",
             [
@@ -1054,6 +1069,21 @@ class FilterTakeASCII(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_214_take_ascii_06_left_promote_01_piece_02_string(self):
+        self.verify(
+            'e2[x]="b"',
+            [
+                (3, "TakeLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_214_take_ascii_06_left_promote_01_piece_03_string_tolerant(self):
+        self.verify_tolerant('e2[x]="b5"', [])
 
     def test_214_take_ascii_06_left_promote_02(self):
         self.verify("e2[x]=bc6", [], returncode=1)
@@ -1280,7 +1310,7 @@ class FilterTakeASCII(verify.Verify):
     def test_214_take_ascii_06_left_promote_06_repeat_09_force_one_up(self):
         self.verify("e2[x]=q{+}", [], returncode=1)
 
-    def test_214_take_ascii_07_right_promote_01(self):
+    def test_214_take_ascii_07_right_promote_01_piece_01_designator(self):
         self.verify(
             "[x]Qa4=N",
             [
@@ -1291,6 +1321,21 @@ class FilterTakeASCII(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_214_take_ascii_07_right_promote_01_piece_02_string(self):
+        self.verify(
+            '[x]Qa4="N"',
+            [
+                (3, "TakeIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_214_take_ascii_07_right_promote_01_piece_03_string_tolerant(self):
+        self.verify_tolerant('[x]Qa4="Nty"', [])
 
     def test_214_take_ascii_07_right_promote_02(self):
         self.verify("[x]Qa4=bc6", [], returncode=1)
@@ -1519,7 +1564,7 @@ class FilterTakeASCII(verify.Verify):
     def test_214_take_ascii_07_right_promote_06_repeat_09_force_one_up(self):
         self.verify("[x]Qa4=q{+}", [], returncode=1)
 
-    def test_214_take_ascii_08_left_right_promote_01(self):
+    def test_214_take_ascii_08_left_right_promote_01_piece_01_designator(self):
         self.verify(
             "r[x]Qa4=R",
             [
@@ -1530,6 +1575,23 @@ class FilterTakeASCII(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_214_take_ascii_08_left_right_promote_01_piece_02_string(self):
+        self.verify(
+            'r[x]Qa4="R"',
+            [
+                (3, "TakeLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_214_take_ascii_08_left_right_promote_01_piece_03_string_tolerant(
+        self,
+    ):
+        self.verify_tolerant('r[x]Qa4="Ro9"', [])
 
     def test_214_take_ascii_08_left_right_promote_02(self):
         self.verify("r[x]Qa4=bc6", [], returncode=1)

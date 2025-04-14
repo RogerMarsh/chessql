@@ -803,7 +803,7 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
-    def test_148_dash_utf8_05_promote_01(self):
+    def test_148_dash_utf8_05_promote_01_piece_01_designator(self):
         self.verify(
             "――=q",
             [
@@ -814,6 +814,21 @@ class FilterDashUTF8(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_148_dash_utf8_05_promote_01_piece_02_string(self):
+        self.verify(
+            '――="q"',
+            [
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_05_promote_01_piece_03_string_tolerant(self):
+        self.verify_tolerant('――="qa5"', [])
 
     def test_148_dash_utf8_05_promote_02(self):
         self.verify("――=qa5", [], returncode=1)
@@ -1040,7 +1055,7 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_05_promote_06_repeat_09_force_one_up(self):
         self.verify("――=q{+}", [], returncode=1)
 
-    def test_148_dash_utf8_06_left_promote_01(self):
+    def test_148_dash_utf8_06_left_promote_01_piece_01_designator(self):
         self.verify(
             "e2――=b",
             [
@@ -1051,6 +1066,21 @@ class FilterDashUTF8(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_148_dash_utf8_06_left_promote_01_piece_02_string(self):
+        self.verify(
+            'e2――="b"',
+            [
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_06_left_promote_01_piece_03_string_tolerant(self):
+        self.verify_tolerant('e2――="b5"', [])
 
     def test_148_dash_utf8_06_left_promote_02(self):
         self.verify("e2――=bc6", [], returncode=1)
@@ -1277,7 +1307,7 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_06_left_promote_06_repeat_09_force_one_up(self):
         self.verify("e2――=q{+}", [], returncode=1)
 
-    def test_148_dash_utf8_07_right_promote_01(self):
+    def test_148_dash_utf8_07_right_promote_01_piece_01_designator(self):
         self.verify(
             "――Qa4=N",
             [
@@ -1288,6 +1318,21 @@ class FilterDashUTF8(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_148_dash_utf8_07_right_promote_01_piece_02_string(self):
+        self.verify(
+            '――Qa4="N"',
+            [
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_07_right_promote_01_piece_03_string_tolerant(self):
+        self.verify_tolerant('――Qa4="Nty"', [])
 
     def test_148_dash_utf8_07_right_promote_02(self):
         self.verify("――Qa4=bc6", [], returncode=1)
@@ -1514,7 +1559,7 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_07_right_promote_06_repeat_09_force_one_up(self):
         self.verify("――Qa4=q{+}", [], returncode=1)
 
-    def test_148_dash_utf8_08_left_right_promote_01(self):
+    def test_148_dash_utf8_08_left_right_promote_01_piece_01_designator(self):
         self.verify(
             "r――Qa4=R",
             [
@@ -1525,6 +1570,23 @@ class FilterDashUTF8(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_148_dash_utf8_08_left_right_promote_01_piece_02_string(self):
+        self.verify(
+            'r――Qa4="R"',
+            [
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "TypeDesignator"),
+            ],
+        )
+
+    def test_148_dash_utf8_08_left_right_promote_01_piece_03_string_tolerant(
+        self,
+    ):
+        self.verify_tolerant('r――Qa4="Ro9"', [])
 
     def test_148_dash_utf8_08_left_right_promote_02(self):
         self.verify("r――Qa4=bc6", [], returncode=1)

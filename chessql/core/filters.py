@@ -278,7 +278,7 @@ class TypeDesignator(structure.NoArgumentsFilter):
 
         """
         self._raise_if_node_not_child_of_filters(
-            self.match_.group(), structure.MoveInfix
+            self.match_.group(), AssignPromotion
         )
 
 
@@ -6303,24 +6303,34 @@ class AssignPromotion(structure.Argument):
                     child.filter_type.name.join("''"),
                 )
             return
-        if not isinstance(child, PieceDesignator):
-            # See string() for for validation of promotion piece as quoted
-            # string.  Perhaps it must be there for CQL-6.1 syntax.
-            # CQL parsing does not ban promotion to king or pawn.
-            if child.filter_type is not cqltypes.FilterType.STRING:
-                self.raise_nodeerror(
-                    self.__class__.__name__.join("''"),
-                    " expects a piece type designator or string but got a ",
-                    child.__class__.__name__.join("''"),
-                )
+        if isinstance(child, TypeDesignator):
             return
-        if _type_designator_piece_re.fullmatch(child.match_.group()) is None:
+        if isinstance(child, PieceDesignator):
+            if _type_designator_piece_re.fullmatch(child.match_.group()):
+                return
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
-                " expects a piece type designator or string but got a ",
+                " expects a piece type designator but got a ",
                 child.match_.group().join("''"),
                 " piece designator",
             )
+            # See string() for for validation of promotion piece as quoted
+            # string.  Perhaps it must be there for CQL-6.1 syntax.
+        # CQL parsing does not ban promotion to king or pawn.
+        if child.filter_type is not cqltypes.FilterType.STRING:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects string but got a ",
+                child.__class__.__name__.join("''"),
+            )
+        if _type_designator_piece_re.fullmatch(child.match_.group()[1:-1]):
+            return
+        self.raise_nodeerror(
+            self.__class__.__name__.join("''"),
+            " expects a piece type designator but got a ",
+            child.match_.group().join("''"),
+            " piece designator",
+        )
 
 
 def assign(match_=None, container=None):
