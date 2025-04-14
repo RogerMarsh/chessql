@@ -272,6 +272,68 @@ class FilterDashASCII(verify.Verify):
     def test_147_dash_ascii_01_plain_06_repeat_09_force_one_up(self):
         self.verify("--{+}", [], returncode=1)
 
+    def test_147_dash_ascii_01_plain_07_function_01_promote(self):
+        self.verify(
+            'function F(T){--=T}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashII"),
+                (7, "AnySquare"),
+                (7, "AnySquare"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_01_plain_07_function_02_promote(self):
+        self.verify("function F(T){--=T}F(Q)", [], returncode=1)
+
+    def test_147_dash_ascii_01_plain_07_function_03_target(self):
+        self.verify(
+            "function F(T){--(T)}F(Q)",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "PieceDesignator"),
+                (5, "BraceLeft"),
+                (6, "DashII"),
+                (7, "AnySquare"),
+                (7, "AnySquare"),
+                (7, "TargetParenthesisLeft"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_01_plain_07_function_04_promote_target(self):
+        self.verify(
+            'function F(T){--=T(R)}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashII"),
+                (7, "AnySquare"),
+                (7, "AnySquare"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+                (7, "TargetParenthesisLeft"),
+                (8, "PieceDesignator"),
+            ],
+        )
+
     def test_147_dash_ascii_01_plain_08_assign_01_logical_01_space(self):
         self.verify("v= --", [], returncode=1)
 
@@ -358,6 +420,68 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_02_left_06_repeat_09_force_one_up(self):
         self.verify("e2--{+}", [], returncode=1)
+
+    def test_147_dash_ascii_02_left_07_function_01_promote(self):
+        self.verify(
+            'function F(T){P--=T}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashLI"),
+                (7, "PieceDesignator"),
+                (7, "AnySquare"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_02_left_07_function_02_promote(self):
+        self.verify("function F(T){P--=T}F(Q)", [], returncode=1)
+
+    def test_147_dash_ascii_02_left_07_function_03_target(self):
+        self.verify(
+            "function F(T){P--(T)}F(Q)",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "PieceDesignator"),
+                (5, "BraceLeft"),
+                (6, "DashLI"),
+                (7, "PieceDesignator"),
+                (7, "AnySquare"),
+                (7, "TargetParenthesisLeft"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_02_left_07_function_04_promote_target(self):
+        self.verify(
+            'function F(T){P--=T(R)}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashLI"),
+                (7, "PieceDesignator"),
+                (7, "AnySquare"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+                (7, "TargetParenthesisLeft"),
+                (8, "PieceDesignator"),
+            ],
+        )
 
     def test_147_dash_ascii_02_left_08_assign_01_logical_01_space(self):
         self.verify("v= e4--", [], returncode=1)
@@ -454,6 +578,68 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_03_right_06_repeat_09_force_one_up(self):
         self.verify("--Qa4{+}", [], returncode=1)
+
+    def test_147_dash_ascii_03_right_07_function_01_promote(self):
+        self.verify(
+            'function F(T){--R=T}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashIR"),
+                (7, "AnySquare"),
+                (7, "PieceDesignator"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_03_right_07_function_02_promote(self):
+        self.verify("function F(T){--R=T}F(Q)", [], returncode=1)
+
+    def test_147_dash_ascii_03_right_07_function_03_target(self):
+        self.verify(
+            "function F(T){--R(T)}F(Q)",
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "PieceDesignator"),
+                (5, "BraceLeft"),
+                (6, "DashIR"),
+                (7, "AnySquare"),
+                (7, "PieceDesignator"),
+                (7, "TargetParenthesisLeft"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_03_right_07_function_04_promote_target(self):
+        self.verify(
+            'function F(T){--R=T(B)}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashIR"),
+                (7, "AnySquare"),
+                (7, "PieceDesignator"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+                (7, "TargetParenthesisLeft"),
+                (8, "PieceDesignator"),
+            ],
+        )
 
     def test_147_dash_ascii_03_right_08_assign_01_logical_01_space(self):
         self.verify("v= --e5", [], returncode=1)
@@ -552,6 +738,68 @@ class FilterDashASCII(verify.Verify):
 
     def test_147_dash_ascii_04_left_right_06_repeat_09_force_one_up(self):
         self.verify("e2--Qa4{+}", [], returncode=1)
+
+    def test_147_dash_ascii_04_left_right_07_function_01_promote(self):
+        self.verify(
+            'function F(T){P--R=T}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashLR"),
+                (7, "PieceDesignator"),
+                (7, "PieceDesignator"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_04_left_right_07_function_02_promote(self):
+        self.verify("function F(T){P--R=T}F(Q)", [], returncode=1)
+
+    def test_147_dash_ascii_04_left_right_07_function_03_target(self):
+        self.verify(
+            'function F(T){P--R(T)}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashLR"),
+                (7, "PieceDesignator"),
+                (7, "PieceDesignator"),
+                (7, "TargetParenthesisLeft"),
+                (8, "Variable"),
+            ],
+        )
+
+    def test_147_dash_ascii_04_left_right_07_function_04_promote_target(self):
+        self.verify(
+            'function F(T){P--R=T(B)}F("Q")',
+            [
+                (3, "Function"),
+                (3, "FunctionCall"),
+                (4, "BraceLeft"),
+                (5, "Assign"),
+                (6, "ReservedVariable"),
+                (6, "String"),
+                (5, "BraceLeft"),
+                (6, "DashLR"),
+                (7, "PieceDesignator"),
+                (7, "PieceDesignator"),
+                (7, "AssignPromotion"),
+                (8, "Variable"),
+                (7, "TargetParenthesisLeft"),
+                (8, "PieceDesignator"),
+            ],
+        )
 
     def test_147_dash_ascii_04_left_right_08_assign_01_logical_01_space(self):
         self.verify("v= e4--e5", [], returncode=1)

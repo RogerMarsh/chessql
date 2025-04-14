@@ -120,7 +120,16 @@ class FunctionCallEnd(filters.RightCompoundPlace):
                 # remove it from function call children.
                 container.cursor.children.append(cursor.children.pop(0))
                 container.cursor.children[-1].parent = container.cursor
+            # Queries like 'function F(){--}F()' will produce three tokens
+            # for the '--' string inside the function call.  Only one of
+            # these should be processed to avoid adding three sets of the
+            # classes generated for '--'.
+            # Outside a function call only one token is seen for a '--'.
+            previous_token_end = None
             for token in body:
+                if token.end() == previous_token_end:
+                    continue
+                previous_token_end = token.end()
                 classes = {
                     key: class_from_token_name[key]
                     # pylint R0801 duplicate code.  Ignored.
