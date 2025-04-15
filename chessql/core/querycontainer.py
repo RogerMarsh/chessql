@@ -153,11 +153,16 @@ class QueryContainer(_QueryParameters, basenode.BaseNode):
         """Return self._verified."""
         return self._verified
 
-    def get_next_variable_id(self, name):
-        """Return str of _next_reserved_name_id and incremant by 1."""
+    def get_next_variable_prefix(self):
+        """Return str of next prefix for variable names.
+
+        A function call will prefix it's formal parameters with the
+        returned value to form the call's argument names.
+
+        """
         self._next_reserved_name_id += 1
-        return str(self._next_reserved_name_id).join(
-            (constants.LOWER_CASE_CQL_PREFIX, "_" + name)
+        return "_".join(
+            (constants.LOWER_CASE_CQL_PREFIX, str(self._next_reserved_name_id))
         )
 
     def complete(self):

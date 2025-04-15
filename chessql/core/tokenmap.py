@@ -82,8 +82,9 @@ class FunctionCallEnd(filters.RightCompoundPlace):
         container = self.container
         self._raise_if_cursor_is_not_expected_class(filters.FunctionCall)
         if container.function_body_cursor is None:
+            variable_prefix = container.get_next_variable_prefix()
             cursor = container.cursor
-            formal = {}
+            formal = cursor.formal
             parameters = container.definitions[cursor.name].parameters
             cursor.completed = False
             body = container.definitions[container.cursor.name].body
@@ -101,17 +102,16 @@ class FunctionCallEnd(filters.RightCompoundPlace):
                     formal[parameters[item]] = name
                     cursor.children.pop(0)
                     continue
-                formal[parameters[item]] = container.get_next_variable_id(
-                    parameters[item]
+                formal[parameters[item]] = "_".join(
+                    (variable_prefix, parameters[item])
                 )
                 # Add 'cql__*' variables at start of '{}' block.
-                functioncall_variable = ReservedVariable(
+                ReservedVariable(
                     match_=_function_call_variable_re.match(
                         formal[parameters[item]]
                     ),
                     container=container,
-                )
-                functioncall_variable.place_node_in_tree()
+                ).place_node_in_tree()
                 filters.Assign(
                     match_=_function_call_assign_re.match("="),
                     container=container,

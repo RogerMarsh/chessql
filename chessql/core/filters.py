@@ -3120,6 +3120,7 @@ class FunctionCall(structure.Name, structure.ParenthesizedArguments):
         self.name = match_.groupdict()["function_call"]
         self._raise_if_name_invalid(cqltypes.Function)
         self._raise_if_function_not_defined()
+        self.formal = {}
 
     def _raise_if_function_not_defined(self):
         """Raise NodeError if name exists with type in definition_types."""
@@ -3164,15 +3165,20 @@ def function_call(match_=None, container=None):
     if isinstance(container.cursor, AssignPromotion):
         if container.function_body_cursor is not None:
             var = Variable(match_=match_, container=container)
-            var.name = name
             var.place_node_in_tree()
             return TargetParenthesisLeft(match_=match_, container=container)
+        if name not in container.definitions:
+            node = container.cursor
+            while node:
+                if isinstance(node, FunctionCall):
+                    name = node.formal.get(name, name)
+                    break
+                node = node.parent
         if (
             container.definitions[name].definition_type
             is cqltypes.DefinitionType.VARIABLE
         ):
             var = Variable(match_=match_, container=container)
-            var.name = name
             var.place_node_in_tree()
         else:
             string(match_=match_, container=container).place_node_in_tree()
