@@ -2819,6 +2819,23 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
+    def test_147_dash_ascii_13_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" --=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
     def test_147_dash_ascii_13_promote_target_04_lhs_01_plus(self):
         self.verify("2+--=q(btm)", [], returncode=1)
 
@@ -3067,6 +3084,23 @@ class FilterDashASCII(verify.Verify):
                 (4, "AnySquare"),
                 (4, "AssignPromotion"),
                 (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
+    def test_147_dash_ascii_14_l_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" P--=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
                 (4, "TargetParenthesisLeft"),
                 (5, "BTM"),
             ],
@@ -3333,6 +3367,23 @@ class FilterDashASCII(verify.Verify):
             ],
         )
 
+    def test_147_dash_ascii_15_r_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" --N=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
     def test_147_dash_ascii_15_r_promote_target_04_lhs_01_plus(self):
         self.verify("2+--Qa4=q(btm)", [], returncode=1)
 
@@ -3589,6 +3640,23 @@ class FilterDashASCII(verify.Verify):
                 (4, "PieceDesignator"),
                 (4, "AssignPromotion"),
                 (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
+    def test_147_dash_ascii_16_lr_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" r--N=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
                 (4, "TargetParenthesisLeft"),
                 (5, "BTM"),
             ],

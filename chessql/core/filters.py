@@ -3147,16 +3147,10 @@ class FunctionCall(structure.Name, structure.ParenthesizedArguments):
         return True
 
 
-def variable_then_parenthesis(match_=None, container=None):
-    """Insert Variable instance and return ParenthesisLeft instance."""
-    var = Variable(match_=match_, container=container)
-    var.name = match_.groupdict()["function_call"]
-    var.place_node_in_tree()
-    return ParenthesisLeft(match_=match_, container=container)
-
-
 def function_call(match_=None, container=None):
-    """Return FunctionCall or ParenthesisLeft instance.
+    """Return a FunctionCall, ParenthesisLeft, or TargetParenthesisLeft.
+
+    If the cursor is an AssignPromotion return a TargetParenthesisLeft.
 
     If the match_.group() is in the register of function names return a
     FunctionCall instance.
@@ -3167,13 +3161,32 @@ def function_call(match_=None, container=None):
 
     """
     name = match_.groupdict()["function_call"]
+    if isinstance(container.cursor, AssignPromotion):
+        if container.function_body_cursor is not None:
+            var = Variable(match_=match_, container=container)
+            var.name = name
+            var.place_node_in_tree()
+            return TargetParenthesisLeft(match_=match_, container=container)
+        if (
+            container.definitions[name].definition_type
+            is cqltypes.DefinitionType.VARIABLE
+        ):
+            var = Variable(match_=match_, container=container)
+            var.name = name
+            var.place_node_in_tree()
+        else:
+            string(match_=match_, container=container).place_node_in_tree()
+        return TargetParenthesisLeft(match_=match_, container=container)
     if name in container.definitions:
         if (
             container.definitions[name].definition_type
             is cqltypes.DefinitionType.FUNCTION
         ):
             return FunctionCall(match_=match_, container=container)
-    return variable_then_parenthesis(match_=match_, container=container)
+    var = Variable(match_=match_, container=container)
+    var.name = name
+    var.place_node_in_tree()
+    return ParenthesisLeft(match_=match_, container=container)
 
 
 class GameNumber(structure.NoArgumentsFilter):
@@ -5404,7 +5417,14 @@ class Variable(structure.Complete, structure.VariableName):
         groupdict = match_.groupdict()
         # The "variable" reference must be first to allow for variables
         # defined by 'echo' pattern.
-        self.name = groupdict["variable"] or groupdict["variable_assign"]
+        # The 'function_call' reference is needed because 'T(' in '--=T(R)'
+        # is seen as a function call by pattern matching and has to be
+        # diverted if the '=' was seen as an 'AssignPromotion' instance.
+        self.name = (
+            groupdict["variable"]
+            or groupdict["variable_assign"]
+            or groupdict["function_call"]
+        )
         self._register_variable_type(cqltypes.VariableType.ANY)
         self._set_persistence_type(cqltypes.PersistenceType.LOCAL)
 

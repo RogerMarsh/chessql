@@ -2783,6 +2783,23 @@ class FilterDashUTF8(verify.Verify):
             ],
         )
 
+    def test_148_dash_utf8_13_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" ――=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashII"),
+                (4, "AnySquare"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
     def test_148_dash_utf8_13_promote_target_04_lhs_01_plus(self):
         self.verify("2+――=q(btm)", [], returncode=1)
 
@@ -3022,7 +3039,7 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_13_promote_target_06_repeat_09_force_one_up(self):
         self.verify("――=q(btm){+}", [], returncode=1)
 
-    def test_148_dash_utf8_14_promote_left_target_01_plain(self):
+    def test_148_dash_utf8_14_l_promote_target_01_plain(self):
         self.verify(
             "P――=Q(btm)",
             [
@@ -3031,6 +3048,23 @@ class FilterDashUTF8(verify.Verify):
                 (4, "AnySquare"),
                 (4, "AssignPromotion"),
                 (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_14_l_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" P――=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashLI"),
+                (4, "PieceDesignator"),
+                (4, "AnySquare"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
                 (4, "TargetParenthesisLeft"),
                 (5, "BTM"),
             ],
@@ -3281,7 +3315,7 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_14_l_promote_target_06_repeat_09_force_one_up(self):
         self.verify("e2――=q(btm){+}", [], returncode=1)
 
-    def test_148_dash_utf8_15_promote_right_target_01_plain(self):
+    def test_148_dash_utf8_15_r_promote_target_01_plain(self):
         self.verify(
             "――N=Q(btm)",
             [
@@ -3290,6 +3324,23 @@ class FilterDashUTF8(verify.Verify):
                 (4, "PieceDesignator"),
                 (4, "AssignPromotion"),
                 (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_15_r_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" ――N=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashIR"),
+                (4, "AnySquare"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
                 (4, "TargetParenthesisLeft"),
                 (5, "BTM"),
             ],
@@ -3540,7 +3591,7 @@ class FilterDashUTF8(verify.Verify):
     def test_148_dash_utf8_15_r_promote_target_06_repeat_09_force_one_up(self):
         self.verify("――Qa4=q(btm){+}", [], returncode=1)
 
-    def test_148_dash_utf8_16_promote_left_right_target_01_plain(self):
+    def test_148_dash_utf8_16_lr_promote_target_01_plain(self):
         self.verify(
             "r――N=Q(btm)",
             [
@@ -3549,6 +3600,23 @@ class FilterDashUTF8(verify.Verify):
                 (4, "PieceDesignator"),
                 (4, "AssignPromotion"),
                 (5, "PieceDesignator"),
+                (4, "TargetParenthesisLeft"),
+                (5, "BTM"),
+            ],
+        )
+
+    def test_148_dash_utf8_16_lr_promote_target_02_variable(self):
+        self.verify(
+            'v="Q" r――N=v(btm)',
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "String"),
+                (3, "DashLR"),
+                (4, "PieceDesignator"),
+                (4, "PieceDesignator"),
+                (4, "AssignPromotion"),
+                (5, "Variable"),
                 (4, "TargetParenthesisLeft"),
                 (5, "BTM"),
             ],
