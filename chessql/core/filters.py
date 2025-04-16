@@ -2763,7 +2763,10 @@ class Find(structure.Argument):
 
 def is_firstmatch_parameter_accepted_by(node):
     """Return True if node accepts firstmatch parameter."""
-    return isinstance(node, (Line, Path))
+    return (
+        isinstance(node, (Line, Path))
+        and node.is_instance_accepting_parameters()
+    )
 
 
 class FirstMatch(structure.NoArgumentsParameter):
@@ -3401,7 +3404,10 @@ class LastGameNumber(structure.NoArgumentsFilter):
 
 def is_lastposition_parameter_accepted_by(node):
     """Return True if node accepts lastposition parameter."""
-    return isinstance(node, (Line, Path))
+    return (
+        isinstance(node, (Line, Path))
+        and node.is_instance_accepting_parameters()
+    )
 
 
 class LastPosition(structure.NoArgumentsParameter):
@@ -3576,6 +3582,13 @@ class Line(_LineOrMove):
                 " must have at least one '<--' or '-->' component",
             )
         self._raise_if_primary_and_secondary_parameter_present()
+
+    def is_instance_accepting_parameters(self):
+        """Return False if a LineArrow is in children, otherwise delegate."""
+        for child in self.children:
+            if isinstance(child, LineArrow):
+                return False
+        return super().is_instance_accepting_parameters()
 
 
 class Local(structure.CQLObject):
@@ -3841,7 +3854,10 @@ class Move(structure.PrecedenceFromChild, _LineOrMove):
 
 def is_nestban_parameter_accepted_by(node):
     """Return True if node accepts nestban parameter."""
-    return isinstance(node, (Line, Path))
+    return (
+        isinstance(node, (Line, Path))
+        and node.is_instance_accepting_parameters()
+    )
 
 
 class NestBan(structure.NoArgumentsParameter):
@@ -4490,8 +4506,9 @@ class PureStalemate(structure.NoArgumentsFilter):
 
 def is_quiet_parameter_accepted_by(node):
     """Return True if node accepts quiet parameter."""
-    return isinstance(
-        node, (ConsecutiveMoves, Echo, Find, Line, Message, Path)
+    return (
+        isinstance(node, (ConsecutiveMoves, Echo, Find, Line, Message, Path))
+        and node.is_instance_accepting_parameters()
     )
 
 
@@ -4753,7 +4770,10 @@ class SingleColor(structure.NoArgumentsParameter):
 
     def is_parameter_accepted_by_filter(self):
         """Return True if parent accepts self as a parameter."""
-        return isinstance(self.parent, Line)
+        return (
+            isinstance(self.parent, Line)
+            and self.parent.is_instance_accepting_parameters()
+        )
 
 
 # Refers to an 'implicit search parameter' in table of filters.
@@ -5264,28 +5284,31 @@ class ResultArgument(structure.NoArgumentsFilter):
 
 def is_range_parameter_accepted_by(node):
     """Return True if node accepts range parameter."""
-    return isinstance(
-        node,
-        (
-            AnyDirection,
-            ConsecutiveMoves,
-            Find,
-            Diagonal,
-            Down,
-            Horizontal,
-            Left,
-            Line,
-            MainDiagonal,
-            Northeast,
-            Northwest,
-            OffDiagonal,
-            Orthogonal,
-            Right,
-            Southeast,
-            Southwest,
-            Up,
-            Vertical,
-        ),
+    return (
+        isinstance(
+            node,
+            (
+                AnyDirection,
+                ConsecutiveMoves,
+                Find,
+                Diagonal,
+                Down,
+                Horizontal,
+                Left,
+                Line,
+                MainDiagonal,
+                Northeast,
+                Northwest,
+                OffDiagonal,
+                Orthogonal,
+                Right,
+                Southeast,
+                Southwest,
+                Up,
+                Vertical,
+            ),
+        )
+        and node.is_instance_accepting_parameters()
     )
 
 

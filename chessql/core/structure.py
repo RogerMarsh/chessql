@@ -276,6 +276,16 @@ class CQLObject(basenode.BaseNode):
                 child.__class__.__name__.join("''"),
             )
 
+    def is_instance_accepting_parameters(self):
+        """Return True.
+
+        This method is intended to qualify the answer of functions such
+        as filters.is_range_parameter_accepted_by(node).  It should be
+        extended by subclassses as needed (to return True or False).
+
+        """
+        return True
+
 
 class Complete(CQLObject):
     """Define 'complete' and 'full' methods for filters with no children.

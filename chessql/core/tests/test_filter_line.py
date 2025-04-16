@@ -1365,6 +1365,739 @@ class FilterLine(verify.Verify):
     def test_062_line_55_repeat_multiple_fixed_06_star_star(self):
         self.verify("line --> k{3}**", [], returncode=1)
 
+    def test_062_line_56_plus_00_plain(self):
+        self.verify(
+            "line --> N +",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_56_plus_01_piece(self):
+        self.verify_declare_fail(
+            "line --> N + k",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_56_plus_02_brace_01_repeat_piece(self):
+        self.verify(
+            "{line --> N +} k",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_56_plus_02_brace_02_add_piece(self):
+        self.verify("{line --> N} + k", [], returncode=1)
+
+    def test_062_line_56_plus_02_brace_03_repeat_number(self):
+        self.verify(
+            "{line --> N +} 2",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_56_plus_02_brace_04_add_number(self):
+        self.verify(
+            "{line --> N} + 2",
+            [
+                (3, "Plus"),
+                (4, "BraceLeft"),
+                (5, "Line"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_56_plus_03_parenthesis_01_repeat_piece(self):
+        self.verify(
+            "(line --> N +) k",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_56_plus_03_parenthesis_02_add_piece(self):
+        self.verify("(line --> N) + k", [], returncode=1)
+
+    def test_062_line_56_plus_03_parenthesis_03_repeat_number(self):
+        self.verify(
+            "(line --> N +) 2",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_56_plus_03_parenthesis_04_add_number(self):
+        self.verify_declare_fail(
+            "(line --> N) + 2",
+            [
+                (3, "Plus"),
+                (4, "ParenthesisLeft"),
+                (5, "Line"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_56_plus_04_plain_01_piece(self):
+        self.verify("line --> N + k --> P", [], returncode=1)
+
+    def test_062_line_56_plus_04_plain_02_integer_01(self):
+        self.verify("line --> N + 2 --> P", [], returncode=1)
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_56_plus_04_plain_02_integer_02(self):
+        self.verify_declare_fail(
+            "line --> N + 2",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_56_plus_04_plain_03_firstmatch(self):
+        self.verify("line --> N + firstmatch --> P", [], returncode=1)
+
+    def test_062_line_56_plus_04_plain_04_lastposition(self):
+        self.verify("line --> N + lastposition --> P", [], returncode=1)
+
+    def test_062_line_56_plus_04_plain_05_singlecolor(self):
+        self.verify("line --> N + singlecolor --> P", [], returncode=1)
+
+    def test_062_line_56_plus_04_plain_06_quiet(self):
+        self.verify("line --> N + quiet --> P", [], returncode=1)
+
+    def test_062_line_56_plus_04_plain_07_nestban(self):
+        self.verify("line --> N + nestban --> P", [], returncode=1)
+
+    def test_062_line_56_plus_04_plain_08_primary_01(self):
+        self.verify("line --> N + primary --> P", [], returncode=1)
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_56_plus_04_plain_08_primary_02(self):
+        self.verify_declare_fail(
+            "line --> N + primary",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "Primary"),
+            ],
+        )
+
+    def test_062_line_56_plus_04_plain_09_secondary_01(self):
+        self.verify("line --> N + secondary --> P", [], returncode=1)
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_56_plus_04_plain_09_secondary_02(self):
+        self.verify_declare_fail(
+            "line --> N + secondary",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "Secondary"),
+            ],
+        )
+
+    def test_062_line_57_star_00_plain(self):
+        self.verify(
+            "line --> N *",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_57_star_01_piece(self):
+        self.verify_declare_fail(
+            "line --> N * k",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_57_star_02_brace_01_repeat_piece(self):
+        self.verify(
+            "{line --> N *} k",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_57_star_02_brace_02_add_piece(self):
+        self.verify("{line --> N} * k", [], returncode=1)
+
+    def test_062_line_57_star_02_brace_03_repeat_number(self):
+        self.verify(
+            "{line --> N *} 2",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_57_star_02_brace_04_add_number(self):
+        self.verify(
+            "{line --> N} * 2",
+            [
+                (3, "Star"),
+                (4, "BraceLeft"),
+                (5, "Line"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_57_star_03_parenthesis_01_repeat_piece(self):
+        self.verify(
+            "(line --> N *) k",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_57_star_03_parenthesis_02_add_piece(self):
+        self.verify("(line --> N) * k", [], returncode=1)
+
+    def test_062_line_57_star_03_parenthesis_03_repeat_number(self):
+        self.verify(
+            "(line --> N *) 2",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowForward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_57_star_03_parenthesis_04_add_number(self):
+        self.verify_declare_fail(
+            "(line --> N) * 2",
+            [
+                (3, "Star"),
+                (4, "ParenthesisLeft"),
+                (5, "Line"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_57_star_04_plain_01_piece(self):
+        self.verify("line --> N * k --> P", [], returncode=1)
+
+    def test_062_line_57_star_04_plain_02_integer_01(self):
+        self.verify("line --> N * 2 --> P", [], returncode=1)
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_57_star_04_plain_02_integer_02(self):
+        self.verify_declare_fail(
+            "line --> N * 2",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_57_star_04_plain_03_firstmatch(self):
+        self.verify("line --> N * firstmatch --> P", [], returncode=1)
+
+    def test_062_line_57_star_04_plain_04_lastposition(self):
+        self.verify("line --> N * lastposition --> P", [], returncode=1)
+
+    def test_062_line_57_star_04_plain_05_singlecolor(self):
+        self.verify("line --> N * singlecolor --> P", [], returncode=1)
+
+    def test_062_line_57_star_04_plain_06_quiet(self):
+        self.verify("line --> N * quiet --> P", [], returncode=1)
+
+    def test_062_line_57_star_04_plain_07_nestban(self):
+        self.verify("line --> N * nestban --> P", [], returncode=1)
+
+    def test_062_line_57_star_04_plain_08_primary_01(self):
+        self.verify("line --> N * primary --> P", [], returncode=1)
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_57_star_04_plain_08_primary_02(self):
+        self.verify_declare_fail(
+            "line --> N * primary",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "Primary"),
+            ],
+        )
+
+    def test_062_line_57_star_04_plain_09_secondary_01(self):
+        self.verify("line --> N * secondary --> P", [], returncode=1)
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_57_star_04_plain_09_secondary_02(self):
+        self.verify_declare_fail(
+            "line --> N * secondary",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "Secondary"),
+            ],
+        )
+
+    def test_062_line_58_plus_00_plain(self):
+        self.verify(
+            "line <-- N +",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+            ],
+        )
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_58_plus_01_piece(self):
+        self.verify_declare_fail(
+            "line <-- N + k",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_58_plus_02_brace_01_repeat_piece(self):
+        self.verify(
+            "{line <-- N +} k",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_58_plus_02_brace_02_add_piece(self):
+        self.verify("{line <-- N} + k", [], returncode=1)
+
+    def test_062_line_58_plus_02_brace_03_repeat_number(self):
+        self.verify(
+            "{line <-- N +} 2",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_58_plus_02_brace_04_add_number(self):
+        self.verify(
+            "{line <-- N} + 2",
+            [
+                (3, "Plus"),
+                (4, "BraceLeft"),
+                (5, "Line"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_58_plus_03_parenthesis_01_repeat_piece(self):
+        self.verify(
+            "(line <-- N +) k",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_58_plus_03_parenthesis_02_add_piece(self):
+        self.verify("(line <-- N) + k", [], returncode=1)
+
+    def test_062_line_58_plus_03_parenthesis_03_repeat_number(self):
+        self.verify(
+            "(line <-- N +) 2",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_58_plus_03_parenthesis_04_add_number(self):
+        self.verify_declare_fail(
+            "(line <-- N) + 2",
+            [
+                (3, "Plus"),
+                (4, "ParenthesisLeft"),
+                (5, "Line"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_58_plus_04_plain_01_piece(self):
+        self.verify("line <-- N + k <-- P", [], returncode=1)
+
+    def test_062_line_58_plus_04_plain_02_integer_01(self):
+        self.verify("line <-- N + 2 <-- P", [], returncode=1)
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_58_plus_04_plain_02_integer_02(self):
+        self.verify_declare_fail(
+            "line <-- N + 2",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_58_plus_04_plain_03_firstmatch(self):
+        self.verify("line <-- N + firstmatch <-- P", [], returncode=1)
+
+    def test_062_line_58_plus_04_plain_04_lastposition(self):
+        self.verify("line <-- N + lastposition <-- P", [], returncode=1)
+
+    def test_062_line_58_plus_04_plain_05_singlecolor(self):
+        self.verify("line <-- N + singlecolor <-- P", [], returncode=1)
+
+    def test_062_line_58_plus_04_plain_06_quiet(self):
+        self.verify("line <-- N + quiet <-- P", [], returncode=1)
+
+    def test_062_line_58_plus_04_plain_07_nestban(self):
+        self.verify("line <-- N + nestban <-- P", [], returncode=1)
+
+    def test_062_line_58_plus_04_plain_08_primary_01(self):
+        self.verify("line <-- N + primary <-- P", [], returncode=1)
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_58_plus_04_plain_08_primary_02(self):
+        self.verify_declare_fail(
+            "line <-- N + primary",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "Primary"),
+            ],
+        )
+
+    def test_062_line_58_plus_04_plain_09_secondary_01(self):
+        self.verify("line <-- N + secondary <-- P", [], returncode=1)
+
+    # CQL-6.2 sees '+' as addition and gives syntax error.
+    def test_062_line_58_plus_04_plain_09_secondary_02(self):
+        self.verify_declare_fail(
+            "line <-- N + secondary",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (3, "Secondary"),
+            ],
+        )
+
+    def test_062_line_59_star_00_plain(self):
+        self.verify(
+            "line <-- N *",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+            ],
+        )
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_59_star_01_piece(self):
+        self.verify_declare_fail(
+            "line <-- N * k",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_59_star_02_brace_01_repeat_piece(self):
+        self.verify(
+            "{line <-- N *} k",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_59_star_02_brace_02_add_piece(self):
+        self.verify("{line <-- N} * k", [], returncode=1)
+
+    def test_062_line_59_star_02_brace_03_repeat_number(self):
+        self.verify(
+            "{line <-- N *} 2",
+            [
+                (3, "BraceLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_59_star_02_brace_04_add_number(self):
+        self.verify(
+            "{line <-- N} * 2",
+            [
+                (3, "Star"),
+                (4, "BraceLeft"),
+                (5, "Line"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_59_star_03_parenthesis_01_repeat_piece(self):
+        self.verify(
+            "(line <-- N *) k",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_59_star_03_parenthesis_02_add_piece(self):
+        self.verify("(line <-- N) * k", [], returncode=1)
+
+    def test_062_line_59_star_03_parenthesis_03_repeat_number(self):
+        self.verify(
+            "(line <-- N *) 2",
+            [
+                (3, "ParenthesisLeft"),
+                (4, "Line"),
+                (5, "ArrowBackward"),
+                (6, "PieceDesignator"),
+                (6, "StarRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_59_star_03_parenthesis_04_add_number(self):
+        self.verify_declare_fail(
+            "(line <-- N) * 2",
+            [
+                (3, "Star"),
+                (4, "ParenthesisLeft"),
+                (5, "Line"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_062_line_59_star_04_plain_01_piece(self):
+        self.verify("line <-- N * k <-- P", [], returncode=1)
+
+    def test_062_line_59_star_04_plain_02_integer_01(self):
+        self.verify("line <-- N * 2 <-- P", [], returncode=1)
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_59_star_04_plain_02_integer_02(self):
+        self.verify_declare_fail(
+            "line <-- N * 2",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "Integer"),
+            ],
+        )
+
+    def test_062_line_59_star_04_plain_03_firstmatch(self):
+        self.verify("line <-- N * firstmatch <-- P", [], returncode=1)
+
+    def test_062_line_59_star_04_plain_04_lastposition(self):
+        self.verify("line <-- N * lastposition <-- P", [], returncode=1)
+
+    def test_062_line_59_star_04_plain_05_singlecolor(self):
+        self.verify("line <-- N * singlecolor <-- P", [], returncode=1)
+
+    def test_062_line_59_star_04_plain_06_quiet(self):
+        self.verify("line <-- N * quiet <-- P", [], returncode=1)
+
+    def test_062_line_59_star_04_plain_07_nestban(self):
+        self.verify("line <-- N * nestban <-- P", [], returncode=1)
+
+    def test_062_line_59_star_04_plain_08_primary_01(self):
+        self.verify("line <-- N * primary <-- P", [], returncode=1)
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_59_star_04_plain_08_primary_02(self):
+        self.verify_declare_fail(
+            "line <-- N * primary",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "Primary"),
+            ],
+        )
+
+    def test_062_line_59_star_04_plain_09_secondary_01(self):
+        self.verify("line <-- N * secondary <-- P", [], returncode=1)
+
+    # CQL-6.2 sees '*' as multiplication and gives syntax error.
+    def test_062_line_59_star_04_plain_09_secondary_02(self):
+        self.verify_declare_fail(
+            "line <-- N * secondary",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+                (5, "StarRepeat"),
+                (3, "Secondary"),
+            ],
+        )
+
+    def test_062_line_60_steps_01_four_01_plain_01_single(self):
+        self.verify(
+            "line --> N --> r --> Q --> k",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_60_steps_01_four_01_plain_02_repeat(self):
+        self.verify(
+            "line --> N + --> r --> Q --> k",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (5, "PlusRepeat"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
 
 if __name__ == "__main__":
     if verify.is_cql_on_path():
