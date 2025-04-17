@@ -674,7 +674,7 @@ class FilterLine(verify.Verify):
         )
 
     # CQL-6.2 says 'technically legal' and gives syntax error.
-    def test_062_line_46_integer_04_bare_plus(self):
+    def test_062_line_46_integer_04_bare_plus_01(self):
         self.verify_declare_fail(
             "line --> 3+4",
             [
@@ -683,6 +683,34 @@ class FilterLine(verify.Verify):
                 (5, "Plus"),
                 (6, "Integer"),
                 (6, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 says 'likely error' and gives syntax error.
+    def test_062_line_46_integer_04_bare_plus_02(self):
+        self.verify_declare_fail(
+            "line --> 3+-->4",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
+                (5, "PlusRepeat"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 says 'likely error' and gives syntax error.
+    def test_062_line_46_integer_04_bare_plus_03_comment(self):
+        self.verify_declare_fail(
+            "line --> 3+/*comment*/-->4",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
+                (5, "PlusRepeat"),
+                (4, "ArrowForward"),
+                (5, "Integer"),
             ],
         )
 
@@ -712,6 +740,36 @@ class FilterLine(verify.Verify):
                 (5, "LineConstituentParenthesisLeft"),
                 (6, "Plus"),
                 (7, "Integer"),
+                (7, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 says 'likely error' and gives syntax error.
+    def test_062_line_46_integer_05_hide_in_parentheses_plus_03(self):
+        self.verify_declare_fail(
+            "line --> (3+-->4)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (6, "PlusRepeat"),
+                (6, "ArrowForward"),
+                (7, "Integer"),
+            ],
+        )
+
+    # CQL-6.2 says 'likely error' and gives syntax error.
+    def test_062_line_46_integer_05_hide_in_parentheses_plus_04_comment(self):
+        self.verify_declare_fail(
+            "line --> (3+/*comment*/-->4)",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "Integer"),
+                (6, "PlusRepeat"),
+                (6, "ArrowForward"),
                 (7, "Integer"),
             ],
         )
@@ -2065,7 +2123,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
-    def test_062_line_60_steps_01_four_01_plain_01_single(self):
+    def test_062_line_60_forward_01_plain_01_single(self):
         self.verify(
             "line --> N --> r --> Q --> k",
             [
@@ -2081,7 +2139,7 @@ class FilterLine(verify.Verify):
             ],
         )
 
-    def test_062_line_60_steps_01_four_01_plain_02_repeat(self):
+    def test_062_line_60_forward_01_plain_02_repeat(self):
         self.verify(
             "line --> N + --> r --> Q --> k",
             [
@@ -2093,6 +2151,41 @@ class FilterLine(verify.Verify):
                 (5, "PieceDesignator"),
                 (4, "ArrowForward"),
                 (5, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_60_forward_02_group_01_single(self):
+        self.verify(
+            "line --> ( N --> r --> Q ) --> k",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_60_forward_02_group_02_repeat_internal(self):
+        self.verify(
+            "line --> ( N + --> r --> Q ) --> k",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
+                (6, "ArrowForward"),
+                (7, "PieceDesignator"),
                 (4, "ArrowForward"),
                 (5, "PieceDesignator"),
             ],

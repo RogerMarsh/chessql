@@ -39,10 +39,13 @@ WHITESPACE = "whitespace"
 _ALL_WHITESPACE = frozenset(
     (BLOCK_COMMENT, END_OF_LINE, END_OF_STREAM, LINE_COMMENT, WHITESPACE)
 )
+ARROW_BACKWARD = "arrow_backward"
+ARROW_FORWARD = "arrow_forward"
 BRACE_RIGHT = "brace_right"
 BRACKET_RIGHT = "bracket_right"
 PARENTHESIS_RIGHT = "parenthesis_right"
-_ALL_BLOCK_ENDS = frozenset((BRACE_RIGHT, BRACKET_RIGHT, PARENTHESIS_RIGHT))
+_ARROWS = frozenset((ARROW_BACKWARD, ARROW_FORWARD))
+_BLOCK_ENDS = frozenset((BRACE_RIGHT, BRACKET_RIGHT, PARENTHESIS_RIGHT))
 
 # Type designator string is limited to "QBRNKPAqbrnkpa_" characters.
 _type_designator_string_re = re.compile(
@@ -255,7 +258,9 @@ class RepeatConstituent(structure.Complete):
             node.parent.children.append(node.children.pop())
             node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
-        if not isinstance(self.parent, (LineArrow, Path)):
+        if not isinstance(
+            self.parent, (LineArrow, LineConstituentParenthesisLeft, Path)
+        ):
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
                 " parent is not a '<--', '-->', or 'path' filter",
@@ -5882,6 +5887,26 @@ class GT(structure.Compare, structure.InfixRight):
     _precedence = cqltypes.Precedence.P80
 
 
+def _lookahead(match_, token_names):
+    """Return True if first token found beyond match_ is in token_names.
+
+    If no tokens are found beyond match_ return True.
+
+    True means treat the '+' or '*' as a repetition operator, not an
+    arithmetic operator.
+
+    """
+    for token in pattern.cql_re.finditer(match_.string, match_.end()):
+        tokens = {
+            key
+            for key, value in token.groupdict().items()
+            if value is not None and key not in _ALL_WHITESPACE
+        }
+        if tokens:
+            return token_names & tokens
+    return True
+
+
 # The '*' in 'line --> not move from Front*', 'Front' is a piece variable
 # in this example, is the regular expression repetition operator not the
 # arithmetic multiplication operator.
@@ -5902,23 +5927,20 @@ def _is_repeat_0_or_1_to_many(match_, container, filter_types):
             )
             and node.complete()
         ):
-            return True
+            break  # return True
         if isinstance(node, LineArrow):
             if container.cursor.filter_type in filter_types:
-                for token in pattern.cql_re.finditer(
-                    match_.string, match_.end()
-                ):
-                    tokens = {
-                        key
-                        for key, value in token.groupdict().items()
-                        if value is not None and key not in _ALL_WHITESPACE
-                    }
-                    if tokens:
-                        return _ALL_BLOCK_ENDS & tokens
-            return True
+                return _lookahead(match_, _ARROWS | _BLOCK_ENDS)
+            break  # return True
         if not node.full():
-            return False
+            if not isinstance(node, LineConstituentParenthesisLeft):
+                return False
+            if container.cursor.filter_type is not cqltypes.FilterType.NUMERIC:
+                break  # return True
+            return _lookahead(match_, _ARROWS)
         node = node.parent
+    # Avoid pylint R0911 too-many-return-statements with 'break'.
+    return True
 
 
 # This has same effect as WildcardPlus.
