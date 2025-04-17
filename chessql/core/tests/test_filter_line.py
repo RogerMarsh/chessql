@@ -2191,6 +2191,51 @@ class FilterLine(verify.Verify):
             ],
         )
 
+    def test_062_line_61_backward_01_group_01_optional(self):
+        self.verify(
+            "line <-- ( N + <-- r <-- Q ) ? <-- k",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (6, "ArrowBackward"),
+                (7, "PieceDesignator"),
+                (5, "RepeatZeroOrOne"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_062_line_61_backward_01_group_02_nested_optional_fail(self):
+        self.verify(
+            "line <-- ( N + ( <-- r <-- Q ) * ) ? <-- k", [], returncode=1
+        )
+
+    def test_062_line_61_backward_01_group_03_nested_optional(self):
+        self.verify(
+            "line <-- ( N + <-- ( r <-- Q ) * ) ? <-- k",
+            [
+                (3, "Line"),
+                (4, "ArrowBackward"),
+                (5, "LineConstituentParenthesisLeft"),
+                (6, "PieceDesignator"),
+                (6, "PlusRepeat"),
+                (6, "ArrowBackward"),
+                (7, "LineConstituentParenthesisLeft"),
+                (8, "PieceDesignator"),
+                (8, "ArrowBackward"),
+                (9, "PieceDesignator"),
+                (7, "StarRepeat"),
+                (5, "RepeatZeroOrOne"),
+                (4, "ArrowBackward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
 
 if __name__ == "__main__":
     if verify.is_cql_on_path():
