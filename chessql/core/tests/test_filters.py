@@ -2313,6 +2313,18 @@ class Filters(verify.Verify):
             [(3, "PieceName"), (4, "PieceDesignator")],
         )
 
+    def test_094_piecename_03_compare(self):
+        self.verify(
+            "piecename d4 == piecename d5",
+            [
+                (3, "Eq"),
+                (4, "PieceName"),
+                (5, "PieceDesignator"),
+                (4, "PieceName"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
     def test_095_piece_assignment_01(self):  # Repeats an 093 test.
         self.verify("piece", [], returncode=1)
 
@@ -2874,6 +2886,18 @@ class Filters(verify.Verify):
         self.verify(
             "typename d4",
             [(3, "TypeName"), (4, "PieceDesignator")],
+        )
+
+    def test_136_typename_03_compare(self):
+        self.verify(
+            "typename d4 == typename d5",
+            [
+                (3, "Eq"),
+                (4, "TypeName"),
+                (5, "PieceDesignator"),
+                (4, "TypeName"),
+                (5, "PieceDesignator"),
+            ],
         )
 
     def test_137_unbind_01(self):

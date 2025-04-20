@@ -4225,9 +4225,32 @@ class PieceId(structure.Argument):
 
 
 class PieceName(structure.Argument):
-    """Represent 'piecename' string filter."""
+    """Represent 'piecename' string filter.
+
+    CQL-6.2 Table of Precedence does not give the 'pieceename' filter a
+    precedence.  For 'piecename q == piecename Q' the 'piecename' filter
+    must have a precedence greater than the comparison operators.
+    """
 
     _filter_type = cqltypes.FilterType.STRING
+
+    @property
+    def precedence(self):
+        """Return precedence greater than comparison when comparing.
+
+        The comparison operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        # structure.InfixRight will catch ':' and a few others if needed.
+        if isinstance(self.container.cursor.children[-1], structure.Compare):
+            return cqltypes.Precedence.PHIGH  # Higher than P80.
+        return self._precedence
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
 
 
 def is_piecepath_parameter_accepted_by(node):
@@ -5075,9 +5098,32 @@ class Try(structure.NoArgumentsFilter):
 
 
 class TypeName(structure.Argument):
-    """Represent 'typename' string filter."""
+    """Represent 'typename' string filter.
+
+    CQL-6.2 Table of Precedence does not give the 'typename' filter a
+    precedence.  For 'typename q == typename Q' the 'typename' filter
+    must have a precedence greater than the comparison operators.
+    """
 
     _filter_type = cqltypes.FilterType.STRING
+
+    @property
+    def precedence(self):
+        """Return precedence greater than comparison when comparing.
+
+        The comparison operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        # structure.InfixRight will catch ':' and a few others if needed.
+        if isinstance(self.container.cursor.children[-1], structure.Compare):
+            return cqltypes.Precedence.PHIGH  # Higher than P80.
+        return self._precedence
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
 
 
 class Type(structure.Argument):
