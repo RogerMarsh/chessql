@@ -193,11 +193,6 @@ def parenthesis_right(match_=None, container=None):
                 node.__class__.__name__.join("''"),
                 " cannot close a '{' compound filter with ')'",
             )
-        if isinstance(node, filters.ConstituentBraceLeft):
-            node.raise_nodeerror(
-                node.__class__.__name__.join("''"),
-                " cannot close a '{' constituent filter with ')'",
-            )
         if isinstance(node, filters.BracketLeft):
             node.raise_nodeerror(
                 node.__class__.__name__.join("''"),

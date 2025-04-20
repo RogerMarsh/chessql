@@ -239,31 +239,42 @@ class RepeatConstituent(structure.Complete):
     is refernced by classes and functions that are mentioned.
     """
 
-    # Probably best to define a class which is in constituent superclasses.
-    # Something shared by ArrowForward, ArrowBackward, and 'path'
-    # equivalents (not yet represented).
     def place_node_in_tree(self):
         """Override to place repeat operator in tree and set cursor to self.
 
         The repeat operator becomes a sibling of constituent.
 
         """
+        # Check for 'path' filter first.
+        node = self.container.cursor
+        while node:
+            if isinstance(node, BraceLeft) and not node.complete():
+                break
+            if (
+                isinstance(node, (Path, ConstituentParenthesisLeft))
+                and not node.complete()
+            ):
+                node.children.append(self.container.cursor.children.pop())
+                node.children[-1].parent = node
+                self.container.cursor.verify_children_and_set_types(
+                    set_node_completed=True
+                )
+                self.container.cursor = self
+                return
+            node = node.parent
+        # Now check for 'line' filter.
         node = self.parent
-        while (
-            node
-            and node.complete()
-            and not isinstance(node, (ArrowForward, ArrowBackward))
-        ):
+        while node and node.complete() and not isinstance(node, LineArrow):
             node.children[-1].parent = node.parent
             node.parent.children.append(node.children.pop())
             node.verify_children_and_set_types(set_node_completed=True)
             node = node.parent
         if not isinstance(
-            self.parent, (LineArrow, LineConstituentParenthesisLeft, Path)
+            self.parent, (LineArrow, LineConstituentParenthesisLeft)
         ):
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
-                " parent is not a '<--', '-->', or 'path' filter",
+                " is not in a 'line' or 'path' filter",
             )
         self.container.cursor = self
 
@@ -508,19 +519,6 @@ def line_comment(match_=None, container=None):
     return WhiteSpace(match_=match_, container=container)
 
 
-class ConstituentBraceRight(RightCompoundPlace):
-    """Close ConstituentBraceLeft and record as whitespace."""
-
-    def place_node_in_tree(self):
-        """Delegate then verify cursor class is ConstituentBraceLeft."""
-        super().place_node_in_tree()
-        # '(' is allowed at the top level, as a container child.
-        # Assume '(' is correct: ignore possibility '(' is inside
-        # a 'cql ( ... )' clause, which might get fixed by a
-        # separate parser for this clause.
-        self._raise_if_cursor_is_not_expected_class(ConstituentBraceLeft)
-
-
 class BraceRight(RightCompoundPlace):
     """Close BraceLeft and record as whitespace."""
 
@@ -573,14 +571,13 @@ class FunctionBodyRight(RightCompoundPlace):
 def brace_right(match_=None, container=None):
     """Return class instance for '}' in context or raise NodeError.
 
-    BraceRight, FunctionBodyRight, and ConstituentBraceRight, are the
-    relevant classes.
+    BraceRight and FunctionBodyRight are the relevant classes.
 
     """
     # Start at container.cursor and move up the parent chain while node
     # is complete.
-    # The first node which is not complete should be a ConstituentBraceLeft,
-    # FunctionBodyLeft or BraceLeft instance: NodeError is raised if not.
+    # The first node which is not complete should be a FunctionBodyLeft or
+    # BraceLeft instance: NodeError is raised if not.
     # For example in the sequence '{...consecutivemoves(x y)}' a completed
     # ConsecutiveMoves instance will be at container.cursor and there may
     # be others in the parent chain depending on the detail of '...'.
@@ -595,17 +592,6 @@ def brace_right(match_=None, container=None):
                         "' '{' block must contain at least one filter",
                     )
                 return BraceRight(match_=match_, container=container)
-            if isinstance(node, ConstituentBraceLeft):
-                if not node.children:
-                    node.raise_nodeerror(
-                        "'",
-                        node.__class__.__name__,
-                        "' '{' constituent block must contain",
-                        " at least one filter",
-                    )
-                return ConstituentBraceRight(
-                    match_=match_, container=container
-                )
             if isinstance(node, FunctionBodyLeft):
                 return FunctionBodyRight(match_=match_, container=container)
             if isinstance(node, ParenthesisLeft):
@@ -722,6 +708,8 @@ def regex_repeat(match_=None, container=None):
     node = container.cursor
     while node is not None:
         if not node.full():
+            if isinstance(node, (Path, ConstituentParenthesisLeft)):
+                return RegexRepeat(match_=match_, container=container)
             break
         if isinstance(node, LineArrow):
             return RegexRepeat(match_=match_, container=container)
@@ -753,16 +741,6 @@ def regex_repeat(match_=None, container=None):
     )
 
 
-# The replaced complete() method returned False.
-# Verify ConstituentBraceRight sets completed True.
-class ConstituentBraceLeft(structure.BlockLeft):
-    """Represent '{' top level constituent filter in 'path' filter."""
-
-    def is_left_brace_or_parenthesis(self):
-        """Override and return True."""
-        return True
-
-
 class FunctionBodyLeft(structure.BlockLeft):
     """Represent '{' body of function filter definition."""
 
@@ -777,10 +755,7 @@ class FunctionBodyLeft(structure.BlockLeft):
 
 
 class BraceLeft(structure.BlockLeft):
-    """Represent '{' compound filter of type determined by children.
-
-    See ConstituentBraceLeft for top level constituents in 'path' filter.
-    """
+    """Represent '{' compound filter of type determined by children."""
 
     @property
     def filter_type(self):
@@ -794,30 +769,10 @@ class BraceLeft(structure.BlockLeft):
         return True
 
 
-def _is_brace_left_constituent(container):
-    """Return True if '{' is at top level within a 'path' filter.
-
-    Search ancestors for nearest of ConstituentBraceLeft, BraceLeft, and
-    Path, instances.
-
-    """
-    node = container.cursor
-    while node:
-        if isinstance(node, (ConstituentBraceLeft, BraceLeft)):
-            return False
-        if isinstance(node, Path):
-            return True
-        node = node.parent
-    return False
-
-
-# Test for return ConstituentBraceLeft(...) alternative is not yet determined.
 def brace_left(match_=None, container=None):
-    """Return BraceLeft or ConstituentBraceLeft instance."""
+    """Return BraceLeft or FunctionBodyLeft instance."""
     if isinstance(container.cursor, Function):
         return FunctionBodyLeft(match_=match_, container=container)
-    if _is_brace_left_constituent(container):
-        return ConstituentBraceLeft(match_=match_, container=container)
     return BraceLeft(match_=match_, container=container)
 
 
@@ -863,6 +818,13 @@ class ConstituentParenthesisLeft(structure.BlockLeft):
         """Override and return True."""
         return True
 
+    @property
+    def filter_type(self):
+        """Return filter type of last child if filter completed."""
+        if self.completed and len(self.children) > 0:
+            return self.children[-1].filter_type
+        return super().filter_type
+
 
 class ParenthesisLeft(structure.BlockLeft):
     """Represent '(' in various CQL statement contexts.
@@ -902,38 +864,38 @@ class ParenthesisLeft(structure.BlockLeft):
 def parenthesis_left(match_=None, container=None):
     """Return appropriate ...ParenthesisLeft instance.
 
-    Search ancestors for nearest of ConstituentBraceLeft, BraceLeft, Line,
-    Path, and LineConstituentParenthesisLeft instances.
+    Search ancestors for nearest of  BraceLeft, Line, Path, and
+    LineConstituentParenthesisLeft instances.
 
     Both '('s in '(<optional1>(...)<optional2>)' should return True by these
     tests, or both should return False, provided '<optional1>' does not have
     'line', 'path', or '{'.
 
     """
+    left_parenthesis_class = ParenthesisLeft
     for cursor in (container.cursor.parent, container.cursor.parent.parent):
         if _is_dash_or_capture(cursor):
             if _no_intervening_whitespace(cursor.match_, match_):
-                return TargetParenthesisLeft(
-                    match_=match_, container=container
-                )
+                left_parenthesis_class = TargetParenthesisLeft
+                break
     node = container.cursor
     while node:
         if isinstance(node, structure.BlockLeft):
-            if isinstance(node, Path):
-                return ConstituentParenthesisLeft(
-                    match_=match_, container=container
-                )
+            if isinstance(node, (Path, ConstituentParenthesisLeft)):
+                left_parenthesis_class = ConstituentParenthesisLeft
+                break
+            if isinstance(node, (CommentSymbol, ParenthesisLeft)):
+                node = node.parent
+                continue
             break
         if isinstance(node, LineArrow):
             if node.full():
                 break
-            return LineConstituentParenthesisLeft(
-                match_=match_, container=container
-            )
-        if not node.full():
+            if left_parenthesis_class is ParenthesisLeft:
+                left_parenthesis_class = LineConstituentParenthesisLeft
             break
         node = node.parent
-    return ParenthesisLeft(match_=match_, container=container)
+    return left_parenthesis_class(match_=match_, container=container)
 
 
 class LineConstituentParenthesisRight(RightCompoundPlace):
@@ -1070,7 +1032,6 @@ class LineArrow(structure.CQLObject):
                     node,
                     (
                         BraceLeft,
-                        ConstituentBraceLeft,
                         ParenthesisLeft,
                         ConstituentParenthesisLeft,
                         LineConstituentParenthesisLeft,
@@ -1295,14 +1256,14 @@ def take_li(match_=None, container=None):
     is a ':'.  Otherwise return a TakeLI instance.
 
     """
-    if _is_lhs_implicit(match_):
+    if _is_lhs_implicit(match_, container):
         return TakeII(match_=match_, container=container)
     return TakeLI(match_=match_, container=container)
 
 
 def take_lr(match_=None, container=None):
     """Return a Take[II|IR|LI|LR|] instance depending on match_ detail."""
-    if _is_lhs_implicit(match_):
+    if _is_lhs_implicit(match_, container):
         return take_ir(match_=match_, container=container)
     if _is_rhs_implicit(match_):
         return TakeLI(match_=match_, container=container)
@@ -1487,14 +1448,14 @@ def dash_li(match_=None, container=None):
     is a ':'.  Otherwise return a DashLI instance.
 
     """
-    if _is_lhs_implicit(match_):
+    if _is_lhs_implicit(match_, container):
         return DashII(match_=match_, container=container)
     return DashLI(match_=match_, container=container)
 
 
 def dash_lr(match_=None, container=None):
     """Return a Dash[II|IR|LI|LR|] instance depending on match_ detail."""
-    if _is_lhs_implicit(match_):
+    if _is_lhs_implicit(match_, container):
         return dash_ir(match_=match_, container=container)
     if _is_rhs_implicit(match_):
         return DashLI(match_=match_, container=container)
@@ -4161,6 +4122,51 @@ class Path(structure.BlockLeft):
 
     _filter_type = cqltypes.FilterType.NUMERIC
 
+    def _verify_children_and_set_own_types(self):
+        """Raise NodeError if no arguments or bad parameter combination."""
+        argument_present = False
+        focus_present = False
+        piecepath_present = False
+        repeat_allowed = False
+        for child in self.children:
+            if not child.is_parameter and not isinstance(child, EndPaths):
+                argument_present = True
+            if isinstance(child, (Focus, FocusCapture)):
+                focus_present = True
+            elif isinstance(child, PiecePath):
+                piecepath_present = True
+            elif isinstance(
+                child, (structure.DashOrTake, ConstituentParenthesisLeft)
+            ):
+                repeat_allowed = True
+            elif isinstance(child, RepeatConstituent):
+                if not repeat_allowed:
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " has ",
+                        child.__class__.__name__.join("''"),
+                        " without a constituent filter after nearest",
+                        " earlier 'repeat' filter",
+                    )
+                repeat_allowed = True
+        if not argument_present:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " must have at least one argument after any parameters",
+            )
+        if piecepath_present and not focus_present:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " 'piecepath' parameter given without 'focus' parameter",
+            )
+
+    def is_instance_accepting_parameters(self):
+        """Return False if a filter is in children, otherwise delegate."""
+        for child in self.children:
+            if not child.is_parameter:
+                return False
+        return super().is_instance_accepting_parameters()
+
 
 class PersistentQuiet(structure.Complete, structure.VariableName):
     """Represent variable with 'persistent quiet' prefix.
@@ -5751,12 +5757,6 @@ def bracket_right(match_=None, container=None):
                 node.__class__.__name__,
                 "' cannot close a '{' compound filter with ']'",
             )
-        if isinstance(node, ConstituentBraceLeft):
-            node.raise_nodeerror(
-                "'",
-                node.__class__.__name__,
-                "' cannot close a '{' constituent filter with ']'",
-            )
         if isinstance(node, structure.ParenthesizedArguments):
             node.raise_nodeerror(
                 "'",
@@ -5919,11 +5919,7 @@ def _is_repeat_0_or_1_to_many(match_, container, filter_types):
         if (
             isinstance(
                 node,
-                (
-                    ConstituentBraceLeft,
-                    ConstituentParenthesisLeft,
-                    LineConstituentParenthesisLeft,
-                ),
+                (LineConstituentParenthesisLeft, ConstituentParenthesisLeft),
             )
             and node.complete()
         ):
@@ -5933,6 +5929,8 @@ def _is_repeat_0_or_1_to_many(match_, container, filter_types):
                 return _lookahead(match_, _ARROWS | _BLOCK_ENDS)
             break  # return True
         if not node.full():
+            if isinstance(node, (Path, ConstituentParenthesisLeft)):
+                break  # return True
             if not isinstance(node, LineConstituentParenthesisLeft):
                 return False
             if container.cursor.filter_type is not cqltypes.FilterType.NUMERIC:
@@ -6583,13 +6581,23 @@ def _is_local_dictionary(filter_):
     )
 
 
-def _is_lhs_implicit(match_):
+def _is_lhs_implicit(match_, container):
     """Return True if character before match_implies implicit lhs.
 
     Relevant to '--' and '[x]' filters.
 
     """
-    return match_.string[match_.start() - 1] in "({:="
+    # In 'to--' the 'to' is lhs filter but in 'path--' the '--' is an
+    # argument of 'path' filter so lhs filter is implicit.  Same for '[x]'
+    # and utf8 versions and utf8 version of 'path'.
+    peek = match_.string[match_.start() - 1]
+    if (
+        isinstance(container.cursor, Path)
+        or peek in ")"
+        and isinstance(container.cursor, ConstituentParenthesisLeft)
+    ):
+        return True
+    return peek in "({:="
 
 
 def _is_rhs_implicit(match_):
@@ -6598,4 +6606,4 @@ def _is_rhs_implicit(match_):
     Relevant to '--' and '[x]' filters.
 
     """
-    return match_.string[match_.end()] in "+-*/%><!)}=("
+    return match_.string[match_.end()] in "+-*/%><!)}=(?"

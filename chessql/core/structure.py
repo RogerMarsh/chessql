@@ -222,16 +222,16 @@ class CQLObject(basenode.BaseNode):
         if filter_type is not None and rhs.filter_type not in filter_type:
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
-                "' cannot ",
-                operation.join("''"),
+                " cannot ",
+                operation,
                 " because rhs filter type is ",
                 str(rhs.filter_type).join("''"),
             )
         if lhs.filter_type is not rhs.filter_type and not allowany:
             self.raise_nodeerror(
                 self.__class__.__name__.join("''"),
-                "' cannot ",
-                operation.join("''"),
+                " cannot ",
+                operation,
                 " because lhs filter type is ",
                 str(lhs.filter_type).join("''"),
                 " and rhs is ",
