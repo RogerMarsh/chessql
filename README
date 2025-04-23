@@ -8,13 +8,13 @@ Chess Query Language (CQL) parser
 Description
 ===========
 
-This package provides a parser for Chess Query Language ('CQL'_).
+This package provides a parser for Chess Query Language (`CQL`_).
 
-The documentation for 'CQL version 6.0.4'_ as found in first half of 2020, plus 'CQL version 6.1'_ and 'CQL version 6.2'_ as found in mid-2024, was used as a reference.
+The documentation for `CQL version 6.0.4`_ as found in first half of 2020, plus `CQL version 6.1`_ and `CQL version 6.2`_ as found in mid-2024, was used as a reference.
 
-'CQLi'_ provides an alternative implementation of CQL-6.1 and a '-parse' option which gives output more easily compared with ChessQL output.
+`CQLi`_ provides an alternative implementation of CQL-6.1 and a '-parse' option which gives output more easily compared with ChessQL output.
 
-This package does not implement an evaluator to find games in a 'PGN'_ file which match a query.
+This package does not implement an evaluator to find games in a `PGN`_ file which match a query.
 
 
 Installation Instructions
