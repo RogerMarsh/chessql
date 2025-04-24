@@ -2135,6 +2135,18 @@ class CurrentMove(structure.Argument):
 
     _filter_type = cqltypes.FilterType.LOGICAL
 
+    @property
+    def precedence(self):
+        """Return precedence greater than logical operators when comparing.
+
+        The logical operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        if isinstance(self.container.cursor.children[-1], (And, Or)):
+            return cqltypes.Precedence.PHIGH  # Higher than P50.
+        return self._precedence
+
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         self.raise_if_not_number_of_children(1)
@@ -2921,7 +2933,6 @@ class UniversalSquareVariable(structure.Complete, structure.VariableName):
 class UniversalSquareIterator(structure.Argument):
     """Represent implied 'universal square iteration' filter."""
 
-    _filter_type = cqltypes.FilterType.SET
     _child_count = 2
 
     def place_node_in_tree(self):
@@ -2966,7 +2977,6 @@ class UniversalPieceVariable(structure.Complete, structure.VariableName):
 class UniversalPieceIterator(structure.Argument):
     """Represent implied 'universal piece iteration' filter."""
 
-    _filter_type = cqltypes.FilterType.SET
     _child_count = 2
 
     def place_node_in_tree(self):
@@ -3878,13 +3888,9 @@ class NoTransform(structure.Argument):
     filter.
     """
 
-    _filter_type = (
-        cqltypes.FilterType.SET
-        | cqltypes.FilterType.LOGICAL
-        | cqltypes.FilterType.NUMERIC
-        | cqltypes.FilterType.STRING
-        | cqltypes.FilterType.POSITION
-    )
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        self.filter_type = self.children[-1].filter_type
 
 
 class Not(structure.Argument):
@@ -4242,8 +4248,7 @@ class PieceName(structure.Argument):
         of precedence checking.
 
         """
-        # structure.InfixRight will catch ':' and a few others if needed.
-        if isinstance(self.container.cursor.children[-1], structure.Compare):
+        if isinstance(self.container.cursor.children[-1], structure.Infix):
             return cqltypes.Precedence.PHIGH  # Higher than P80.
         return self._precedence
 
@@ -4615,9 +4620,31 @@ class Ray(structure.ParenthesizedArguments):
 
 
 class ReadFile(structure.Argument):
-    """Represent 'readfile' string filter."""
+    """Represent 'readfile' string filter.
+
+    CQL-6.2 Table of Precedence does not give the 'readfile' filter a
+    precedence.  For 'readfile "f" == readfile "f"' the 'readfile' filter
+    must have a precedence greater than the comparison operators.
+    """
 
     _filter_type = cqltypes.FilterType.STRING
+
+    @property
+    def precedence(self):
+        """Return precedence greater than comparison when comparing.
+
+        The comparison operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        if isinstance(self.container.cursor.children[-1], structure.Infix):
+            return cqltypes.Precedence.PHIGH  # Higher than P80.
+        return self._precedence
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.STRING)
 
 
 class RemoveComment(structure.NoArgumentsFilter):
@@ -4630,9 +4657,30 @@ class Result(structure.Argument):
     """Represent 'result' logical filter.
 
     The 'result' keyword also appears in the parameter module.
+
+    CQL-6.2 Table of Precedence does not give the 'result' filter a
+    precedence.  For 'result "1-0" == result "1-0"' the 'result' filter
+    must have a precedence greater than the comparison operators.
     """
 
     _filter_type = cqltypes.FilterType.LOGICAL
+
+    @property
+    def precedence(self):
+        """Return precedence greater than comparison when comparing.
+
+        The comparison operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        if isinstance(self.container.cursor.children[-1], structure.Infix):
+            return cqltypes.Precedence.PHIGH  # Higher than P80.
+        return self._precedence
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.STRING)
 
 
 # Definition of ReverseColor derived from:
@@ -4827,20 +4875,23 @@ class Sort(structure.Argument):
 
     _filter_type = cqltypes.FilterType.NUMERIC | cqltypes.FilterType.STRING
     _accepted_parameters = frozenset(("min", "string"))
-    # Precedence removed from 'sort' because it applies to 'body of sort'
-    # according to Table of Precedences.
-    # At time of writing removing precedence makes 'sort' interact with
-    # infix filters correctly: a case where assigning the precedence to
-    # the body filter matters has not yet been seen.
-    # Are 'echo', 'piece', and 'square', the same?  They are listed with
-    # 'sort'.
+    _precedence = cqltypes.Precedence.P30
 
-    @property
-    def filter_type(self):
-        """Return filter type of last child if BraceLeft completed."""
-        if self.completed:
-            return self.children[-1].filter_type
-        return super().filter_type
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        child = self.children[0]
+        self.raise_if_not_filter_type(
+            child,
+            (
+                cqltypes.FilterType.NUMERIC
+                | cqltypes.FilterType.STRING
+                | cqltypes.FilterType.SET
+            ),
+        )
+        if child.filter_type in cqltypes.FilterType.SET:
+            self._filter_type = cqltypes.FilterType.NUMERIC
+        else:
+            self._filter_type = child.filter_type
 
 
 def sort(match_=None, container=None):
@@ -4937,11 +4988,38 @@ class Str(structure.Argument):
 
     _filter_type = cqltypes.FilterType.STRING
 
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.STRING)
+
 
 class Tag(structure.Argument):
-    """Represent 'tag' string filter."""
+    """Represent 'tag' string filter.
+
+    CQL-6.2 Table of Precedence does not give the 'tag' filter a
+    precedence.  For 'tag "t" == tag "t"' the 'tag' filter
+    must have a precedence greater than the comparison operators.
+    """
 
     _filter_type = cqltypes.FilterType.STRING
+
+    @property
+    def precedence(self):
+        """Return precedence greater than comparison when comparing.
+
+        The comparison operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        if isinstance(self.container.cursor.children[-1], structure.Infix):
+            return cqltypes.Precedence.PHIGH  # Higher than P80.
+        return self._precedence
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.STRING)
 
 
 class Terminal(structure.NoArgumentsFilter):
@@ -5115,8 +5193,7 @@ class TypeName(structure.Argument):
         of precedence checking.
 
         """
-        # structure.InfixRight will catch ':' and a few others if needed.
-        if isinstance(self.container.cursor.children[-1], structure.Compare):
+        if isinstance(self.container.cursor.children[-1], structure.Infix):
             return cqltypes.Precedence.PHIGH  # Higher than P80.
         return self._precedence
 
@@ -5730,6 +5807,23 @@ class BracketLeft(structure.CompleteBlock, structure.InfixLeft):
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
         lhs = self.children[0]
+        if isinstance(lhs, (IsBound, IsUnbound)):
+            name = lhs.children[0].name
+            if name not in self.container.definitions:
+                self.raise_nodeerror(
+                    lhs.__class__.__name__.join("''"),
+                    " expects the name of a dictionary, not ",
+                    name.join("''"),
+                )
+            if not isinstance(lhs.children[0], Dictionary):
+                self.raise_nodeerror(
+                    lhs.__class__.__name__.join("''"),
+                    " expects name ",
+                    name.join("''"),
+                    " to refer to a dictionary, not a ",
+                    lhs.children[0].__class__.__name__.join("''"),
+                )
+            return
         if isinstance(lhs, structure.VariableName):
             if (
                 lhs.container.definitions[lhs.name].filter_type

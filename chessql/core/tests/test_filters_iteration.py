@@ -113,6 +113,154 @@ class FiltersIteration(verify.Verify):
     def test_169_square_ascii_10_position_set(self):
         self.verify("x [element] currentposition k", [], returncode=1)
 
+    def test_169_square_ascii_11_compare_01_set(self):
+        self.verify_capture_cql_output(
+            "x[element].k==q",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <EqualityNode",
+                    "    Left: k<all>",
+                    "    Right: q<all>",
+                    " SquareLoopNode>",
+                )
+            ),
+        )
+
+    def test_169_square_ascii_11_compare_02_element(self):
+        self.verify(
+            "x[element].k==y[element].q",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "ExistentialSquareIterator"),
+                (6, "Element"),
+                (7, "ExistentialSquareVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_169_square_ascii_12_logical_01_set(self):
+        self.verify_capture_cql_output(
+            "x[element].k or q",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Or"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <OrNode",
+                    "    or left arg: k<all>",
+                    "    or right arg: q<all> OrNode> SquareLoopNode>",
+                )
+            ),
+        )
+
+    def test_169_square_ascii_12_logical_02_element(self):
+        self.verify(
+            "x[element].k or y[element].q",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Or"),
+                (5, "PieceDesignator"),
+                (5, "ExistentialSquareIterator"),
+                (6, "Element"),
+                (7, "ExistentialSquareVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_169_square_ascii_13_setop_01_set(self):
+        self.verify_capture_cql_output(
+            "x[element].k|q",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <UnionNode",
+                    "    left |: k<all>",
+                    "    right |: q<all> UnionNode> SquareLoopNode>",
+                )
+            ),
+        )
+
+    def test_169_square_ascii_13_setop_02_element(self):
+        self.verify(
+            "x[element].k|y[element].q",
+            [
+                (3, "ExistentialSquareIterator"),
+                (4, "Element"),
+                (5, "ExistentialSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "ExistentialSquareIterator"),
+                (6, "Element"),
+                (7, "ExistentialSquareVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    # Because precedence setting got commented as a typo in filters.
+    def test_170_square_ascii_14_element_in_line(self):
+        self.verify_capture_cql_output(
+            "line --> x[element].k --> q",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "ExistentialSquareIterator"),
+                (6, "Element"),
+                (7, "ExistentialSquareVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "".join(
+                        (
+                            "<0 of 2: <HolderConstituent ",
+                            "<SquareLoopNode : variable: x ",
+                        )
+                    ),
+                    "     target: <AnyNode>",
+                    "     body: k<all> SquareLoopNode> >",
+                    "    <1 of 2: <HolderConstituent q<all>> FutureNode>",
+                )
+            ),
+        )
+
     def test_170_square_utf8_01(self):
         self.verify("∊", [], returncode=1)
 
@@ -319,6 +467,102 @@ class FiltersIteration(verify.Verify):
                 (5, "AnySquare"),
                 (4, "CurrentPosition"),
             ],
+        )
+
+    def test_171_universal_square_ascii_08_compare_01_set(self):
+        self.verify_capture_cql_output(
+            "[forall]x[element].k==q",
+            [
+                (3, "UniversalSquareIterator"),
+                (4, "Element"),
+                (5, "UniversalSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <EqualityNode",
+                    "    Left: k<all>",
+                    "    Right: q<all>",
+                    " SquareLoopNode>",
+                )
+            ),
+        )
+
+    def test_171_universal_square_ascii_08_compare_02_element(self):
+        self.verify(
+            "[forall]x[element].k==[forall]y[element].q",
+            [],
+            returncode=1,
+        )
+
+    def test_171_universal_square_ascii_09_logical_01_set(self):
+        self.verify_capture_cql_output(
+            "[forall]x[element].k and q",
+            [
+                (3, "UniversalSquareIterator"),
+                (4, "Element"),
+                (5, "UniversalSquareVariable"),
+                (5, "AnySquare"),
+                (4, "And"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <AndNode",
+                    "    and left arg: k<all>",
+                    "    and right arg: q<all> AndNode> SquareLoopNode>",
+                )
+            ),
+        )
+
+    def test_171_universal_square_ascii_09_logical_02_element(self):
+        self.verify(
+            "[forall]x[element].k and [forall]y[element].q",
+            [
+                (3, "UniversalSquareIterator"),
+                (4, "Element"),
+                (5, "UniversalSquareVariable"),
+                (5, "AnySquare"),
+                (4, "And"),
+                (5, "PieceDesignator"),
+                (5, "UniversalSquareIterator"),
+                (6, "Element"),
+                (7, "UniversalSquareVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_171_universal_square_ascii_10_setop_01_set(self):
+        self.verify_capture_cql_output(
+            "[forall]x[element].k|q",
+            [
+                (3, "UniversalSquareIterator"),
+                (4, "Element"),
+                (5, "UniversalSquareVariable"),
+                (5, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <UnionNode",
+                    "    left |: k<all>",
+                    "    right |: q<all> UnionNode> SquareLoopNode>",
+                )
+            ),
+        )
+
+    def test_171_universal_square_ascii_10_setop_02_element(self):
+        self.verify(
+            "[forall]x[element].k|[forall]y[element].q",
+            [],
+            returncode=1,
         )
 
     def test_172_universal_square_utf8_01_01(self):
@@ -733,6 +977,154 @@ class FiltersIteration(verify.Verify):
 
     def test_175_piece_ascii_10_position_set(self):
         self.verify("[Aa]y [element] currentposition k", [], returncode=1)
+
+    def test_175_piece_ascii_11_compare_01_set(self):
+        self.verify_capture_cql_output(
+            "[Aa]x[element].k==q",
+            [
+                (3, "ExistentialPieceIterator"),
+                (4, "Element"),
+                (5, "ExistentialPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <EqualityNode",
+                    "    Left: k<all>",
+                    "    Right: q<all>",
+                    " PieceLoopNode>",
+                )
+            ),
+        )
+
+    def test_175_piece_ascii_11_compare_02_element(self):
+        self.verify(
+            "[Aa]x[element].k==[Aa]y[element].q",
+            [
+                (3, "ExistentialPieceIterator"),
+                (4, "Element"),
+                (5, "ExistentialPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "ExistentialPieceIterator"),
+                (6, "Element"),
+                (7, "ExistentialPieceVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_175_piece_ascii_12_logical_01_set(self):
+        self.verify_capture_cql_output(
+            "[Aa]x[element].k or q",
+            [
+                (3, "ExistentialPieceIterator"),
+                (4, "Element"),
+                (5, "ExistentialPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Or"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <OrNode",
+                    "    or left arg: k<all>",
+                    "    or right arg: q<all> OrNode> PieceLoopNode>",
+                )
+            ),
+        )
+
+    def test_175_piece_ascii_12_logical_02_element(self):
+        self.verify(
+            "[Aa]x[element].k or [Aa]y[element].q",
+            [
+                (3, "ExistentialPieceIterator"),
+                (4, "Element"),
+                (5, "ExistentialPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Or"),
+                (5, "PieceDesignator"),
+                (5, "ExistentialPieceIterator"),
+                (6, "Element"),
+                (7, "ExistentialPieceVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_175_piece_ascii_13_setop_01_set(self):
+        self.verify_capture_cql_output(
+            "[Aa]x[element].k | q",
+            [
+                (3, "ExistentialPieceIterator"),
+                (4, "Element"),
+                (5, "ExistentialPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <UnionNode",
+                    "    left |: k<all>",
+                    "    right |: q<all> UnionNode> PieceLoopNode>",
+                )
+            ),
+        )
+
+    def test_175_piece_ascii_13_setop_02_element(self):
+        self.verify(
+            "[Aa]x[element].k | [Aa]y[element].q",
+            [
+                (3, "ExistentialPieceIterator"),
+                (4, "Element"),
+                (5, "ExistentialPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "ExistentialPieceIterator"),
+                (6, "Element"),
+                (7, "ExistentialPieceVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    # Because precedence setting got commented as a typo in filters.
+    def test_175_piece_ascii_14_element_in_line(self):
+        self.verify_capture_cql_output(
+            "line --> [Aa]x[element].k --> q",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "ExistentialPieceIterator"),
+                (6, "Element"),
+                (7, "ExistentialPieceVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "".join(
+                        (
+                            "<0 of 2: <HolderConstituent ",
+                            "<PieceLoopNode : variable: x ",
+                        )
+                    ),
+                    "     target: <AnyNode>",
+                    "     body: k<all> PieceLoopNode> >",
+                    "    <1 of 2: <HolderConstituent q<all>> FutureNode>",
+                )
+            ),
+        )
 
     def test_176_piece_utf8_01(self):
         self.verify("◭", [(3, "PieceDesignator")])
@@ -1197,6 +1589,95 @@ class FiltersIteration(verify.Verify):
                 (5, "AnySquare"),
                 (4, "CurrentPosition"),
             ],
+        )
+
+    def test_179_universal_piece_ascii_08_compare_01_set(self):
+        self.verify_capture_cql_output(
+            "[forall][Aa]x[element].k==q",
+            [
+                (3, "UniversalPieceIterator"),
+                (4, "Element"),
+                (5, "UniversalPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Eq"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <EqualityNode",
+                    "    Left: k<all>",
+                    "    Right: q<all>",
+                    " PieceLoopNode>",
+                )
+            ),
+        )
+
+    def test_179_universal_piece_ascii_08_compare_02_element(self):
+        self.verify(
+            "[forall][Aa]x[element].k==[forall][Aa]y[element].q",
+            [],
+            returncode=1,
+        )
+
+    def test_179_universal_piece_ascii_09_logical_01_set(self):
+        self.verify(
+            "[forall][Aa]x[element].k and q",
+            [
+                (3, "UniversalPieceIterator"),
+                (4, "Element"),
+                (5, "UniversalPieceVariable"),
+                (5, "AnySquare"),
+                (4, "And"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_179_universal_piece_ascii_09_logical_02_element(self):
+        self.verify(
+            "[forall][Aa]x[element].k and [forall][Aa]y[element].q",
+            [
+                (3, "UniversalPieceIterator"),
+                (4, "Element"),
+                (5, "UniversalPieceVariable"),
+                (5, "AnySquare"),
+                (4, "And"),
+                (5, "PieceDesignator"),
+                (5, "UniversalPieceIterator"),
+                (6, "Element"),
+                (7, "UniversalPieceVariable"),
+                (7, "AnySquare"),
+                (6, "PieceDesignator"),
+            ],
+        )
+
+    def test_179_universal_piece_ascii_10_setop_01_set(self):
+        self.verify_capture_cql_output(
+            "[forall][Aa]x[element].k|q",
+            [
+                (3, "UniversalPieceIterator"),
+                (4, "Element"),
+                (5, "UniversalPieceVariable"),
+                (5, "AnySquare"),
+                (4, "Union"),
+                (5, "PieceDesignator"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "body: <UnionNode",
+                    "    left |: k<all>",
+                    "    right |: q<all> UnionNode> PieceLoopNode>",
+                )
+            ),
+        )
+
+    def test_179_universal_piece_ascii_10_setop_02_element(self):
+        self.verify(
+            "[forall][Aa]x[element].k|[forall][Aa]y[element].q",
+            [],
+            returncode=1,
         )
 
     def test_180_universal_piece_utf8_01_01(self):

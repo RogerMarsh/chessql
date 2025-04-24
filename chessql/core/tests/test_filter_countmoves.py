@@ -19,6 +19,9 @@ class FilterCountMoves(verify.Verify):
     def test_019_countmoves_01_plain_01_bare(self):
         self.verify("countmoves", [], returncode=1)
 
+    def test_019_countmoves_01_plain_02_piece(self):
+        self.verify("countmoves k", [], returncode=1)
+
     def test_019_countmoves_01_plain_04_target_01_btm(self):
         self.verify(
             "countmoves --(btm)",
@@ -111,9 +114,6 @@ class FilterCountMoves(verify.Verify):
                 (6, "OO"),
             ],
         )
-
-    def test_019_countmoves_02(self):
-        self.verify("countmoves k", [], returncode=1)
 
     def test_019_countmoves_03_move_01_dash_ascii(self):
         self.verify(
@@ -3340,6 +3340,70 @@ class FilterCountMoves(verify.Verify):
         self,
     ):
         self.verify("countmoves e2×Qa4=q(btm){+}", [], returncode=1)
+
+    def test_019_countmoves_10_compare_01_numeric(self):
+        self.verify(
+            "countmoves -- == 3",
+            [
+                (3, "Eq"),
+                (4, "CountMoves"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_019_countmoves_10_compare_02_countmoves(self):
+        self.verify(
+            "countmoves -- == countmoves --",
+            [
+                (3, "Eq"),
+                (4, "CountMoves"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "CountMoves"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_019_countmoves_11_logical_01_numeric(self):
+        self.verify(
+            "countmoves -- or 3",
+            [
+                (3, "Or"),
+                (4, "CountMoves"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_019_countmoves_11_logical_02_countmoves(self):
+        self.verify(
+            "countmoves -- or countmoves --",
+            [
+                (3, "Or"),
+                (4, "CountMoves"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "CountMoves"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_019_countmoves_12_setop_01_numeric(self):
+        self.verify("countmoves -- & 3", [], returncode=1)
+
+    def test_019_countmoves_12_setop_02_countmoves(self):
+        self.verify("countmoves -- & countmoves --", [], returncode=1)
 
 
 if __name__ == "__main__":

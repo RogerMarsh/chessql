@@ -19,6 +19,9 @@ class FilterLegal(verify.Verify):
     def test_060_legal_01_plain_01_bare(self):
         self.verify("legal", [], returncode=1)
 
+    def test_060_legal_01_plain_02_piece(self):
+        self.verify("legal k", [], returncode=1)
+
     def test_060_legal_01_plain_04_target_01_btm(self):
         self.verify("legal --(btm)", [], returncode=1)
 
@@ -79,9 +82,6 @@ class FilterLegal(verify.Verify):
 
     def test_060_legal_01_plain_04_target_07_set_o_o(self):
         self.verify("legal --(Rc4 o-o)", [], returncode=1)
-
-    def test_060_legal_02(self):
-        self.verify("legal k", [], returncode=1)
 
     def test_060_legal_03_dash_ascii(self):
         self.verify(
@@ -1388,6 +1388,83 @@ class FilterLegal(verify.Verify):
         self,
     ):
         self.verify("legal e2――Qa4=q(o-o){+}", [], returncode=1)
+
+    def test_060_legal_08_compare_01_integer(self):
+        self.verify(
+            "legal -- == 3",
+            [
+                (3, "Eq"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_060_legal_08_compare_02_legal(self):
+        self.verify(
+            "legal -- == legal --",
+            [
+                (3, "Eq"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_060_legal_09_logical_01_integer(self):
+        self.verify(
+            "legal -- or 3",
+            [
+                (3, "Or"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_060_legal_09_logical_02_legal(self):
+        self.verify(
+            "legal -- or legal --",
+            [
+                (3, "Or"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_060_legal_10_setop_01_integer(self):
+        self.verify("legal -- & 3", [], returncode=1)
+
+    def test_060_legal_10_setop_02_legal(self):
+        self.verify(
+            "legal -- & legal --",
+            [
+                (3, "Intersection"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Legal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
 
 
 if __name__ == "__main__":

@@ -4291,6 +4291,102 @@ class FilterTakeUTF8(verify.Verify):
             ],
         )
 
+    def test_215_take_utf8_21_pair_07_compare_01_dash_ascii_01_no_space(self):
+        self.verify("×==--", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_01_dash_ascii_02_l_space(self):
+        self.verify("× ==--", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_01_dash_ascii_03_r_space(self):
+        self.verify("×== --", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_01_dash_ascii_04_lr_space(self):
+        self.verify("× == --", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_02_dash_utf8_01_no_space(self):
+        self.verify("×==――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_02_dash_utf8_02_l_space(self):
+        self.verify("× ==――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_02_dash_utf8_03_r_space(self):
+        self.verify("×== ――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_02_dash_utf8_04_lr_space(self):
+        self.verify("× == ――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_03_take_ascii_01_no_space(self):
+        self.verify("×==[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_03_take_ascii_02_l_space(self):
+        self.verify("× ==[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_03_take_ascii_03_r_space(self):
+        self.verify("×== [x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_03_take_ascii_04_lr_space(self):
+        self.verify("× == [x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_04_take_utf8_01_no_space(self):
+        self.verify("×==×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_04_take_utf8_02_l_space(self):
+        self.verify("× ==×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_04_take_utf8_03_r_space(self):
+        self.verify("×== ×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_07_compare_04_take_utf8_04_lr_space(self):
+        self.verify("× == ×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_01_dash_ascii_01_no_space(self):
+        self.verify("×|--", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_01_dash_ascii_02_l_space(self):
+        self.verify("× |--", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_01_dash_ascii_03_r_space(self):
+        self.verify("×| --", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_01_dash_ascii_04_lr_space(self):
+        self.verify("× | --", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_02_dash_utf8_01_no_space(self):
+        self.verify("×|――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_02_dash_utf8_02_l_space(self):
+        self.verify("× |――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_02_dash_utf8_03_r_space(self):
+        self.verify("×| ――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_02_dash_utf8_04_lr_space(self):
+        self.verify("× | ――", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_03_take_ascii_01_no_space(self):
+        self.verify("×|[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_03_take_ascii_02_l_space(self):
+        self.verify("× |[x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_03_take_ascii_03_r_space(self):
+        self.verify("×| [x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_03_take_ascii_04_lr_space(self):
+        self.verify("× | [x]", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_04_take_utf8_01_no_space(self):
+        self.verify("×|×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_04_take_utf8_02_l_space(self):
+        self.verify("× |×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_04_take_utf8_03_r_space(self):
+        self.verify("×| ×", [], returncode=1)
+
+    def test_215_take_utf8_21_pair_08_setop_04_take_utf8_04_lr_space(self):
+        self.verify("× | ×", [], returncode=1)
+
     def test_215_take_utf8_22_target_filter_type_01_default(self):
         con = self.verify(
             "×",
@@ -4391,6 +4487,102 @@ class FilterTakeUTF8(verify.Verify):
             is cqltypes.FilterType.POSITION,
             True,
         )
+
+    def test_215_take_utf8_23_plp_07_compare_01_dash_ascii_01_no_space(self):
+        self.verify("×=q==--", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_01_dash_ascii_02_l_space(self):
+        self.verify("×=q ==--", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_01_dash_ascii_03_r_space(self):
+        self.verify("×=q== --", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_01_dash_ascii_04_lr_space(self):
+        self.verify("×=q == --", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_02_dash_utf8_01_no_space(self):
+        self.verify("×=q==――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_02_dash_utf8_02_l_space(self):
+        self.verify("×=q ==――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_02_dash_utf8_03_r_space(self):
+        self.verify("×=q== ――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_02_dash_utf8_04_lr_space(self):
+        self.verify("×=q == ――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_03_take_ascii_01_no_space(self):
+        self.verify("×=q==[x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_03_take_ascii_02_l_space(self):
+        self.verify("×=q ==[x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_03_take_ascii_03_r_space(self):
+        self.verify("×=q== [x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_03_take_ascii_04_lr_space(self):
+        self.verify("×=q == [x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_04_take_utf8_01_no_space(self):
+        self.verify("×=q==×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_04_take_utf8_02_l_space(self):
+        self.verify("×=q ==×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_04_take_utf8_03_r_space(self):
+        self.verify("×=q== ×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_07_compare_04_take_utf8_04_lr_space(self):
+        self.verify("×=q == ×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_01_dash_ascii_01_no_space(self):
+        self.verify("×=q|--", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_01_dash_ascii_02_l_space(self):
+        self.verify("×=q |--", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_01_dash_ascii_03_r_space(self):
+        self.verify("×=q| --", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_01_dash_ascii_04_lr_space(self):
+        self.verify("×=q | --", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_02_dash_utf8_01_no_space(self):
+        self.verify("×=q|――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_02_dash_utf8_02_l_space(self):
+        self.verify("×=q |――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_02_dash_utf8_03_r_space(self):
+        self.verify("×=q| ――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_02_dash_utf8_04_lr_space(self):
+        self.verify("×=q | ――", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_03_take_ascii_01_no_space(self):
+        self.verify("×=q|[x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_03_take_ascii_02_l_space(self):
+        self.verify("×=q |[x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_03_take_ascii_03_r_space(self):
+        self.verify("×=q| [x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_03_take_ascii_04_lr_space(self):
+        self.verify("×=q | [x]", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_04_take_utf8_01_no_space(self):
+        self.verify("×=q|×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_04_take_utf8_02_l_space(self):
+        self.verify("×=q |×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_04_take_utf8_03_r_space(self):
+        self.verify("×=q| ×", [], returncode=1)
+
+    def test_215_take_utf8_23_plp_08_setop_04_take_utf8_04_lr_space(self):
+        self.verify("×=q | ×", [], returncode=1)
 
 
 if __name__ == "__main__":

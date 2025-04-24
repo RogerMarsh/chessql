@@ -19,6 +19,9 @@ class FilterPseudolegal(verify.Verify):
     def test_106_pseudolegal_01_plain_01_bare(self):
         self.verify("pseudolegal", [], returncode=1)
 
+    def test_106_pseudolegal_01_plain_02_piece(self):
+        self.verify("pseudolegal k", [], returncode=1)
+
     def test_106_pseudolegal_01_plain_04_target_01_btm(self):
         self.verify("pseudolegal --(btm)", [], returncode=1)
 
@@ -79,9 +82,6 @@ class FilterPseudolegal(verify.Verify):
 
     def test_106_pseudolegal_01_plain_04_target_07_set_o_o(self):
         self.verify("pseudolegal --(Rc4 o-o)", [], returncode=1)
-
-    def test_106_pseudolegal_02_dash(self):
-        self.verify("pseudolegal k", [], returncode=1)
 
     def test_106_pseudolegal_03_dash_ascii(self):
         self.verify(
@@ -1402,6 +1402,83 @@ class FilterPseudolegal(verify.Verify):
         self,
     ):
         self.verify("pseudolegal e2――Qa4=q(o-o){+}", [], returncode=1)
+
+    def test_106_pseudolegal_08_compare_01_integer(self):
+        self.verify(
+            "pseudolegal -- == 3",
+            [
+                (3, "Eq"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_106_pseudolegal_08_compare_02_pseudolegal(self):
+        self.verify(
+            "pseudolegal -- == pseudolegal --",
+            [
+                (3, "Eq"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_106_pseudolegal_09_logical_01_integer(self):
+        self.verify(
+            "pseudolegal -- or 3",
+            [
+                (3, "Or"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_106_pseudolegal_09_logical_02_legal(self):
+        self.verify(
+            "pseudolegal -- or pseudolegal --",
+            [
+                (3, "Or"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_106_pseudolegal_10_setop_01_integer(self):
+        self.verify("pseudolegal -- & 3", [], returncode=1)
+
+    def test_106_pseudolegal_10_setop_02_legal(self):
+        self.verify(
+            "pseudolegal -- & pseudolegal --",
+            [
+                (3, "Intersection"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Pseudolegal"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
 
 
 if __name__ == "__main__":

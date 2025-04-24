@@ -47,8 +47,41 @@ class Filters(verify.Verify):
     def test_004_ascii_02(self):
         self.verify("ascii 65", [(3, "ASCII"), (4, "Integer")])
 
-    def test_005_assert(self):
+    def test_005_assert_01_filter(self):
         self.verify("assert 1", [(3, "Assert"), (4, "Integer")])
+
+    def test_005_assert_02_compare_01_integer(self):
+        self.verify(
+            "assert 1 == 2",
+            [(3, "Assert"), (4, "Eq"), (5, "Integer"), (5, "Integer")],
+        )
+
+    def test_005_assert_02_compare_02_assert(self):
+        self.verify("assert 1 == assert 2", [], returncode=1)
+
+    def test_005_assert_03_logical_01_integer(self):
+        self.verify(
+            "assert 1 and 2",
+            [(3, "Assert"), (4, "And"), (5, "Integer"), (5, "Integer")],
+        )
+
+    def test_005_assert_03_logical_02_assert(self):
+        self.verify(
+            "assert 1 and assert 2",
+            [
+                (3, "Assert"),
+                (4, "And"),
+                (5, "Integer"),
+                (5, "Assert"),
+                (6, "Integer"),
+            ],
+        )
+
+    def test_005_assert_04_setop_01_integer(self):
+        self.verify("assert 1 | 2", [], returncode=1)
+
+    def test_005_assert_04_setop_02_assert(self):
+        self.verify("assert 1 | assert 2", [], returncode=1)
 
     def test_006_atomic_01_bare(self):
         self.verify("atomic", [], returncode=1)
@@ -218,6 +251,56 @@ class Filters(verify.Verify):
     def test_016_comment_04(self):
         self.verify("comment quiet (A)", [], returncode=1)
 
+    def test_016_comment_05_compare_01_integer(self):
+        self.verify('comment "q" == 2', [], returncode=1)
+
+    def test_016_comment_05_compare_02_string(self):
+        self.verify(
+            'comment "q" == "w"',
+            [(3, "Comment"), (4, "Eq"), (5, "String"), (5, "String")],
+        )
+
+    def test_016_comment_05_compare_03_comment(self):
+        self.verify('comment "y" == comment "z"', [], returncode=1)
+
+    def test_016_comment_06_logical_01_integer(self):
+        self.verify(
+            'comment "q" and 2',
+            [
+                (3, "Comment"),
+                (4, "And"),
+                (5, "String"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_016_comment_06_logical_02_string(self):
+        self.verify(
+            'comment "q" and "w"',
+            [(3, "Comment"), (4, "And"), (5, "String"), (5, "String")],
+        )
+
+    def test_016_comment_06_logical_03_comment(self):
+        self.verify(
+            'comment "y" and comment "z"',
+            [
+                (3, "Comment"),
+                (4, "And"),
+                (5, "String"),
+                (5, "Comment"),
+                (6, "String"),
+            ],
+        )
+
+    def test_016_comment_07_setop_01_integer(self):
+        self.verify('comment "q" | 2', [], returncode=1)
+
+    def test_016_comment_07_setop_02_string(self):
+        self.verify('comment "q" | "w"', [], returncode=1)
+
+    def test_016_comment_07_setop_03_comment(self):
+        self.verify('comment "y" | comment "z"', [], returncode=1)
+
     def test_017_connectedpawns(self):
         self.verify("connectedpawns", [(3, "ConnectedPawns")])
 
@@ -385,6 +468,47 @@ class Filters(verify.Verify):
                 (5, "AnySquare"),
             ],
         )
+
+    def test_020_currentmove_04_compare_01_integer(self):
+        self.verify("currentmove -- == 1", [], returncode=1)
+
+    def test_020_currentmove_04_compare_02_currentmove(self):
+        self.verify("currentmove -- == currentmove --", [], returncode=1)
+
+    def test_020_currentmove_05_logical_01_integer(self):
+        self.verify(
+            "currentmove -- and 1",
+            [
+                (3, "And"),
+                (4, "CurrentMove"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_020_currentmove_05_logical_02_currentmove(self):
+        self.verify(
+            "currentmove -- and currentmove --",
+            [
+                (3, "And"),
+                (4, "CurrentMove"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+                (4, "CurrentMove"),
+                (5, "DashII"),
+                (6, "AnySquare"),
+                (6, "AnySquare"),
+            ],
+        )
+
+    def test_020_currentmove_06_setop_01_integer(self):
+        self.verify("currentmove -- & 1", [], returncode=1)
+
+    def test_020_currentmove_06_setop_02_currentmove(self):
+        self.verify("currentmove -- & currentmove --", [], returncode=1)
 
     def test_021_currentposition_ascii(self):
         self.verify("currentposition", [(3, "CurrentPosition")])
@@ -1417,6 +1541,58 @@ class Filters(verify.Verify):
         )
         self.assertEqual("v" in con.definitions, True)
 
+    def test_055_isbound_09_compare_01_integer(self):
+        self.verify("isbound v == 1", [], returncode=1)
+
+    def test_055_isbound_09_compare_02_logicalfilter(self):
+        self.verify("isbound v == true", [], returncode=1)
+
+    def test_055_isbound_09_compare_03_unbind(self):
+        self.verify("isbound v == isbound v", [], returncode=1)
+
+    def test_055_isbound_10_logical_01_integer(self):
+        self.verify(
+            "isbound v or 2",
+            [
+                (3, "Or"),
+                (4, "IsBound"),
+                (5, "BindName"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_055_isbound_10_logical_02_logicalfilter(self):
+        self.verify(
+            "isbound v or true",
+            [
+                (3, "Or"),
+                (4, "IsBound"),
+                (5, "BindName"),
+                (4, "True_"),
+            ],
+        )
+
+    def test_055_isbound_10_logical_03_unbind(self):
+        self.verify(
+            "isbound v or isbound v",
+            [
+                (3, "Or"),
+                (4, "IsBound"),
+                (5, "BindName"),
+                (4, "IsBound"),
+                (5, "BindName"),
+            ],
+        )
+
+    def test_055_isbound_11_logical_01_integer(self):
+        self.verify("isbound v | 1", [], returncode=1)
+
+    def test_055_isbound_11_logical_02_logicalfilter(self):
+        self.verify("isbound v | true", [], returncode=1)
+
+    def test_055_isbound_11_logical_03_unbind(self):
+        self.verify("isbound v | isbound v", [], returncode=1)
+
     def test_056_isolatedpwans(self):
         self.verify("isolatedpawns", [(3, "IsolatedPawns")])
 
@@ -1476,6 +1652,58 @@ class Filters(verify.Verify):
             ],
         )
         self.assertEqual("v" in con.definitions, True)
+
+    def test_057_isunbound_09_compare_01_integer(self):
+        self.verify("isunbound v == 1", [], returncode=1)
+
+    def test_057_isunbound_09_compare_02_logicalfilter(self):
+        self.verify("isunbound v == true", [], returncode=1)
+
+    def test_057_isunbound_09_compare_03_unbind(self):
+        self.verify("isunbound v == isunbound v", [], returncode=1)
+
+    def test_057_isunbound_10_logical_01_integer(self):
+        self.verify(
+            "isunbound v or 2",
+            [
+                (3, "Or"),
+                (4, "IsUnbound"),
+                (5, "BindName"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_057_isunbound_10_logical_02_logicalfilter(self):
+        self.verify(
+            "isunbound v or true",
+            [
+                (3, "Or"),
+                (4, "IsUnbound"),
+                (5, "BindName"),
+                (4, "True_"),
+            ],
+        )
+
+    def test_057_isunbound_10_logical_03_unbind(self):
+        self.verify(
+            "isunbound v or isunbound v",
+            [
+                (3, "Or"),
+                (4, "IsUnbound"),
+                (5, "BindName"),
+                (4, "IsUnbound"),
+                (5, "BindName"),
+            ],
+        )
+
+    def test_057_isunbound_11_logical_01_integer(self):
+        self.verify("isunbound v | 1", [], returncode=1)
+
+    def test_057_isunbound_11_logical_02_logicalfilter(self):
+        self.verify("isunbound v | true", [], returncode=1)
+
+    def test_057_isunbound_11_logical_03_unbind(self):
+        self.verify("isunbound v | isunbound v", [], returncode=1)
 
     def test_058_lastgamenumber_01_bare(self):
         self.verify_run(
@@ -1712,6 +1940,39 @@ class Filters(verify.Verify):
             "message quiet A", [(3, "Message"), (4, "PieceDesignator")]
         )
 
+    def test_070_message_06_compare_01_string(self):
+        self.verify(
+            'message "q" == "w"',
+            [(3, "Message"), (4, "Eq"), (5, "String"), (5, "String")],
+        )
+
+    def test_070_message_06_compare_02_message(self):
+        self.verify('message "y" == message "z"', [], returncode=1)
+
+    def test_070_message_07_logical_01_string(self):
+        self.verify(
+            'message "q" or "w"',
+            [(3, "Message"), (4, "Or"), (5, "String"), (5, "String")],
+        )
+
+    def test_070_message_07_logical_02_message(self):
+        self.verify(
+            'message "y" or message "z"',
+            [
+                (3, "Message"),
+                (4, "Or"),
+                (5, "String"),
+                (5, "Message"),
+                (6, "String"),
+            ],
+        )
+
+    def test_070_message_08_setop_01_string(self):
+        self.verify('message "q" | "w"', [], returncode=1)
+
+    def test_070_message_08_setop_02_message(self):
+        self.verify('message "y" | message "z"', [], returncode=1)
+
     def test_071_min_01(self):
         self.verify("min", [], returncode=1)
 
@@ -1840,7 +2101,7 @@ class Filters(verify.Verify):
             [(3, "Move"), (4, "CommentParenthesesParameter"), (5, "String")],
         )
 
-    def test_074_move_21_comment_parameter_01_plain(self):
+    def test_074_move_21_comment_01(self):
         self.verify(
             'move legal comment "Any move"',
             [
@@ -1851,7 +2112,68 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_074_move_21_comment_parameter_02_parentheses(self):
+    def test_074_move_21_comment_02_compare_01_string(self):
+        self.verify(
+            'move legal comment "Any move" == "text"',
+            [
+                (3, "Move"),
+                (4, "LegalParameter"),
+                (3, "Comment"),
+                (4, "Eq"),
+                (5, "String"),
+                (5, "String"),
+            ],
+        )
+
+    def test_074_move_21_comment_02_compare_02_comment(self):
+        self.verify(
+            'move legal comment "Any move" == comment "text"',
+            [],
+            returncode=1,
+        )
+
+    def test_074_move_21_comment_03_logical_01_string(self):
+        self.verify(
+            'move legal comment "Any move" or "text"',
+            [
+                (3, "Move"),
+                (4, "LegalParameter"),
+                (3, "Comment"),
+                (4, "Or"),
+                (5, "String"),
+                (5, "String"),
+            ],
+        )
+
+    def test_074_move_21_comment_03_logical_02_comment(self):
+        self.verify(
+            'move legal comment "Any move" or comment "text"',
+            [
+                (3, "Move"),
+                (4, "LegalParameter"),
+                (3, "Comment"),
+                (4, "Or"),
+                (5, "String"),
+                (5, "Comment"),
+                (6, "String"),
+            ],
+        )
+
+    def test_074_move_21_comment_04_setop_01_string(self):
+        self.verify(
+            'move legal comment "Any move" & "text"',
+            [],
+            returncode=1,
+        )
+
+    def test_074_move_21_comment_04_setop_02_comment(self):
+        self.verify(
+            'move legal comment "Any move" & comment "text"',
+            [],
+            returncode=1,
+        )
+
+    def test_074_move_21_comment_05_parentheses(self):
         self.verify(
             'move legal comment ("Any move")',
             [
@@ -1862,7 +2184,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_074_move_22_comment_parameter_01_plain(self):
+    def test_074_move_22_comment_01_plain(self):
         self.verify(
             'move pseudolegal comment "Any move"',
             [
@@ -1873,7 +2195,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_074_move_22_comment_parameter_02_parentheses(self):
+    def test_074_move_22_comment_02_parentheses(self):
         self.verify(
             'move pseudolegal comment ("Any move")',
             [
@@ -2076,13 +2398,148 @@ class Filters(verify.Verify):
     def test_079_notransform_01(self):
         self.verify("notransform", [], returncode=1)
 
-    def test_079_notransform_02(self):
-        self.verify(
+    def test_079_notransform_02_set_01_piecedesignator(self):
+        con = self.verify(
             "notransform P",
             [
                 (3, "NoTransform"),
                 (4, "PieceDesignator"),
             ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            is cqltypes.FilterType.SET,
+            True,
+        )
+
+    def test_079_notransform_02_set_02_btm(self):
+        con = self.verify(
+            "notransform to",
+            [
+                (3, "NoTransform"),
+                (4, "To"),
+            ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            is cqltypes.FilterType.SET,
+            True,
+        )
+
+    def test_079_notransform_03_numeric(self):
+        con = self.verify(
+            "notransform 1",
+            [
+                (3, "NoTransform"),
+                (4, "Integer"),
+            ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            is cqltypes.FilterType.NUMERIC,
+            True,
+        )
+
+    def test_079_notransform_04_string(self):
+        con = self.verify(
+            'notransform "P"',
+            [
+                (3, "NoTransform"),
+                (4, "String"),
+            ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            is cqltypes.FilterType.STRING,
+            True,
+        )
+
+    def test_079_notransform_05_logical(self):
+        con = self.verify(
+            "notransform btm",
+            [
+                (3, "NoTransform"),
+                (4, "BTM"),
+            ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            is cqltypes.FilterType.LOGICAL,
+            True,
+        )
+
+    def test_079_notransform_06_position(self):
+        con = self.verify(
+            "notransform currentposition",
+            [
+                (3, "NoTransform"),
+                (4, "CurrentPosition"),
+            ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            is cqltypes.FilterType.POSITION,
+            True,
+        )
+
+    def test_079_notransform_07_universal(self):
+        con = self.verify(
+            "notransform ∀◭x∊.k",
+            [
+                (3, "NoTransform"),
+                (4, "UniversalPieceIterator"),
+                (5, "Element"),
+                (6, "UniversalPieceVariable"),
+                (6, "AnySquare"),
+                (5, "PieceDesignator"),
+            ],
+        )
+        self.assertEqual(
+            con.children[-1].children[-1].filter_type
+            == ~cqltypes.FilterType.ANY,
+            True,
+        )
+
+    def test_079_notransform_08_equal(self):
+        self.verify(
+            "notransform 1 == 2",
+            [
+                (3, "NoTransform"),
+                (4, "Eq"),
+                (5, "Integer"),
+                (5, "Integer"),
+            ],
+        )
+
+    def test_079_notransform_09_line(self):
+        self.verify(
+            "line --> notransform k --> Q",
+            [
+                (3, "Line"),
+                (4, "ArrowForward"),
+                (5, "NoTransform"),
+                (6, "PieceDesignator"),
+                (4, "ArrowForward"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_079_notransform_10_colon(self):
+        self.verify_capture_cql_output(
+            "notransform currentposition:q",
+            [
+                (3, "NoTransform"),
+                (4, "Colon"),
+                (5, "CurrentPosition"),
+                (5, "PieceDesignator"),
+            ],
+            "\n".join(
+                (
+                    "notransform <WithPositionNode ",
+                    "    target: <CurrentNode>",
+                    "    filter: q<all>>  /notransform>",
+                )
+            ),
         )
 
     def test_080_nullmove(self):
@@ -2313,7 +2770,18 @@ class Filters(verify.Verify):
             [(3, "PieceName"), (4, "PieceDesignator")],
         )
 
-    def test_094_piecename_03_compare(self):
+    def test_094_piecename_03_compare_01_string(self):
+        self.verify(
+            'piecename d4 == "Q"',
+            [
+                (3, "Eq"),
+                (4, "PieceName"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_094_piecename_03_compare_02_piecename(self):
         self.verify(
             "piecename d4 == piecename d5",
             [
@@ -2324,6 +2792,35 @@ class Filters(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_094_piecename_04_logical_01_string(self):
+        self.verify(
+            'piecename d4 or "Q"',
+            [
+                (3, "Or"),
+                (4, "PieceName"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_094_piecename_04_logical_02_piecename(self):
+        self.verify(
+            "piecename d4 or piecename d5",
+            [
+                (3, "Or"),
+                (4, "PieceName"),
+                (5, "PieceDesignator"),
+                (4, "PieceName"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_094_piecename_05_setop_01_string(self):
+        self.verify('piecename d4 & "Q"', [], returncode=1)
+
+    def test_094_piecename_05_setop_02_piecename(self):
+        self.verify("piecename d4 & piecename d5", [], returncode=1)
 
     def test_095_piece_assignment_01(self):  # Repeats an 093 test.
         self.verify("piece", [], returncode=1)
@@ -2616,20 +3113,115 @@ class Filters(verify.Verify):
     def test_110_ray_12_direction_duplicate_set_set(self):
         self.verify("ray up vertical (Q r)", [], returncode=1)
 
-    def test_111_readfile_01(self):
+    def test_111_readfile_01_bare(self):
         self.verify("readfile", [], returncode=1)
 
-    def test_111_readfile_01_name(self):
+    def test_111_readfile_02_nonstring(self):
+        self.verify("readfile 1", [], returncode=1)
+
+    def test_111_readfile_03_name(self):
         self.verify('readfile "x.cql"', [(3, "ReadFile"), (4, "String")])
+
+    def test_111_readfile_04_compare_01_string(self):
+        self.verify(
+            'readfile "null.pgn" == "pgn text"',
+            [
+                (3, "Eq"),
+                (4, "ReadFile"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_111_readfile_04_compare_02_readfile(self):
+        self.verify(
+            'readfile "null.pgn" == readfile "null.pgn"',
+            [
+                (3, "Eq"),
+                (4, "ReadFile"),
+                (5, "String"),
+                (4, "ReadFile"),
+                (5, "String"),
+            ],
+        )
+
+    def test_111_readfile_05_logical_01_string(self):
+        self.verify(
+            'readfile "null.pgn" or "pgn text"',
+            [
+                (3, "Or"),
+                (4, "ReadFile"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_111_readfile_05_logical_02_readfile(self):
+        self.verify(
+            'readfile "null.pgn" or readfile "null.pgn"',
+            [
+                (3, "Or"),
+                (4, "ReadFile"),
+                (5, "String"),
+                (4, "ReadFile"),
+                (5, "String"),
+            ],
+        )
+
+    def test_111_readfile_06_setop_01_string(self):
+        self.verify('readfile "null.pgn" | "pgn text"', [], returncode=1)
+
+    def test_111_readfile_06_setop_02_readfile(self):
+        self.verify(
+            'readfile "null.pgn" | readfile "null.pgn"', [], returncode=1
+        )
 
     def test_112_removecomment(self):
         self.verify("removecomment", [(3, "RemoveComment")])
 
-    def test_113_result_01(self):
+    def test_113_result_01_bare(self):
         self.verify("result", [], returncode=1)
 
-    def test_113_result_01_name(self):
+    def test_113_result_02_nonstring(self):
+        self.verify("result 1", [], returncode=1)
+
+    def test_113_result_03_name(self):
         self.verify('result "1-0"', [(3, "Result"), (4, "String")])
+
+    def test_113_result_04_compare_01_string(self):
+        self.verify('result "1-0" == "pgn text"', [], returncode=1)
+
+    def test_113_result_04_compare_02_result(self):
+        self.verify('result "1-0" == result "0-1"', [], returncode=1)
+
+    def test_113_result_05_logical_01_string(self):
+        self.verify(
+            'result "1-0" or "pgn text"',
+            [
+                (3, "Or"),
+                (4, "Result"),
+                (5, "String"),
+                (4, "String"),
+            ],
+        )
+
+    def test_113_result_05_logical_02_result(self):
+        self.verify(
+            'result "1-0" and result "0-1"',
+            [
+                (3, "And"),
+                (4, "Result"),
+                (5, "String"),
+                (4, "Result"),
+                (5, "String"),
+            ],
+        )
+
+    def test_113_result_06_setop_01_string(self):
+        self.verify('result "1-0" | "0-1"', [], returncode=1)
+
+    def test_113_result_06_setop_02_readfile(self):
+        self.verify('result "1-0" | result "0-1"', [], returncode=1)
 
     def test_114_reversecolor_01(self):
         self.verify("reversecolor", [], returncode=1)
@@ -2852,11 +3444,65 @@ class Filters(verify.Verify):
             [(3, "StrParentheses"), (4, "String"), (4, "String")],
         )
 
+    def test_129_str_04_compare_01_string(self):
+        self.verify(
+            'str "t" == "a"',
+            [(3, "Str"), (4, "Eq"), (5, "String"), (5, "String")],
+        )
+
+    def test_129_str_04_compare_02_str(self):
+        self.verify(
+            'str "t" == str "a"',
+            [(3, "Str"), (4, "Eq"), (5, "String"), (5, "Str"), (6, "String")],
+        )
+
+    def test_129_str_05_logical_01_string(self):
+        self.verify_tolerant('str "t" and "a"', [])
+
+    def test_129_str_05_logical_02_str(self):
+        self.verify_tolerant('str "t" and str "a"', [])
+
+    def test_129_str_06_setop_01_string(self):
+        self.verify('str "t" | "a"', [], returncode=1)
+
+    def test_129_str_06_setop_02_str(self):
+        self.verify('str "t" | str "a"', [], returncode=1)
+
     def test_130_tag_01(self):
         self.verify("tag", [], returncode=1)
 
     def test_130_tag_02_string(self):
         self.verify('tag "MyTag"', [(3, "Tag"), (4, "String")])
+
+    def test_130_tag_03_compare_01_string(self):
+        self.verify(
+            'tag "x" == "y"',
+            [(3, "Eq"), (4, "Tag"), (5, "String"), (4, "String")],
+        )
+
+    def test_130_tag_03_compare_02_tag(self):
+        self.verify(
+            'tag "x" == tag "y"',
+            [(3, "Eq"), (4, "Tag"), (5, "String"), (4, "Tag"), (5, "String")],
+        )
+
+    def test_130_tag_04_logical_01_string(self):
+        self.verify(
+            'tag "x" and "y"',
+            [(3, "And"), (4, "Tag"), (5, "String"), (4, "String")],
+        )
+
+    def test_130_tag_04_logical_02_tag(self):
+        self.verify(
+            'tag "x" and tag "y"',
+            [(3, "And"), (4, "Tag"), (5, "String"), (4, "Tag"), (5, "String")],
+        )
+
+    def test_130_tag_04_setop_01_string(self):
+        self.verify('tag "x" | "y"', [], returncode=1)
+
+    def test_130_tag_04_setop_02_tag(self):
+        self.verify('tag "x" | tag "y"', [], returncode=1)
 
     def test_131_terminal(self):
         self.verify("terminal", [(3, "Terminal")])
@@ -2899,6 +3545,35 @@ class Filters(verify.Verify):
                 (5, "PieceDesignator"),
             ],
         )
+
+    def test_136_typename_04_logical_01_string(self):
+        self.verify(
+            'typename d4 or "Q"',
+            [
+                (3, "Or"),
+                (4, "TypeName"),
+                (5, "PieceDesignator"),
+                (4, "String"),
+            ],
+        )
+
+    def test_136_typename_04_logical_02_piecename(self):
+        self.verify(
+            "typename d4 or typename d5",
+            [
+                (3, "Or"),
+                (4, "TypeName"),
+                (5, "PieceDesignator"),
+                (4, "TypeName"),
+                (5, "PieceDesignator"),
+            ],
+        )
+
+    def test_136_typename_05_setop_01_string(self):
+        self.verify('typename d4 & "Q"', [], returncode=1)
+
+    def test_136_typename_05_setop_02_piecename(self):
+        self.verify("typename d4 & typename d5", [], returncode=1)
 
     def test_137_unbind_01(self):
         self.verify("unbind", [], returncode=1)
@@ -2967,6 +3642,67 @@ class Filters(verify.Verify):
 
     def test_137_unbind_04_dictionary_key_04(self):
         self.verify('unbind v["key"]', [], returncode=1)
+
+    def test_137_unbind_05_compare_01_integer(self):
+        self.verify("v=1 unbind v == 1", [], returncode=1)
+
+    def test_137_unbind_05_compare_02_logicalfilter(self):
+        self.verify("v=1 unbind v == true", [], returncode=1)
+
+    def test_137_unbind_05_compare_03_unbind(self):
+        self.verify("v=1 unbind v == unbind v", [], returncode=1)
+
+    def test_137_unbind_06_logical_01_integer(self):
+        self.verify(
+            "v=1 unbind v or 2",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Or"),
+                (4, "Unbind"),
+                (5, "Variable"),
+                (4, "Integer"),
+            ],
+        )
+
+    def test_137_unbind_06_logical_02_logicalfilter(self):
+        self.verify(
+            "v=1 unbind v or true",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Or"),
+                (4, "Unbind"),
+                (5, "Variable"),
+                (4, "True_"),
+            ],
+        )
+
+    def test_137_unbind_06_logical_03_unbind(self):
+        self.verify(
+            "v=1 unbind v or unbind v",
+            [
+                (3, "Assign"),
+                (4, "Variable"),
+                (4, "Integer"),
+                (3, "Or"),
+                (4, "Unbind"),
+                (5, "Variable"),
+                (4, "Unbind"),
+                (5, "Variable"),
+            ],
+        )
+
+    def test_137_unbind_07_logical_01_integer(self):
+        self.verify("v=1 unbind v | 1", [], returncode=1)
+
+    def test_137_unbind_07_logical_02_logicalfilter(self):
+        self.verify("v=1 unbind v | true", [], returncode=1)
+
+    def test_137_unbind_07_logical_03_unbind(self):
+        self.verify("v=1 unbind v | unbind v", [], returncode=1)
 
     def test_138_up_01(self):
         self.verify("up", [], returncode=1)

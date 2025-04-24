@@ -857,9 +857,27 @@ class LeftParenthesisInfix(CQLObject):
 
 
 class BindArgument(Argument):
-    """The variable argument for 'isbound', 'isunbound' and 'unbind'."""
+    """The variable argument for 'isbound', 'isunbound' and 'unbind'.
+
+    CQL-6.2 Table of Precedence does not give any binding filter a
+    precedence.  For 'unbind v or unbind w' the 'unbind' filter must have
+    a precedence greater than the comparison operators.
+    """
 
     _filter_type = cqltypes.FilterType.LOGICAL
+
+    @property
+    def precedence(self):
+        """Return precedence greater than logical when comparing.
+
+        The logical operator will be the '-1' child of cursor at time
+        of precedence checking.
+
+        """
+        if isinstance(self.container.cursor.children[-1], Infix):
+            if not isinstance(self.container.cursor, DictionaryName):
+                return cqltypes.Precedence.PHIGH  # Higher than P80.
+        return self._precedence
 
     def _verify_children_and_set_own_types(self):
         """Override, raise NodeError if children verification fails."""
