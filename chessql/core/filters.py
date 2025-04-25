@@ -2717,6 +2717,81 @@ class FEN(structure.ImplicitSearchFilter):
 
     _filter_type = cqltypes.FilterType.STRING
 
+    def _verify_children_and_set_own_types(self):
+        """Extend, raise NodeError if FEN verification fails."""
+        super()._verify_children_and_set_own_types()
+        if len(self.children) == 0:
+            return
+        fen = self.children[0].match_.group()[1:-1].split()
+        if len(fen) > 6:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects at most six fields in it's argument but has ",
+                str(len(fen)).join("''"),
+            )
+        if len(fen) > 5 and not fen[5].isdigit():
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects digits as the full move number but found ",
+                fen[5].join("''"),
+            )
+        if len(fen) > 4 and not fen[4].isdigit():
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects digits as the half move clock but found ",
+                fen[4].join("''"),
+            )
+        if len(fen) > 3 and re.match(r"(?:(?:[a-h][36])|-)$", fen[3]) is None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects an en-passant destination square but found ",
+                fen[3].join("''"),
+            )
+        if len(fen) > 2 and re.match(r"(?:(?:K?Q?k?q?)|-)$", fen[2]) is None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects castling options such as 'KQkq' but found ",
+                fen[2].join("''"),
+            )
+        if len(fen) > 1 and re.match(r"[wb]$", fen[1]) is None:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects the 'white or black to move' flag but found ",
+                fen[1].join("''"),
+            )
+        ranks = fen[0].split("/")
+        if len(ranks) != 8:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects exactly eight rank specifications but found ",
+                str(len(ranks)).join("''"),
+            )
+        for rank in ranks:
+            if re.match(r"[Aa._BKNPQRbknpqr1-8]+$", rank) is None:
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects piece names or gap lengths in rank but found ",
+                    str(rank).join("''"),
+                )
+            gap = re.search(r"[1-8](?=[1-8])", rank)
+            if gap is not None:
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects single digit gap lengths in rank but found ",
+                    gap.group().join("''"),
+                    " in ",
+                    str(rank).join("''"),
+                )
+            rank_length = sum(int(i) if i.isdigit() else 1 for i in rank)
+            if rank_length != 8:
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " expects eight squares allocated in a rank but found ",
+                    str(rank_length).join("''"),
+                    " squares allocated in ",
+                    str(rank).join("''"),
+                )
+
 
 class File(structure.Argument):
     """Represent 'file' numeric filter."""

@@ -1499,6 +1499,16 @@ class ImplicitSearchFilter(NoArgumentsFilter):
     matches.  In other words <any value> can be taken as the argument.
     """
 
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        if len(self.children) > 1:
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " expects at most one argument but ",
+                str(len(self).children).join("''"),
+                " but has 2",
+            )
+
 
 class ModifyAssign(CQLObject):
     """Shared behaviour of '<operator>=' filters which have numeric rhs."""

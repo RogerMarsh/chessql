@@ -292,10 +292,128 @@ class FiltersImplicitSearch(verify.Verify):
             [],
         )
 
-    def test_036_fen_03_implicit_02_pieces_02_valid(self):
+    def test_036_fen_03_implicit_02_pieces_01_invalid_06_extra_square_01(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/p8/8/8/8/PPPPPPPP/RNBQKBNR"',
+            [],
+            returncode=1,
+        )
+
+    def test_036_fen_03_implicit_02_pieces_01_invalid_06_extra_square_02(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/9/8/8/8/PPPPPPPP/RNBQKBNR"',
+            [],
+            returncode=1,
+        )
+
+    def test_036_fen_03_implicit_02_pieces_01_invalid_07_extra_digit_gap(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/71/8/8/8/PPPPPPPP/RNBQKBNR"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_02_pieces_01_invalid_08_fen_character(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/w7/8/PPPPPPPP/RNBQKBNR"',
+            [],
+            returncode=1,
+        )
+
+    def test_036_fen_03_implicit_02_pieces_01_invalid_08_empty_rank(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8//8/PPPPPPPP/RNBQKBNR"',
+            [],
+            returncode=1,
+        )
+
+    def test_036_fen_03_implicit_02_pieces_02_valid_01_standard_chars(self):
         self.verify(
             'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"',
             [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_02_pieces_02_valid_02_cql_chars(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/Aa._PPPP/RNBQKBNR"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_01_too_many_fields(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 a"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_03_fen_02_six_01_full_move_valid(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_02_six_01_full_move_bad(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 x"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_03_fen_03_five_01_half_move_clock_valid(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_03_five_01_half_move_clock_bad(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - x"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_03_fen_04_four_01_no_ep(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_04_four_02_ep_valid(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq b3"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_04_four_03_ep_invalid(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq b4"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_03_fen_05_three_01_oo_valid(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_05_three_02_oo_wrong_order(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KkQq"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_03_fen_05_three_03_oo_repeated(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KKQkq"',
+            [],
+        )
+
+    def test_036_fen_03_implicit_03_fen_06_two_01_to_move_valid(self):
+        self.verify(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w"',
+            [(3, "FEN"), (4, "ImplicitSearchParameter")],
+        )
+
+    def test_036_fen_03_implicit_03_fen_06_two_02_to_move_invalid(self):
+        self.verify_tolerant(
+            'fen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR t"',
+            [],
         )
 
     def test_036_fen_04_value_match_01_ok(self):
