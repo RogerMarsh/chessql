@@ -5536,6 +5536,10 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_219_string(self):
+        con = self.verify('"//"', [(3, "String")])
+        self.assertEqual(con.children[-1].children[-1].match_.group(), '"//"')
+
 
 if __name__ == "__main__":
     if verify.is_cql_on_path():

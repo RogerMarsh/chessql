@@ -76,8 +76,8 @@ _comment_re = re.compile(
             elements.LINE_COMMENT,
             elements.STRING,
             elements.COMMENT_SYMBOL,
-            r"(?P<anything_else>)[^/]+",  # Not elements.ANYTHING_ELSE set.
-            r"/",
+            r'(?P<anything_else>)[^/"]+',  # Not elements.ANYTHING_ELSE set.
+            r'[/"]',
         )
     )
 )
