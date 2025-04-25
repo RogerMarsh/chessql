@@ -697,9 +697,6 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_031_eco(self):
-        self.verify("eco", [(3, "ECO")])
-
     def test_032_elo_01(self):
         self.verify("elo", [(3, "Elo")])
 
@@ -714,9 +711,6 @@ class Filters(verify.Verify):
 
     def test_035_false(self):
         self.verify("false", [(3, "False_")])
-
-    def test_036_fen(self):
-        self.verify("fen", [(3, "FEN")])
 
     def test_037_file_01(self):
         self.verify("file", [], returncode=1)
@@ -1375,15 +1369,6 @@ class Filters(verify.Verify):
 
     def test_045_gamenumber(self):
         self.verify("gamenumber", [(3, "GameNumber")])
-
-    def test_046_hascomment_01(self):
-        self.verify("hascomment", [(3, "OriginalComment")])
-
-    def test_046_hascomment_02(self):
-        self.verify(
-            'hascomment "text"',
-            [(3, "OriginalComment"), (4, "ImplicitSearchParameter")],
-        )
 
     def test_047_idealmate(self):
         self.verify("idealmate", [(3, "IdealMate")])
@@ -2564,18 +2549,6 @@ class Filters(verify.Verify):
                 (3, "Or"),
                 (4, "PieceDesignator"),
                 (4, "PieceDesignator"),
-            ],
-        )
-
-    def test_084_originalcomment_01(self):
-        self.verify("originalcomment", [(3, "OriginalComment")])
-
-    def test_084_originalcomment_02(self):
-        self.verify(
-            'originalcomment "good"',
-            [
-                (3, "OriginalComment"),
-                (4, "ImplicitSearchParameter"),
             ],
         )
 

@@ -358,7 +358,16 @@ def string(match_=None, container=None):
     if is_documentation_parameter_accepted_by(container.cursor):
         return Documentation(match_=match_, container=container)
     if is_implicit_search_parameter_accepted_by(container.cursor):
-        return ImplicitSearchParameter(match_=match_, container=container)
+        if not isinstance(
+            container.cursor.parent,
+            (
+                StrParentheses,
+                MessageParentheses,
+                CommentParentheses,
+                CommentSymbol,
+            ),
+        ):
+            return ImplicitSearchParameter(match_=match_, container=container)
     return String(match_=match_, container=container)
 
 
@@ -370,6 +379,16 @@ class EndCommentSymbol(structure.CQLObject):
         node = container.cursor
         while node:
             if isinstance(node, CommentSymbol):
+                # Most cases of suppressing implicit search parameter like
+                # '/// (Event "Open")' avoid a '() has too many children'
+                # exception if the following setting of container.cursor
+                # is activated by removing the '# '.
+                # But '/// (Event "Open")<just whitespace without any "\n">'
+                # still fails while '/// (Event "Open") k' is fine.
+                # The need for "\n" implies a problem collapsing the tree
+                # if there are no more non-whitespace characters in stream
+                # after ")".
+                # container.cursor = node
                 break
             if isinstance(node, structure.CompleteBlock):
                 if not node.full():
