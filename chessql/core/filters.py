@@ -175,6 +175,8 @@ class RightCompoundPlace(structure.CQLObject):
         container = self.container
         container.whitespace.append(self)
         del self.parent.children[-1]
+        # Setting completed outside verify_children_and_set_types()
+        # needs a note of justification.
         self.parent.completed = True
         container.cursor = self.parent
         # Class instances for tokens treated as whitespace have no parent.
@@ -379,16 +381,6 @@ class EndCommentSymbol(structure.CQLObject):
         node = container.cursor
         while node:
             if isinstance(node, CommentSymbol):
-                # Most cases of suppressing implicit search parameter like
-                # '/// (Event "Open")' avoid a '() has too many children'
-                # exception if the following setting of container.cursor
-                # is activated by removing the '# '.
-                # But '/// (Event "Open")<just whitespace without any "\n">'
-                # still fails while '/// (Event "Open") k' is fine.
-                # The need for "\n" implies a problem collapsing the tree
-                # if there are no more non-whitespace characters in stream
-                # after ")".
-                # container.cursor = node
                 break
             if isinstance(node, structure.CompleteBlock):
                 if not node.full():
@@ -411,7 +403,14 @@ class EndCommentSymbol(structure.CQLObject):
         node = self.parent
         while True:
             while node and node.full():
-                node.verify_children_and_set_types(set_node_completed=True)
+                # All cases of suppressing implicit search parameter like
+                # '/// (Event "Open")' avoid a '() has too many children'
+                # exception with the test on node.completed present.
+                # But verify_children_and_set_types() is, in principle,
+                # the only place where completed is set True, so the test
+                # may indicate another problem.
+                if not node.completed:
+                    node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, (Path, CommentSymbol)):
                 self.raise_nodeerror(
@@ -419,8 +418,7 @@ class EndCommentSymbol(structure.CQLObject):
                     " not complete while handling ",
                     self.__class__.__name__.join("''"),
                 )
-            node.verify_children_and_set_types()
-            node.completed = True
+            node.verify_children_and_set_types(set_node_completed=True)
             if isinstance(node, CommentSymbol):
                 break
             p_node = node.parent
@@ -452,7 +450,14 @@ class EndPaths(structure.CQLObject):
         node = self.parent
         while True:
             while node and node.full():
-                node.verify_children_and_set_types(set_node_completed=True)
+                # All cases of suppressing implicit search parameter like
+                # '/// (Event "Open")' avoid a '() has too many children'
+                # exception with the test on node.completed present.
+                # But verify_children_and_set_types() is, in principle,
+                # the only place where completed is set True, so the test
+                # may indicate another problem.
+                if not node.completed:
+                    node.verify_children_and_set_types(set_node_completed=True)
                 node = node.parent
             if not isinstance(node, (Path, CommentSymbol)):
                 self.raise_nodeerror(
@@ -460,8 +465,7 @@ class EndPaths(structure.CQLObject):
                     " not complete while handling ",
                     self.__class__.__name__.join("''"),
                 )
-            node.verify_children_and_set_types()
-            node.completed = True
+            node.verify_children_and_set_types(set_node_completed=True)
             p_node = node.parent
             while p_node:
                 if isinstance(p_node, (Path, CommentSymbol)):
@@ -1001,6 +1005,8 @@ class TargetConditionsEnd(structure.CQLObject):
             parent_parent, (structure.MoveInfix, structure.DashOrTake)
         ):
             parent_parent.filter_type = children[-1].filter_type
+        # Setting completed outside verify_children_and_set_types()
+        # needs a note of justification.
         self.parent.completed = True
         container.cursor = self.parent
 

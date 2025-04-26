@@ -152,6 +152,8 @@ class FunctionCallEnd(filters.RightCompoundPlace):
             filters.BraceRight(
                 match_=body[-1], container=container
             ).place_node_in_tree()
+            # Setting completed outside verify_children_and_set_types()
+            # needs a note of justification.
             cursor.completed = True
             container.cursor = cursor
 
