@@ -3129,6 +3129,15 @@ def from_(match_=None, container=None):
     )
 
 
+class FromDefaultPinParameter(FromParameter):
+    """Represent default 'from' parameter to 'pin' filter."""
+
+    def __init__(self, match_=None, container=None):
+        """Initialise node parent and children attributes."""
+        super().__init__(match_=match_, container=container)
+        AnyPiece(match_=match_, container=container).parent = self
+
+
 class Function(structure.Name, structure.Argument):
     """Represent 'function' filter of any type.
 
@@ -4484,6 +4493,27 @@ class Pin(structure.PrecedenceFromChild, structure.CompleteParameterArguments):
         super().place_node_in_tree()
         self.container.cursor = self
 
+    def _verify_children_and_set_own_types(self):
+        """Add missing parameters to self.children.
+
+        The expected parameters are 'through', 'from', and 'to'.  If it
+        is missing the 'through' parameter is added first.
+
+        """
+        present = set(i.__class__ for i in self.children)
+        if Through not in present:
+            ThroughDefaultPinParameter(
+                match_=self.match_, container=self.container
+            ).parent = self
+        if FromParameter not in present:
+            FromDefaultPinParameter(
+                match_=self.match_, container=self.container
+            ).parent = self
+        if ToParameter not in present:
+            ToDefaultPinParameter(
+                match_=self.match_, container=self.container
+            ).parent = self
+
 
 # Perhaps this should be three filters: 'player', 'player black' and
 # 'player white'.  A consequence is 'white' and 'black' are just filters,
@@ -5206,6 +5236,15 @@ class Through(structure.ParameterArgument):
         return is_through_parameter_accepted_by(self.parent)
 
 
+class ThroughDefaultPinParameter(Through):
+    """Represent default 'through' parameter to 'pin' filter."""
+
+    def __init__(self, match_=None, container=None):
+        """Initialise node parent and children attributes."""
+        super().__init__(match_=match_, container=container)
+        AnyPiece(match_=match_, container=container).parent = self
+
+
 def is_title_parameter_accepted_by(node):
     """Return True if node accepts title parameter."""
     return isinstance(node, Path)
@@ -5256,6 +5295,15 @@ def to(match_=None, container=None):
     return _set_or_parameter(
         match_, container, To, ToParameter, is_to_parameter_accepted_by
     )
+
+
+class ToDefaultPinParameter(ToParameter):
+    """Represent default 'to' parameter to 'pin' filter."""
+
+    def __init__(self, match_=None, container=None):
+        """Initialise node parent and children attributes."""
+        super().__init__(match_=match_, container=container)
+        AnyKing(match_=match_, container=container).parent = self
 
 
 # pylint C0103 naming style.  'true' is a CQL keyword which is represented
@@ -5829,16 +5877,39 @@ class Backslash(structure.CQLObject):
     _filter_type = cqltypes.FilterType.STRING
 
 
-# CQL documentation says '▦', or '.', is equivalent to 'a-h1-8' so why
-# not incorporate this in the piece designator sub-pattern, noting that
-# 'ka-h1-8' is one piece designator but 'k.' and 'k▦' are both two piece
-# designators.
 class AnySquare(structure.NoArgumentsFilter):
     """Represent '.' set filter (utf8 ▦ '\u25a6').
 
     It is a piece designator meaning all squares.
 
+    For '--'-like filters it is the implicit lhs or rhs argument where
+    an explicit filter is absent.
+
     In CQL() parameters it appears in file names unprotected by quotes.
+    """
+
+    _filter_type = cqltypes.FilterType.SET
+
+
+class AnyPiece(structure.NoArgumentsFilter):
+    """Represent '[Aa]' set filter (utf8 ◭ '\u25ed').
+
+    It is a piece designator meaning any white or black piece.
+
+    For 'pin' filters it is the argument of the implied 'through' and
+    'from' parameters if these parameters are not explicit.
+    """
+
+    _filter_type = cqltypes.FilterType.SET
+
+
+class AnyKing(structure.NoArgumentsFilter):
+    """Represent '[Kk]' set filter (utf8 ♔♚ '\u2654\u265a').
+
+    It is a piece designator meaning any white or black king.
+
+    For 'pin' filters it is the argument of the implied 'to' parameter
+    if this parameter is not explicit.
     """
 
     _filter_type = cqltypes.FilterType.SET
