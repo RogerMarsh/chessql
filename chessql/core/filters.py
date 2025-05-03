@@ -3135,6 +3135,7 @@ class FromDefaultPinParameter(FromParameter):
     def __init__(self, match_=None, container=None):
         """Initialise node parent and children attributes."""
         super().__init__(match_=match_, container=container)
+        container.cursor = self
         AnyPiece(match_=match_, container=container).parent = self
 
 
@@ -4500,19 +4501,24 @@ class Pin(structure.PrecedenceFromChild, structure.CompleteParameterArguments):
         is missing the 'through' parameter is added first.
 
         """
+        saved_cursor = self.container.cursor
         present = set(i.__class__ for i in self.children)
         if Through not in present:
+            self.container.cursor = self
             ThroughDefaultPinParameter(
                 match_=self.match_, container=self.container
             ).parent = self
         if FromParameter not in present:
+            self.container.cursor = self
             FromDefaultPinParameter(
                 match_=self.match_, container=self.container
             ).parent = self
         if ToParameter not in present:
+            self.container.cursor = self
             ToDefaultPinParameter(
                 match_=self.match_, container=self.container
             ).parent = self
+        self.container.cursor = saved_cursor
 
 
 # Perhaps this should be three filters: 'player', 'player black' and
@@ -5242,6 +5248,7 @@ class ThroughDefaultPinParameter(Through):
     def __init__(self, match_=None, container=None):
         """Initialise node parent and children attributes."""
         super().__init__(match_=match_, container=container)
+        container.cursor = self
         AnyPiece(match_=match_, container=container).parent = self
 
 
@@ -5303,6 +5310,7 @@ class ToDefaultPinParameter(ToParameter):
     def __init__(self, match_=None, container=None):
         """Initialise node parent and children attributes."""
         super().__init__(match_=match_, container=container)
+        container.cursor = self
         AnyKing(match_=match_, container=container).parent = self
 
 
