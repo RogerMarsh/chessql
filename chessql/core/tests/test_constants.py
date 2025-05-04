@@ -19,8 +19,8 @@ class Constants(unittest.TestCase):
     def test____assumptions(self):
         ae = self.assertEqual
         ae(constants.PIECE_NAMES, r"QBRNKPAqbrnkpa_")
-        ae(constants.RANK_NAMES, "1-8")
-        ae(constants.FILE_NAMES, "a-h")
+        ae(constants.RANK_RANGE, "1-8")
+        ae(constants.FILE_RANGE, "a-h")
         ae(constants.VARIABLE_NAME_CHARS, r"[a-zA-Z0-9_$]")
         ae(constants.QUOTED_STRING, r'"[^\\"]*(?:\\.[^\\"]*)*"')
         ae(constants.UPPER_CASE_CQL_PREFIX, r"__CQL")

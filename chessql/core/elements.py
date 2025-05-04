@@ -708,13 +708,13 @@ VERBOSE = r"(?P<verbose>)verbose(?![\w$])"  # Path parameter.
 _SIMPLE_SQUARE = "".join(
     (
         r"[",
-        constants.FILE_NAMES,
+        constants.FILE_RANGE,
         r"](?:-[",
-        constants.FILE_NAMES,
+        constants.FILE_RANGE,
         r"])?[",
-        constants.RANK_NAMES,
+        constants.RANK_RANGE,
         r"](?:-[",
-        constants.RANK_NAMES,
+        constants.RANK_RANGE,
         r"])?",
     )
 )

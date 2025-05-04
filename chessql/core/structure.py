@@ -29,12 +29,12 @@ _simple_designator_re = re.compile(
             r"|".join(
                 (
                     constants.PIECE_NAMES.join((r"[", r"]")),
-                    constants.FILE_NAMES.join((r"[", r"]")),
+                    constants.FILE_RANGE.join((r"[", r"]")),
                     r"".join(
                         (
                             constants.PIECE_NAMES.join((r"[", r"]?")),
-                            constants.FILE_NAMES.join((r"[", r"]")),
-                            constants.RANK_NAMES.join((r"[", r"]")),
+                            constants.FILE_RANGE.join((r"[", r"]")),
+                            constants.RANK_RANGE.join((r"[", r"]")),
                         )
                     ),
                 )

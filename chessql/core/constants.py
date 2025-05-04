@@ -6,8 +6,8 @@
 
 # Patterns for piece, rank, and file, names in CQL.
 PIECE_NAMES = r"QBRNKPAqbrnkpa_"
-RANK_NAMES = r"1-8"
-FILE_NAMES = r"a-h"
+RANK_RANGE = r"1-8"
+FILE_RANGE = r"a-h"
 
 # Pattern for characters allowed in variable names.
 VARIABLE_NAME_CHARS = r"[a-zA-Z0-9_$]"
