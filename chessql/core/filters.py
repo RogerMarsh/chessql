@@ -3138,6 +3138,10 @@ class FromDefaultPinParameter(FromParameter):
         container.cursor = self
         AnyPiece(match_=match_, container=container).place_node_in_tree()
 
+    def get_match_text(self):
+        """Override and return 'from', the 'pin' parameter."""
+        return "from"
+
 
 class Function(structure.Name, structure.Argument):
     """Represent 'function' filter of any type.
@@ -5251,6 +5255,10 @@ class ThroughDefaultPinParameter(Through):
         container.cursor = self
         AnyPiece(match_=match_, container=container).place_node_in_tree()
 
+    def get_match_text(self):
+        """Override and return 'through', the 'pin' parameter."""
+        return "through"
+
 
 def is_title_parameter_accepted_by(node):
     """Return True if node accepts title parameter."""
@@ -5312,6 +5320,10 @@ class ToDefaultPinParameter(ToParameter):
         super().__init__(match_=match_, container=container)
         container.cursor = self
         AnyKing(match_=match_, container=container).place_node_in_tree()
+
+    def get_match_text(self):
+        """Override and return 'to', the 'pin' parameter."""
+        return "to"
 
 
 # pylint C0103 naming style.  'true' is a CQL keyword which is represented
@@ -5899,6 +5911,10 @@ class AnySquare(PieceDesignator):
     In CQL() parameters it appears in file names unprotected by quotes.
     """
 
+    def get_match_text(self):
+        """Override and return '.', ASCII form of 'any square' filter."""
+        return "."
+
 
 class AnyPiece(PieceDesignator):
     """Represent '[Aa]' set filter (utf8 ◭ '\u25ed').
@@ -5912,6 +5928,10 @@ class AnyPiece(PieceDesignator):
     'from' parameters if these parameters are not explicit.
     """
 
+    def get_match_text(self):
+        """Override and return '[Aa]', ASCII form of 'any piece' filter."""
+        return "[Aa]"
+
 
 class AnyKing(PieceDesignator):
     """Represent '[Kk]' set filter (utf8 ♔♚ '\u2654\u265a').
@@ -5924,6 +5944,10 @@ class AnyKing(PieceDesignator):
     For 'pin' filters it is the argument of the implied 'to' parameter
     if this parameter is not explicit.
     """
+
+    def get_match_text(self):
+        """Override and return '[Kk]', ASCII form of 'either king' filter."""
+        return "[Kk]"
 
 
 # '[' and ']' are used in five ways,

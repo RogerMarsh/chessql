@@ -270,6 +270,20 @@ class BaseNode:
             node = node.parent
         return node
 
+    def get_match_text(self):
+        """Return the text to drive evaluation of represented filter.
+
+        For most BaseNode subclass instances this text will be the text
+        in self.match_.group().
+
+        For the other instances this text gives the reason for existence
+        of an implicit filter.  In these cases it is assumed the text to
+        drive evaluation is some constant.  Subclasses for these cases
+        should override this method and return the relevant constant.
+
+        """
+        return self.match_.group()
+
     def parent_match_trace(self):
         """Return match trace for node through parents to root node."""
         node = self

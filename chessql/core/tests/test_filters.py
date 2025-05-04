@@ -459,7 +459,7 @@ class Filters(verify.Verify):
         self.verify("currentmove k", [], returncode=1)
 
     def test_020_currentmove_03(self):
-        self.verify(
+        con = self.verify(
             "currentmove --",
             [
                 (3, "CurrentMove"),
@@ -468,6 +468,15 @@ class Filters(verify.Verify):
                 (5, "AnySquare"),
             ],
         )
+        dash = con.children[-1].children[-1].children[-1]
+        self.assertEqual(dash.get_match_text(), dash.match_.group())
+        self.assertEqual(dash.match_.group(), "--")
+        anysquare = dash.children[0]
+        self.assertEqual(anysquare.match_.group(), dash.match_.group())
+        self.assertEqual(anysquare.get_match_text(), ".")
+        anysquare = dash.children[1]
+        self.assertEqual(anysquare.match_.group(), dash.match_.group())
+        self.assertEqual(anysquare.get_match_text(), ".")
 
     def test_020_currentmove_04_compare_01_integer(self):
         self.verify("currentmove -- == 1", [], returncode=1)

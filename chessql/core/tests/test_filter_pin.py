@@ -15,7 +15,7 @@ from . import verify
 class FilterPin(verify.Verify):
 
     def test_097_pin_01_all_default_01_bare(self):
-        self.verify(
+        con = self.verify(
             "pin",
             [
                 (3, "Pin"),
@@ -27,6 +27,27 @@ class FilterPin(verify.Verify):
                 (5, "AnyKing"),
             ],
         )
+        pin = con.children[-1].children[-1]
+        self.assertEqual(pin.get_match_text(), pin.match_.group())
+        self.assertEqual(pin.match_.group(), "pin")
+        through = pin.children[0]
+        self.assertEqual(through.match_.group(), pin.match_.group())
+        self.assertEqual(through.get_match_text(), "through")
+        anypiece = through.children[0]
+        self.assertEqual(anypiece.match_.group(), pin.match_.group())
+        self.assertEqual(anypiece.get_match_text(), "[Aa]")
+        from_ = pin.children[1]
+        self.assertEqual(from_.match_.group(), pin.match_.group())
+        self.assertEqual(from_.get_match_text(), "from")
+        anypiece = from_.children[0]
+        self.assertEqual(anypiece.match_.group(), pin.match_.group())
+        self.assertEqual(anypiece.get_match_text(), "[Aa]")
+        to = pin.children[2]
+        self.assertEqual(to.match_.group(), pin.match_.group())
+        self.assertEqual(to.get_match_text(), "to")
+        anyking = to.children[0]
+        self.assertEqual(anyking.match_.group(), pin.match_.group())
+        self.assertEqual(anyking.get_match_text(), "[Kk]")
 
     def test_097_pin_01_all_default_02_something(self):
         self.verify(
