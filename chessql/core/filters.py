@@ -3136,7 +3136,7 @@ class FromDefaultPinParameter(FromParameter):
         """Initialise node parent and children attributes."""
         super().__init__(match_=match_, container=container)
         container.cursor = self
-        AnyPiece(match_=match_, container=container).parent = self
+        AnyPiece(match_=match_, container=container).place_node_in_tree()
 
 
 class Function(structure.Name, structure.Argument):
@@ -4507,17 +4507,17 @@ class Pin(structure.PrecedenceFromChild, structure.CompleteParameterArguments):
             self.container.cursor = self
             ThroughDefaultPinParameter(
                 match_=self.match_, container=self.container
-            ).parent = self
+            ).place_node_in_tree()
         if FromParameter not in present:
             self.container.cursor = self
             FromDefaultPinParameter(
                 match_=self.match_, container=self.container
-            ).parent = self
+            ).place_node_in_tree()
         if ToParameter not in present:
             self.container.cursor = self
             ToDefaultPinParameter(
                 match_=self.match_, container=self.container
-            ).parent = self
+            ).place_node_in_tree()
         self.container.cursor = saved_cursor
 
 
@@ -5249,7 +5249,7 @@ class ThroughDefaultPinParameter(Through):
         """Initialise node parent and children attributes."""
         super().__init__(match_=match_, container=container)
         container.cursor = self
-        AnyPiece(match_=match_, container=container).parent = self
+        AnyPiece(match_=match_, container=container).place_node_in_tree()
 
 
 def is_title_parameter_accepted_by(node):
@@ -5311,7 +5311,7 @@ class ToDefaultPinParameter(ToParameter):
         """Initialise node parent and children attributes."""
         super().__init__(match_=match_, container=container)
         container.cursor = self
-        AnyKing(match_=match_, container=container).parent = self
+        AnyKing(match_=match_, container=container).place_node_in_tree()
 
 
 # pylint C0103 naming style.  'true' is a CQL keyword which is represented
@@ -5885,10 +5885,13 @@ class Backslash(structure.CQLObject):
     _filter_type = cqltypes.FilterType.STRING
 
 
-class AnySquare(structure.NoArgumentsFilter):
+class AnySquare(PieceDesignator):
     """Represent '.' set filter (utf8 ▦ '\u25a6').
 
     It is a piece designator meaning all squares.
+
+    The text '.' and '▦' in a CQL query causes an AnySquare instance to
+    be generated.
 
     For '--'-like filters it is the implicit lhs or rhs argument where
     an explicit filter is absent.
@@ -5896,31 +5899,31 @@ class AnySquare(structure.NoArgumentsFilter):
     In CQL() parameters it appears in file names unprotected by quotes.
     """
 
-    _filter_type = cqltypes.FilterType.SET
 
-
-class AnyPiece(structure.NoArgumentsFilter):
+class AnyPiece(PieceDesignator):
     """Represent '[Aa]' set filter (utf8 ◭ '\u25ed').
 
     It is a piece designator meaning any white or black piece.
+
+    The text '[Aa]' and '◭' in a CQL query causes a PieceDesignator
+    instance to be generated.
 
     For 'pin' filters it is the argument of the implied 'through' and
     'from' parameters if these parameters are not explicit.
     """
 
-    _filter_type = cqltypes.FilterType.SET
 
-
-class AnyKing(structure.NoArgumentsFilter):
+class AnyKing(PieceDesignator):
     """Represent '[Kk]' set filter (utf8 ♔♚ '\u2654\u265a').
 
     It is a piece designator meaning any white or black king.
 
+    The text '[Kk]' and '♔♚' in a CQL query causes a PieceDesignator
+    instance to be generated.
+
     For 'pin' filters it is the argument of the implied 'to' parameter
     if this parameter is not explicit.
     """
-
-    _filter_type = cqltypes.FilterType.SET
 
 
 # '[' and ']' are used in five ways,
