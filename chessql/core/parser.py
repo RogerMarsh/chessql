@@ -169,20 +169,20 @@ def parse_debug(string, tree_only=False, tokens_only=False):
                     print()
                 print(token)
                 if not tokens_only:
-                    print("*cursor*", container.cursor.parent_class_trace())
+                    print("*cursor*", _parent_class_trace(container.cursor))
             cqlobj = value(match_=token, container=container)
             if not tree_only:
                 if not tokens_only:
-                    print("*init match*", cqlobj.parent_match_trace())
-                    print("*init class*", cqlobj.parent_class_trace())
+                    print("*init match*", _parent_match_trace(cqlobj))
+                    print("*init class*", _parent_class_trace(cqlobj))
             cqlobj.place_node_in_tree()
             if not tree_only:
                 if not tokens_only:
-                    print("*place match*", cqlobj.parent_match_trace())
-                    print("*place class*", cqlobj.parent_class_trace())
+                    print("*place match*", _parent_match_trace(cqlobj))
+                    print("*place class*", _parent_class_trace(cqlobj))
                     print(
                         "*cursor*",
-                        container.cursor.parent_class_trace(),
+                        _parent_class_trace(container.cursor),
                     )
     return container
 
@@ -241,3 +241,25 @@ def _remove_comments(string, container):
         else:
             no_comments.append(group())
     return "".join(no_comments)
+
+
+def _parent_match_trace(leaf):
+    """Return match trace for node through parents to root node."""
+    node = leaf
+    stack = []
+    while node:
+        stack.append(node)
+        node = node.parent
+    stack = [s.match_[0] if s.parent else None for s in stack]
+    return (leaf.__class__.__name__, len(stack), stack)
+
+
+def _parent_class_trace(leaf):
+    """Return class trace for node through parents to root node."""
+    node = leaf
+    stack = []
+    while node:
+        stack.append(node)
+        node = node.parent
+    stack = [s.__class__.__name__ if s.parent else None for s in stack]
+    return (leaf.__class__.__name__, len(stack), stack)

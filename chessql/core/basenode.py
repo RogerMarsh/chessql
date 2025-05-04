@@ -284,26 +284,6 @@ class BaseNode:
         """
         return self.match_.group()
 
-    def parent_match_trace(self):
-        """Return match trace for node through parents to root node."""
-        node = self
-        stack = []
-        while node:
-            stack.append(node)
-            node = node.parent
-        stack = [s.match_[0] if s.parent else None for s in stack]
-        return (self.__class__.__name__, len(stack), stack)
-
-    def parent_class_trace(self):
-        """Return class trace for node through parents to root node."""
-        node = self
-        stack = []
-        while node:
-            stack.append(node)
-            node = node.parent
-        stack = [s.__class__.__name__ if s.parent else None for s in stack]
-        return (self.__class__.__name__, len(stack), stack)
-
     def _str_filter_type(self):
         """Return name of filter type or an error report."""
         try:
