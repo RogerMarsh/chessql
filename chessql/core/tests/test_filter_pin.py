@@ -307,6 +307,25 @@ class FilterPin(verify.Verify):
             ],
         )
 
+    def test_097_pin_28_non_set_argument(self):
+        self.verify("pin to {k 2}", [], returncode=1)
+
+    def test_097_pin_29_set_argument(self):
+        self.verify(
+            "pin to {2 k}",
+            [
+                (3, "Pin"),
+                (4, "ToParameter"),
+                (5, "BraceLeft"),
+                (6, "Integer"),
+                (6, "PieceDesignator"),
+                (4, "ThroughDefaultPinParameter"),
+                (5, "AnyPiece"),
+                (4, "FromDefaultPinParameter"),
+                (5, "AnyPiece"),
+            ],
+        )
+
 
 if __name__ == "__main__":
     if verify.is_cql_on_path():

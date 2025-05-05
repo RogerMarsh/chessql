@@ -4505,6 +4505,8 @@ class Pin(structure.PrecedenceFromChild, structure.CompleteParameterArguments):
         is missing the 'through' parameter is added first.
 
         """
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
         saved_cursor = self.container.cursor
         present = set(i.__class__ for i in self.children)
         if Through not in present:

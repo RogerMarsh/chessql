@@ -1434,6 +1434,17 @@ class ParameterArgument(CQLObject):
     # Keywords with unparenthesized argument take one child by default.
     _child_count = 1
 
+    @property
+    def filter_type(self):
+        """Return filter type of child.
+
+        Look at the '-1' child because usually the last in a list of
+        things determines the type of the container.  For example
+        '{2 k}' is a set filter and '{k 2}' is a numeric filter.
+
+        """
+        return self.children[-1].filter_type
+
     def place_node_in_tree(self):
         """Delegate then verify parameter and set cursor to self."""
         super().place_node_in_tree()
