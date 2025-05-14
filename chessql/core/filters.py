@@ -1347,11 +1347,33 @@ class AttackArrow(structure.MoveInfix):
 
     _filter_type = cqltypes.FilterType.SET
 
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
+        if isinstance(self.children[-1], AttackedArrow):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot be chained to an ",
+                AttackedArrow.__name__.join("''"),
+            )
+
 
 class AttackedArrow(structure.MoveInfix):
     """Represent '<-' (←) set filter."""
 
     _filter_type = cqltypes.FilterType.SET
+
+    def _verify_children_and_set_own_types(self):
+        """Override, raise NodeError if children verification fails."""
+        for child in self.children:
+            self.raise_if_not_filter_type(child, cqltypes.FilterType.SET)
+        if isinstance(self.children[-1], AttackArrow):
+            self.raise_nodeerror(
+                self.__class__.__name__.join("''"),
+                " cannot be chained to an ",
+                AttackArrow.__name__.join("''"),
+            )
 
 
 class DashII(structure.DashOrTake):

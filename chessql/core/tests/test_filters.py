@@ -3742,7 +3742,7 @@ class Filters(verify.Verify):
     def test_150_attackarrow_01_utf8(self):
         self.verify("→", [], returncode=1)
 
-    def test_150_attackarrow_02_single_ascii(self):  # Same as attacks?
+    def test_150_attackarrow_02_single_ascii(self):
         self.verify(
             "A -> k",
             [
@@ -3752,7 +3752,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_150_attackarrow_02_single_utf8(self):  # Same as attacks?
+    def test_150_attackarrow_02_single_utf8(self):
         self.verify(
             "A → k",
             [
@@ -3814,13 +3814,25 @@ class Filters(verify.Verify):
             ],
         )
 
+    def test_150_attackarrow_05_attackedarrow_ascii(self):
+        self.verify("A -> P <- P", [], returncode=1)
+
+    def test_150_attackarrow_05_attackedarrow_utf8(self):
+        self.verify("A → P ← P", [], returncode=1)
+
+    def test_150_attackarrow_06_not_set_ascii(self):
+        self.verify("A -> true -> P", [], returncode=1)
+
+    def test_150_attackarrow_06_not_set_utf8(self):
+        self.verify("A → true → P", [], returncode=1)
+
     def test_151_attackedarrow_01_ascii(self):
         self.verify("<-", [], returncode=1)
 
     def test_151_attackedarrow_01_utf8(self):
         self.verify("←", [], returncode=1)
 
-    def test_151_attackedarrow_02_single_ascii(self):  # Same as attackedby?
+    def test_151_attackedarrow_02_single_ascii(self):
         self.verify(
             "A <- k",
             [
@@ -3830,7 +3842,7 @@ class Filters(verify.Verify):
             ],
         )
 
-    def test_151_attackedarrow_02_single_utf8(self):  # Same as attackedby?
+    def test_151_attackedarrow_02_single_utf8(self):
         self.verify(
             "A ← k",
             [
@@ -3891,6 +3903,18 @@ class Filters(verify.Verify):
                 (6, "PieceDesignator"),
             ],
         )
+
+    def test_151_attackedarrow_05_attackarrow_ascii(self):
+        self.verify("A <- P -> P", [], returncode=1)
+
+    def test_151_attackedarrow_05_attackarrow_utf8(self):
+        self.verify("A ← P → P", [], returncode=1)
+
+    def test_151_attackedarrow_06_not_set_ascii(self):
+        self.verify("A <- true <- P", [], returncode=1)
+
+    def test_151_attackedarrow_06_not_set_utf8(self):
+        self.verify("A ← true ← P", [], returncode=1)
 
     def test_181_union_ascii_01(self):
         self.verify("|", [], returncode=1)
