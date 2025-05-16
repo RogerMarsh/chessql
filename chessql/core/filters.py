@@ -76,6 +76,11 @@ _range_integer_re = re.compile(r"(?P<integer>.*)")
 # fits the pattern to detect 'function call' variable names.
 _range_variable_re = _echo_variable_re
 
+# Find 'a-h' and '1-8' style square specifications in piece designators
+# so sequences like 'h-a' and '8-1' can be rejected.  Sequences like
+# '1-h' and 'a-8' are ruled out by the pattern for piece designators.
+_file_rank_re = re.compile(r"([a-h1-8])-([a-h1-8])")
+
 # Map compound directions to basic directions.
 _directions = {
     "up": ["up"],
@@ -5599,6 +5604,20 @@ class PieceDesignator(structure.NoArgumentsFilter):
     """
 
     _filter_type = cqltypes.FilterType.SET
+
+    def __init__(self, match_=None, container=None):
+        """Verify 'a-h' and '2-5' style file and rank specifications."""
+        super().__init__(match_=match_, container=container)
+        for first, last in _file_rank_re.findall(self.match_.group()):
+            if first > last:
+                self.raise_nodeerror(
+                    self.__class__.__name__.join("''"),
+                    " file" if first in "abcdefgh" else " rank",
+                    " specification ",
+                    "-".join((first, last)),
+                    " is not allowed in ",
+                    self.match_.group().join("''"),
+                )
 
 
 class ResultArgument(structure.NoArgumentsFilter):

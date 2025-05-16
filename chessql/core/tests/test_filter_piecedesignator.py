@@ -176,6 +176,12 @@ class FilterPieceDesignator(verify.Verify):
                         [(3, "PieceDesignator")],
                     )
 
+    def test_220_piece_designator_11_bad_file_or_rank_range(self):
+        """File and rank ranges like 'g-e' and '5-1' are not allowed."""
+        for designator in ("h4-2", "h-a2", "[e2,g-f1]", "[b6-3,d7]"):
+            with self.subTest(designator=designator):
+                self.verify(designator, [], returncode=1)
+
 
 if __name__ == "__main__":
     if verify.is_cql_on_path():
