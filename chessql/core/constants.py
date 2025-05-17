@@ -15,6 +15,10 @@ VARIABLE_NAME_CHARS = r"[a-zA-Z0-9_$]"
 # Pattern for quoted strings.
 QUOTED_STRING = r'"[^\\"]*(?:\\.[^\\"]*)*"'
 
+# File and rank names in CQL.
+FILE_NAMES = "abcdefgh"  # Same as in pgn_read.core.constants module.
+CQL_RANK_NAMES = "12345678"  # pgn_read.core.constants.RANK_NAMES reversed.
+
 # Reserved prefixes for variable names.
 UPPER_CASE_CQL_PREFIX = "__CQL"
 LOWER_CASE_CQL_PREFIX = "cql__"

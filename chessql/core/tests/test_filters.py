@@ -3095,6 +3095,42 @@ class Filters(verify.Verify):
             [(3, "Rotate45"), (4, "Count"), (4, "BTM")],
         )
 
+    def test_116_rotate45_04_single_square(self):
+        self.verify("rotate45 a5", [], returncode=1)
+
+    def test_116_rotate45_05_compound_squares_01_few(self):
+        self.verify("rotate45 [a5,b7]", [], returncode=1)
+
+    def test_116_rotate45_06_compound_squares_02_many_01_no_duplicates(self):
+        self.verify("rotate45 [a5,b7,c-g1-4]", [], returncode=1)
+
+    def test_116_rotate45_06_compound_squares_02_many_02_duplicates(self):
+        self.verify("rotate45 [a5,b7,a-h1-7]", [], returncode=1)
+
+    def test_116_rotate45_06_compound_squares_03_all_01_duplicates(self):
+        self.verify(
+            "rotate45 [a5,b7,a-h1-8]",
+            [(3, "Rotate45"), (4, "PieceDesignator")],
+        )
+
+    def test_116_rotate45_06_compound_squares_03_all_02_duplicates(self):
+        self.verify(
+            "rotate45 [a-h1-8,a-h1-8]",
+            [(3, "Rotate45"), (4, "PieceDesignator")],
+        )
+
+    def test_116_rotate45_06_compound_squares_03_all_03_no_duplicates(self):
+        self.verify(
+            "rotate45 [a-h1-8]",
+            [(3, "Rotate45"), (4, "PieceDesignator")],
+        )
+
+    def test_116_rotate45_06_compound_squares_03_all_04_implied(self):
+        self.verify(
+            "rotate45 N",
+            [(3, "Rotate45"), (4, "PieceDesignator")],
+        )
+
     def test_117_rotate90_01(self):
         self.verify("rotate90", [], returncode=1)
 

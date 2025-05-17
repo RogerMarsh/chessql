@@ -81,6 +81,14 @@ _range_variable_re = _echo_variable_re
 # '1-h' and 'a-8' are ruled out by the pattern for piece designators.
 _file_rank_re = re.compile(r"([a-h1-8])-([a-h1-8])")
 
+# Find the square designator part of a piece designator.
+# The 'rotate45' filter operates only on sets containin all squares.
+# This pattern assumes any string scanned has been accepted by the piece
+# designator pattern.
+_square_designator_re = re.compile(
+    elements.PIECE_OPTIONS.join((r"(?:", ")?(.*)"))
+)
+
 # Map compound directions to basic directions.
 _directions = {
     "up": ["up"],
@@ -4908,6 +4916,69 @@ class Rotate45(TransformFilterType, structure.Argument):
 
     _precedence = cqltypes.Precedence.P30
 
+    def _verify_children_and_set_own_types(self):
+        """Override, verify PieceDesignator descendant square references."""
+        self.__verify_piece_designator_descendants(self.children)
+
+    def __verify_piece_designator_descendants(self, children):
+        """Verify all PieceDesignator descendants refer to all squares."""
+        for child in children:
+            if isinstance(child, NoTransform):
+                continue
+            if isinstance(child, PieceDesignator):
+                match_ = _square_designator_re.match(child.match_.group())
+                if match_ is None:
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " unable to find square set in ",
+                        child.match_.group().join("''"),
+                    )
+                match_text = match_.group(1)
+                if not match_text or "a-h1-8" in match_text:
+                    continue
+                if "," not in match_text:
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " can only be applied to an 'all squares' ",
+                        " piece designator but a ",
+                        match_text.join("''"),
+                        " square was found",
+                    )
+                    continue
+                squareset = set()
+                for sqr in match_text[1:-1].split(","):
+                    if len(sqr) == 2:
+                        squareset.add(sqr)
+                    elif len(sqr) == 6:
+                        squareset.update(
+                            child.expand_composite_square(
+                                sqr[0], sqr[2], sqr[3], sqr[5]
+                            )
+                        )
+                    elif sqr[1] == "-":
+                        squareset.update(
+                            child.expand_composite_square(
+                                sqr[0], sqr[2], sqr[3], sqr[3]
+                            )
+                        )
+                    elif sqr[2] == "-":
+                        squareset.update(
+                            child.expand_composite_square(
+                                sqr[0], sqr[0], sqr[1], sqr[3]
+                            )
+                        )
+                if len(squareset) != 64:
+                    self.raise_nodeerror(
+                        self.__class__.__name__.join("''"),
+                        " can only be applied to an 'all squares' ",
+                        " piece designator but ",
+                        str(len(squareset)),
+                        " squares are specified in ",
+                        child.match_.group().join("''"),
+                    )
+                continue
+            self.__verify_piece_designator_descendants(child.children)
+
 
 # See comment preceding Shift: same seen for Rotate90.
 class Rotate90(TransformFilterType, structure.Argument):
@@ -5618,6 +5689,21 @@ class PieceDesignator(structure.NoArgumentsFilter):
                     " is not allowed in ",
                     self.match_.group().join("''"),
                 )
+
+    # Originally left to a piece designator evaluation class, but 'rotate45'
+    # filter parsing needs this to decide if the operation is allowed.
+    @staticmethod
+    def expand_composite_square(startfile, endfile, startrank, endrank):
+        """Return the set of squares implied by a square designator."""
+        file_names = constants.FILE_NAMES
+        cql_rank_names = constants.CQL_RANK_NAMES
+        files = file_names[
+            file_names.index(startfile) : file_names.index(endfile) + 1
+        ]
+        ranks = cql_rank_names[
+            cql_rank_names.index(startrank) : cql_rank_names.index(endrank) + 1
+        ]
+        return {f + r for f in files for r in ranks}
 
 
 class ResultArgument(structure.NoArgumentsFilter):

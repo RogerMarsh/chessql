@@ -23,10 +23,12 @@ class Constants(unittest.TestCase):
         ae(constants.FILE_RANGE, "a-h")
         ae(constants.VARIABLE_NAME_CHARS, r"[a-zA-Z0-9_$]")
         ae(constants.QUOTED_STRING, r'"[^\\"]*(?:\\.[^\\"]*)*"')
+        ae(constants.FILE_NAMES, "abcdefgh")
+        ae(constants.CQL_RANK_NAMES, "12345678")
         ae(constants.UPPER_CASE_CQL_PREFIX, r"__CQL")
         ae(constants.LOWER_CASE_CQL_PREFIX, r"cql__")
         ae(constants.FUNCTION_BODY_PREFIX, r"%%_body_")
-        ae(len([c for c in dir(constants) if not c.startswith("__")]), 8)
+        ae(len([c for c in dir(constants) if not c.startswith("__")]), 10)
         ae(
             len(
                 [
