@@ -19,6 +19,9 @@ import unittest
 
 from . import verify
 
+# The expand_composite_square() tests do not go through verify module.
+from .. import parser
+
 
 class FilterPieceDesignator(verify.Verify):
 
@@ -181,6 +184,87 @@ class FilterPieceDesignator(verify.Verify):
         for designator in ("h4-2", "h-a2", "[e2,g-f1]", "[b6-3,d7]"):
             with self.subTest(designator=designator):
                 self.verify(designator, [], returncode=1)
+
+    def test_220_piece_designator_14_expand_composite_square_01_none(self):
+        con = parser.parse("cql()" + "_")
+        node = con.children[-1].children[-1]
+        self.assertRaisesRegex(
+            TypeError,
+            "".join(
+                (
+                    r"PieceDesignator.expand_composite_square\(\) ",
+                    r"missing 4 required positional arguments: ",
+                    r"'startfile', 'endfile', 'startrank', and 'endrank'$",
+                )
+            ),
+            node.expand_composite_square,
+            *(),
+        )
+
+    def test_220_piece_designator_14_expand_composite_square_02_bad(self):
+        """Reject file and rank ranges outside 'a-h' and '1-8'."""
+        con = parser.parse("cql()" + "_")
+        node = con.children[-1].children[-1]
+        for arguments in (
+            ("z", "h", "1", "8"),
+            ("a", "4", "1", "8"),
+            ("a", "h", "0", "8"),
+            ("a", "1", "1", "a"),
+        ):
+            with self.subTest(arguments=arguments):
+                self.assertRaisesRegex(
+                    ValueError,
+                    "substring not found$",
+                    node.expand_composite_square,
+                    *arguments,
+                )
+
+    def test_220_piece_designator_14_expand_composite_square_03_order(self):
+        """File and rank ranges like 'g-e' and '5-1' are not allowed."""
+        con = parser.parse("cql()" + "_")
+        node = con.children[-1].children[-1]
+        for arguments, answer in (
+            (("h", "a", "1", "8"), set()),
+            (("a", "h", "8", "1"), set()),
+        ):
+            with self.subTest(arguments=arguments, answer=answer):
+                self.assertEqual(
+                    node.expand_composite_square(*arguments), answer
+                )
+
+    def test_220_piece_designator_14_expand_composite_square_04_good(self):
+        """Expand a selection of acceptable square ranges."""
+        con = parser.parse("cql()" + "_")
+        node = con.children[-1].children[-1]
+        for arguments, answer in (
+            (
+                ("a", "h", "1", "8"),
+                set(
+                    ("a1", "a2", "a3", "a4", "a5", "a6", "a7", "a8")
+                    + ("b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8")
+                    + ("c1", "c2", "c3", "c4", "c5", "c6", "c7", "c8")
+                    + ("d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8")
+                    + ("e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8")
+                    + ("f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8")
+                    + ("g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8")
+                    + ("h1", "h2", "h3", "h4", "h5", "h6", "h7", "h8")
+                ),
+            ),
+            (("c", "d", "4", "6"), set(["c4", "c5", "c6", "d4", "d5", "d6"])),
+            (
+                ("f", "f", "1", "8"),
+                set(["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8"]),
+            ),
+            (
+                ("a", "h", "7", "7"),
+                set(["a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7"]),
+            ),
+            (("b", "b", "7", "7"), set(["b7"])),
+        ):
+            with self.subTest(arguments=arguments):
+                self.assertEqual(
+                    node.expand_composite_square(*arguments), answer
+                )
 
 
 if __name__ == "__main__":
