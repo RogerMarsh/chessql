@@ -4523,7 +4523,7 @@ class Filters(verify.Verify):
     def test_193_comment_eol_01_bare(self):
         self.verify("//", [], returncode=1)
 
-    def test_193_comment_eol_02(self):  # wromg.
+    def test_193_comment_eol_02(self):
         self.verify("K//\n", [(3, "PieceDesignator")])
 
     def test_194_comment_symbol_01_bare(self):
@@ -4538,8 +4538,10 @@ class Filters(verify.Verify):
     def test_195_block_comment_02_bare(self):
         self.verify("*/", [], returncode=1)
 
+    # CQL insists on at least one filter in a query.
+    # ChessQL allows no filters to fit ChessTab processing.
     def test_195_block_comment_03(self):
-        self.verify("/**/", [], returncode=1)
+        self.verify_declare_fail("/**/", [])
 
     def test_195_block_comment_04(self):
         self.verify("/**/k", [(3, "PieceDesignator")])

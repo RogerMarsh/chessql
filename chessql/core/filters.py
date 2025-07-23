@@ -6933,6 +6933,10 @@ class EndOfStream(structure.Complete):
 
         All nodes should be complete now.
 
+        CQL requires at least one filter.  This parser allows queries
+        with no filters and passes the decision on no filters to the
+        evaluator (because it fits what ChessTab does).
+
         """
         super().place_node_in_tree()
         self.container.whitespace.append(self.parent.children.pop())
@@ -6940,10 +6944,6 @@ class EndOfStream(structure.Complete):
             self.parent, (querycontainer.QueryContainer, cql.CQL)
         ):
             self.raise_nodeerror("Unexpected end of statement found")
-        if not self.parent.children:
-            self.raise_nodeerror(
-                "There must be at least one filter in the query"
-            )
         # This copes with simple non-filter text in a query which is seen
         # as variable names, like 'cql(<stuff>) some thing'.
         # The general case of an unassigned variable hidden in a query is
