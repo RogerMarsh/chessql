@@ -32,7 +32,7 @@ See `Python`_ and `pip`_ documentation for alternatives and platform-specific po
 Use
 ===
 
-Function core.parser.parse(<string>) returns a QueryContainer instance with the result of parsing a string usually read from a *.cql file.
+Function core.parser.parse(<string>) returns a QueryContainer instance with the result of parsing a string usually read from a <*>.cql file.
 
 Function core.parser.parse_command_line_query() returns a QueryContainer instance with the result of parsing a command line usually passed to the CQL executable.
 
