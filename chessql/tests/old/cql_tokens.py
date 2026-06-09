@@ -26,6 +26,7 @@ tokens it is assumed a Dash class will prove useful so the hierarchy for
 DashLRXCon is 'DashLRXCon : Dash : Token : Object'.
 
 """
+
 import subprocess
 import os
 import re

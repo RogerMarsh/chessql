@@ -17,6 +17,7 @@ The source is assumed to start at the first line starting 'cql('.
 The AST is assumed to start at the first line starting 'QueryContainer '.
 
 """
+
 import subprocess
 import os
 import re

@@ -8,6 +8,7 @@ The names of user defined functions, variables, and dictionaries need to
 be managed: names must be unique and each ones properties persist through
 a query unless explicitly removed by the 'unbind' filter.
 """
+
 import enum
 
 

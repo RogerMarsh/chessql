@@ -15,6 +15,7 @@ In '#' comments '6.0.4 index of symbols' and '6.1 index of symbols' mean
 introduction of 'unicode symbols'.
 
 """
+
 from . import constants
 
 # 6.0.4 overview of comments.  Ignore text in *.cql file.

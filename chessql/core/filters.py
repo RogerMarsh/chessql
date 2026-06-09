@@ -20,6 +20,7 @@ Some keywords are also keywords for parameters of the cql(<parameters>)
 statement.  See the parameters module for that usage.
 
 """
+
 import re
 
 from . import basenode

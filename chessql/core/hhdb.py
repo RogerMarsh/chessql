@@ -16,6 +16,7 @@ conflict is resolved by catching all HHDB keywords in the pattern for
 the 'hhdb' filter.
 
 """
+
 from . import structure
 from . import cqltypes
 

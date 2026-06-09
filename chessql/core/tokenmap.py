@@ -26,6 +26,7 @@ the point of function call.  These belong in the filters module but make
 direct use of the class_from_token_name dict defined in this module.
 
 """
+
 import re
 
 from . import filters

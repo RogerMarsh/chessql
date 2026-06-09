@@ -10,6 +10,7 @@ because of how the 'cql -parse ...' command handles repeated 'matchcount'
 and 'result' parameters.
 
 """
+
 import re
 
 from . import constants

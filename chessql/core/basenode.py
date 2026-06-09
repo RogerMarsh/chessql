@@ -11,6 +11,7 @@ returned by those values which are functions are kept in filters even
 if not values in cql.class_from_token_name dict.
 
 """
+
 from . import constants
 from . import cqltypes
 

@@ -10,7 +10,6 @@ import tkinter.filedialog
 import sys
 import subprocess
 
-
 if __name__ == "__main__":
     if len(sys.argv) == 2 and os.path.isfile(sys.argv[-1]):
         query = sys.argv[-1]

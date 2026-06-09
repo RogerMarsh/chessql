@@ -60,6 +60,7 @@ Since this module is following CQL, not CQLi, the global scope of user
 defined names is acceptable.
 
 """
+
 import re
 import os
 

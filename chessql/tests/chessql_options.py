@@ -6,7 +6,6 @@
 
 from ..core import options
 
-
 if __name__ == "__main__":
     opt = options.Options()
     opt.get_options()

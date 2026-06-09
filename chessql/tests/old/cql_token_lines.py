@@ -13,6 +13,7 @@ says in the cql(input <pgn file>.pgn) clause, but that does not matter
 when parsing only and some cql files do not give a pgn file.
 
 """
+
 import subprocess
 import os
 import re

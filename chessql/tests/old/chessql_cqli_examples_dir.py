@@ -14,7 +14,6 @@ import sys
 import subprocess
 import platform
 
-
 if __name__ == "__main__":
     if platform.system() == "Windows":
         run_prefix = []

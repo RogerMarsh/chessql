@@ -8,6 +8,7 @@ This module defines the QueryContainer class.  An instance of this class
 is the root node of a query structure.
 
 """
+
 from . import basenode
 from . import constants
 from . import structure

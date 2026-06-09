@@ -11,6 +11,7 @@ combined to form the pattern for the regular expression applied to the
 text of a CQL statement.
 
 """
+
 import re
 
 from . import elements

@@ -6,7 +6,6 @@
 
 from ..core import parser
 
-
 if __name__ == "__main__":
     container = parser.parse_command_line_query()
     print("** option errors **")
